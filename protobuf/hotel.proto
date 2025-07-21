@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+package hotel;
+
+option go_package = ".;hotels";
+
+service HotelService {
+    rpc GetHotel(GetHotelRequest) returns (GetHotelResponse);
+}
+
+message GetHotelRequest {
+    string id = 1;
+}
+
+message GetHotelResponse {
+    string id = 1;
+    string name = 2;
+    string address = 3;
+}
