@@ -1,0 +1,27 @@
+version: "3.8"
+
+services:
+  postgres-hotel:
+    image: postgres:14.18
+    container_name: postgres-hotel
+    environment:
+      POSTGRES_DB: hotel_db
+      POSTGRES_USER: littlesock
+      POSTGRES_PASSWORD: 113446
+    ports:
+      - "5433:5432"
+    networks:
+      - grpc-kafka-net
+
+  postgres-user:
+    image: postgres:14.18
+    container_name: postgres-user
+    environment:
+      POSTGRES_DB: user_db
+      POSTGRES_USER: littlesock
+      POSTGRES_PASSWORD: 113446
+
+    ports:
+      - "5434:5432"
+    networks:
+      - grpc-kafka-net
