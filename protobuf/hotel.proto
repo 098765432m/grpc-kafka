@@ -1,11 +1,11 @@
 syntax = "proto3";
 
-package hotel;
-
-option go_package = ".;hotels";
+option go_package = ".;hotel_pb";
 
 service HotelService {
     rpc GetHotel(GetHotelRequest) returns (GetHotelResponse);
+    rpc CreateHotel(CreateHotelRequest) returns (CreateHotelResponse);
+    rpc GetAllHotels(GetAllHotelsRequest) returns (GetAllHotelsResponse);
 }
 
 message GetHotelRequest {
@@ -15,5 +15,23 @@ message GetHotelRequest {
 message GetHotelResponse {
     string id = 1;
     string name = 2;
-    string address = 3;
+}
+
+message CreateHotelRequest {
+    string name = 1;
+}
+
+message CreateHotelResponse {
+}
+
+message GetAllHotelsRequest {
+}
+
+message GetAllHotelsResponse {
+    repeated Hotel hotels = 1;
+}
+
+message Hotel {
+    string id = 1;
+    string name = 2;
 }
