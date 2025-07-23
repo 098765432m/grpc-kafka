@@ -6,7 +6,7 @@ import (
 	"log"
 
 	"github.com/098765432m/grpc-kafka/common/consts"
-	"github.com/098765432m/grpc-kafka/common/gen-proto/hotels"
+	"github.com/098765432m/grpc-kafka/common/gen-proto/hotel_pb"
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
@@ -20,15 +20,29 @@ var rootCmd = &cobra.Command{
 		hotelConn := NewGrpcClient(consts.HOTEL_GRPC_PORT)
 		defer hotelConn.Close()
 
-		hotelClient := hotels.NewHotelServiceClient(hotelConn)
+		hotelClient := hotel_pb.NewHotelServiceClient(hotelConn)
 
-		fmt.Println("123123")
-		hotel, err := hotelClient.GetHotel(
-			context.Background(),
-			&hotels.GetHotelRequest{Id: "czxczxczxc"},
-		)
+		// fmt.Println("123123")
+		// hotel, err := hotelClient.GetHotel(
+		// 	context.Background(),
+		// 	&hotels.GetHotelRequest{Id: "czxczxczxc"},
+		// )
 
-		fmt.Println(hotel, err)
+		_, err := hotelClient.CreateHotel(context.Background(), &hotel_pb.CreateHotelRequest{Name: "Test Hotel"})
+		if err != nil {
+			log.Fatalf("Failed to create hotel: %v", err)
+		}
+
+		fmt.Println("Hotel created successfully")
+
+		hotels, err := hotelClient.GetAllHotels(context.Background(), &hotel_pb.GetAllHotelsRequest{})
+		if err != nil {
+			log.Fatalf("Failed to get all hotels: %v", err)
+		}
+
+		for _, hotel := range hotels.Hotels {
+			fmt.Printf("Hotel ID: %s, Name: %s\n", hotel.Id, hotel.Name)
+		}
 
 		// // Start grpc server
 		// grpcServer := app.NewGrpcServer(consts.USER_GRPC_PORT)
