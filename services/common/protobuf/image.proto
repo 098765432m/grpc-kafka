@@ -1,0 +1,51 @@
+syntax = "proto3";
+
+package image;
+
+option go_package = "gen-proto/image_pb;image_pb";
+
+service ImageService {
+    rpc UploadImage(UploadImageRequest) returns (UploadImageResponse);
+    rpc GetHotelImages(GetHotelImagesRequest) returns (GetHotelImagesResponse);
+    rpc DeleteImage (DeleteImageRequest) returns (DeleteImageResponse);
+};
+
+message Image {
+    string id = 1;
+    string publicId = 2;
+    string format = 3;
+    string hotelId = 4;
+}
+
+message HotelImage {
+    string id = 1;
+    string publicId = 2;
+    string format = 3;
+    string hotelId = 4;
+}
+
+message UploadImageRequest {
+    string publicId = 1;
+    string format = 2;
+    string hotelId = 3;
+}
+
+message UploadImageResponse {
+    Image image = 1;
+}
+
+message GetHotelImagesRequest {
+    string hotelId = 1;
+}
+
+message GetHotelImagesResponse {
+    repeated HotelImage images = 1;
+}
+
+message DeleteImageRequest {
+    string id = 1;
+}
+
+message DeleteImageResponse {
+    
+}
