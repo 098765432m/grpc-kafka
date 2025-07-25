@@ -1,4 +1,4 @@
-PROTO_SRC = protobuf
+PROTO_SRC = services/common/protobuf
 PROTO_GO_OUT = services/common/
 PROTO_FILES := $(wildcard $(PROTO_SRC)/*.proto)
 

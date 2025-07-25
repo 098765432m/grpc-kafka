@@ -1,0 +1,59 @@
+syntax = "proto3";
+
+option go_package = "gen-proto/user_pb;user_pb";
+
+service HotelService {
+    rpc GetUser(GetUserRequest) returns (GetUserResponse);
+    rpc CreateUser(CreateUserRequest) returns (CreateUserResponse);
+    rpc UpdateUser(UpdateUserRequest) returns (UpdateUserResponse);
+    rpc DeleteUser(DeleteUserRequest) returns (DeleteUserResponse);
+
+}
+
+message User {
+    string id = 1;
+    string username = 2;
+    string password = 3;
+    string email = 4;
+    string phoneNumber = 5;
+    string fullName = 6;
+    string role = 7;
+    string hotelId = 8;
+}
+
+message GetUserRequest {
+    string id = 1;
+}
+
+message GetUserResponse {
+    User user = 1;
+}
+
+message CreateUserRequest {
+    string username = 1;
+    string password = 2;
+    string email = 3;
+    string phoneNumber = 4;
+    string fullName = 5;
+    string role = 6;
+    string hotelId = 7;
+}
+
+message CreateUserResponse {
+    
+}
+
+message UpdateUserRequest {
+    User user = 1;
+}
+
+message UpdateUserResponse {
+}
+
+message DeleteUserRequest {
+    string id = 1;
+}
+
+message DeleteUserResponse {
+    
+}

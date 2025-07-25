@@ -20,7 +20,7 @@ INSERT INTO users (
     @hotel_id::text
 )
 
--- name: UpdateUser :one
+-- name: UpdateUser :exec
 UPDATE users
 SET
     username = @username::text,
@@ -30,8 +30,7 @@ SET
     full_name = @full_name::text,
     role = @role::role_enum,
     hotel_id = @hotel_id::text
-WHERE id = @id::uuid
-RETURNING *;
+WHERE id = @id::uuid;
 
 -- name: DeleteUser :exec
 DELETE FROM users WHERE id = $1;
