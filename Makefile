@@ -19,7 +19,7 @@ proto:
 sqlc:
 	@echo ">> Running sqlc <<"
 	@$(foreach config, $(SQLC_CONFIG_FILES), \
-		cd $(dir $(config)) && sqlc generate;)
+		(cd $(dir $(config)) && sqlc generate);)
 
 clean:
 	@echo ">> Cleaning generated files <<"

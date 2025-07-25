@@ -5,6 +5,7 @@ SELECT * FROM users WHERE id = $1;
 INSERT INTO users (
     username, 
     password,
+    address,
     email,
     phone_number,
     full_name,
@@ -13,18 +14,20 @@ INSERT INTO users (
 ) VALUES (
     @username::text, 
     @password::text,
+    @address::text,
     @email::text,
     @phone_number::text,
     @full_name::text,
     @role::role_enum,
     @hotel_id::text
-)
+);
 
 -- name: UpdateUser :exec
 UPDATE users
 SET
     username = @username::text,
     password = @password::text,
+    address = @address::text,
     email = @email::text,
     phone_number = @phone_number::text,
     full_name = @full_name::text,

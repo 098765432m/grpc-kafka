@@ -22,12 +22,6 @@ var rootCmd = &cobra.Command{
 
 		hotelClient := hotel_pb.NewHotelServiceClient(hotelConn)
 
-		// fmt.Println("123123")
-		// hotel, err := hotelClient.GetHotel(
-		// 	context.Background(),
-		// 	&hotels.GetHotelRequest{Id: "czxczxczxc"},
-		// )
-
 		_, err := hotelClient.CreateHotel(context.Background(), &hotel_pb.CreateHotelRequest{Name: "Test Hotel"})
 		if err != nil {
 			log.Fatalf("Failed to create hotel: %v", err)
