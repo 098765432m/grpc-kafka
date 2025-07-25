@@ -12,16 +12,21 @@ import (
 )
 
 const createHotel = `-- name: CreateHotel :exec
-INSERT INTO hotels (name) VALUES ($1::text)
+INSERT INTO hotels (name, address) VALUES ($1::text, $2::text)
 `
 
-func (q *Queries) CreateHotel(ctx context.Context, name string) error {
-	_, err := q.db.Exec(ctx, createHotel, name)
+type CreateHotelParams struct {
+	Name    string `json:"name"`
+	Address string `json:"address"`
+}
+
+func (q *Queries) CreateHotel(ctx context.Context, arg CreateHotelParams) error {
+	_, err := q.db.Exec(ctx, createHotel, arg.Name, arg.Address)
 	return err
 }
 
 const getAll = `-- name: GetAll :many
-SELECT id, name FROM hotels
+SELECT id, name, address FROM hotels
 `
 
 func (q *Queries) GetAll(ctx context.Context) ([]Hotel, error) {
@@ -33,7 +38,7 @@ func (q *Queries) GetAll(ctx context.Context) ([]Hotel, error) {
 	var items []Hotel
 	for rows.Next() {
 		var i Hotel
-		if err := rows.Scan(&i.ID, &i.Name); err != nil {
+		if err := rows.Scan(&i.ID, &i.Name, &i.Address); err != nil {
 			return nil, err
 		}
 		items = append(items, i)
@@ -45,12 +50,12 @@ func (q *Queries) GetAll(ctx context.Context) ([]Hotel, error) {
 }
 
 const getHotelById = `-- name: GetHotelById :one
-SELECT id, name FROM hotels WHERE id = $1
+SELECT id, name, address FROM hotels WHERE id = $1
 `
 
 func (q *Queries) GetHotelById(ctx context.Context, id pgtype.UUID) (Hotel, error) {
 	row := q.db.QueryRow(ctx, getHotelById, id)
 	var i Hotel
-	err := row.Scan(&i.ID, &i.Name)
+	err := row.Scan(&i.ID, &i.Name, &i.Address)
 	return i, err
 }

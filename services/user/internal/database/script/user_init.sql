@@ -15,5 +15,5 @@ CREATE TABLE users (
     hotel_id TEXT
 );
 
-INSERT INTO users (username, password, email, phone_number, full_name, role, hotel_id) VALUES
-('john_doe', '113446', 'jd@as.com', '1234567890', 'John Doe', 'GUEST', NULL),
+INSERT INTO users (username, password, address, email, phone_number, full_name, role, hotel_id) VALUES
+('john_doe', '113446', 'Ong Trang', 'jd@as.com', '1234567890', 'John Doe', 'GUEST', NULL),

@@ -9,6 +9,7 @@ import (
 )
 
 type Hotel struct {
-	ID   pgtype.UUID `json:"id"`
-	Name string      `json:"name"`
+	ID      pgtype.UUID `json:"id"`
+	Name    string      `json:"name"`
+	Address string      `json:"address"`
 }
