@@ -30,3 +30,6 @@ go.work.sum
 
 # ignore docker persistent data
 services/**/database/persistent/
+
+# ignore generated protobuf files
+services/common/gen-proto/*/*.pb.go
