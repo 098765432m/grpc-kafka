@@ -21,6 +21,14 @@ sqlc:
 	@$(foreach config, $(SQLC_CONFIG_FILES), \
 		(cd $(dir $(config)) && sqlc generate);)
 
+docker-compose-up:
+	@echo ">> Start Docker Compose <<"
+	@cd services && sudo docker-compose up -d
+
+docker-compose-down:
+	@echo ">> Start Docker Compose <<"
+	@cd services && sudo docker-compose down
+
 clean:
 	@echo ">> Cleaning generated files <<"
 	@find $(PROTO_GO_OUT) -name "*.pb.go" -type f -delete
