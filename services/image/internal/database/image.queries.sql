@@ -10,7 +10,7 @@ INSERT INTO images (
     $1,
     $2,
     $3
-)
+);
 
 -- name: GetHotelImages :many
 SELECT 
@@ -23,3 +23,6 @@ WHERE hotel_id = $1;
 
 -- name: DeleteImage :exec
 DELETE FROM images WHERE id = $1;
+
+-- name: DeleteImages :exec
+DELETE FROM images WHERE id = ANY($1::uuid[]);
