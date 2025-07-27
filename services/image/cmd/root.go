@@ -4,7 +4,6 @@ import (
 	"log"
 
 	"github.com/098765432m/grpc-kafka/common/consts"
-	"github.com/098765432m/grpc-kafka/common/utils"
 	"github.com/098765432m/grpc-kafka/image/internal/app"
 	"github.com/spf13/cobra"
 )
@@ -19,7 +18,7 @@ var rootCmd = &cobra.Command{
 		go grpcServer.Run()
 
 		//Start Http server
-		httpServer := utils.NewHttpServer(consts.IMAGE_HTTP_PORT, nil)
+		httpServer := app.NewHttpServer(consts.IMAGE_HTTP_PORT, nil)
 		httpServer.Run()
 	},
 }

@@ -12,7 +12,7 @@ CREATE TABLE users (
     phone_number VARCHAR(255) NOT NULL UNIQUE,
     full_name VARCHAR(255) NOT NULL,
     role role_enum NOT NULL DEFAULT 'GUEST',
-    hotel_id TEXT
+    hotel_id TEXT DEFAULT NULL
 );
 
 INSERT INTO users (username, password, address, email, phone_number, full_name, role, hotel_id) VALUES
