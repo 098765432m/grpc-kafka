@@ -1,4 +1,4 @@
-package service
+package hotel_service
 
 import (
 	"context"
@@ -30,7 +30,9 @@ func (hs *HotelService) GetHotel(ctx context.Context, id pgtype.UUID) (any, erro
 }
 
 func (hs *HotelService) CreateHotel(ctx context.Context, name string) error {
-	err := hs.repository.CreateHotel(ctx, name)
+	err := hs.repository.CreateHotel(ctx, hotel_repo.CreateHotelParams{
+		Name: name,
+	})
 	if err != nil {
 		zap.S().Error("Failed to create hotel: ", err)
 		return err

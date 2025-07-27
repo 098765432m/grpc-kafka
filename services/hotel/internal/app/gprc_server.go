@@ -6,9 +6,9 @@ import (
 	"net"
 
 	"github.com/098765432m/grpc-kafka/common/gen-proto/hotel_pb"
-	"github.com/098765432m/grpc-kafka/hotel/internal/handler"
+	hotel_handler "github.com/098765432m/grpc-kafka/hotel/internal/handler"
 	hotel_repo "github.com/098765432m/grpc-kafka/hotel/internal/repository/hotel"
-	"github.com/098765432m/grpc-kafka/hotel/internal/service"
+	hotel_service "github.com/098765432m/grpc-kafka/hotel/internal/service"
 	"github.com/jackc/pgx/v5"
 	"google.golang.org/grpc"
 )
@@ -33,10 +33,10 @@ func (g *GrpcServer) Run() {
 	// repo
 	repo := hotel_repo.New(g.conn)
 	//service
-	hotelService := service.NewHotelService(repo)
+	hotelService := hotel_service.NewHotelService(repo)
 
 	// Register our grpc services
-	hotel_pb.RegisterHotelServiceServer(grpcServer, handler.NewHotelGrpcHandler(hotelService))
+	hotel_pb.RegisterHotelServiceServer(grpcServer, hotel_handler.NewHotelGrpcHandler(hotelService))
 
 	log.Printf("Running grpc server on port: %d\n", g.addr)
 	if err := grpcServer.Serve(lis); err != nil {

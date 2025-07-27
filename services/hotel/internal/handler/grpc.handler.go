@@ -1,18 +1,18 @@
-package handler
+package hotel_handler
 
 import (
 	"context"
 
 	"github.com/098765432m/grpc-kafka/common/gen-proto/hotel_pb"
-	"github.com/098765432m/grpc-kafka/hotel/internal/service"
+	hotel_service "github.com/098765432m/grpc-kafka/hotel/internal/service"
 )
 
 type HotelGrpcHandler struct {
 	hotel_pb.UnimplementedHotelServiceServer
-	service *service.HotelService
+	service *hotel_service.HotelService
 }
 
-func NewHotelGrpcHandler(service *service.HotelService) *HotelGrpcHandler {
+func NewHotelGrpcHandler(service *hotel_service.HotelService) *HotelGrpcHandler {
 	return &HotelGrpcHandler{
 		service: service,
 	}
@@ -21,8 +21,10 @@ func NewHotelGrpcHandler(service *service.HotelService) *HotelGrpcHandler {
 func (hg *HotelGrpcHandler) GetHotel(ctx context.Context, req *hotel_pb.GetHotelRequest) (*hotel_pb.GetHotelResponse, error) {
 
 	return &hotel_pb.GetHotelResponse{
-		Id:   "123",
-		Name: "Sample Hotel",
+		Hotel: &hotel_pb.Hotel{
+			Id:   req.Id,
+			Name: "Sample Hotel",
+		},
 	}, nil
 }
 

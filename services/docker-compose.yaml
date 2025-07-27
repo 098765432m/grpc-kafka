@@ -5,6 +5,7 @@ networks:
     driver: bridge
 
 services:
+  # Hotel Database
   postgres-hotel:
     image: postgres:14.18
     container_name: postgres-hotel
@@ -20,6 +21,7 @@ services:
       - ./hotel/internal/database/persistent:/var/lib/postgresql/data
       - ./hotel/internal/database/script/hotel_init.sql:/docker-entrypoint-initdb.d/create_tables.sql
 
+  # User Database
   postgres-user:
     image: postgres:14.18
     container_name: postgres-user
@@ -34,3 +36,19 @@ services:
     volumes:
       - ./user/internal/database/persistent:/var/lib/postgresql/data
       - ./user/internal/database/script/user_init.sql:/docker-entrypoint-initdb.d/create_tables.sql
+
+  # Image Database
+  postgres-image:
+    image: postgres:14.18
+    container_name: postgres-image
+    environment:
+      POSTGRES_DB: image
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: 113446
+    ports:
+      - "5435:5432"
+    networks:
+      - grpc-kafka-net
+    volumes:
+      - ./image/internal/database/persistent:/var/lib/postgresql/data
+      - ./image/internal/database/script/image_init.sql:/docker-entrypoint-initdb.d/create_tables.sql
