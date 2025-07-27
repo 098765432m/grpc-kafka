@@ -6,3 +6,13 @@ INSERT INTO hotels (name, address) VALUES (@name::text, @address::text);
 
 -- name: GetAll :many
 SELECT * FROM hotels;
+
+-- name: UpdateHotelById :exec
+UPDATE hotels
+SET 
+    name = @name::text,
+    address = @address::text
+WHERE id = @id::uuid;
+
+-- name: DeleteHotelById :exec
+DELETE FROM hotels WHERE id = $1;

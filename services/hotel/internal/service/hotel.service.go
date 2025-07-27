@@ -50,3 +50,29 @@ func (hs *HotelService) GetAll(ctx context.Context) ([]hotel_repo.Hotel, error) 
 
 	return hotels, nil
 }
+
+func (hs *HotelService) UpdateHotel(ctx context.Context, hotelParam *hotel_repo.UpdateHotelByIdParams) error {
+
+	err := hs.repository.UpdateHotelById(ctx, hotel_repo.UpdateHotelByIdParams{
+		ID:      hotelParam.ID,
+		Name:    hotelParam.Name,
+		Address: hotelParam.Address,
+	})
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (hs *HotelService) DeleteHotel(ctx context.Context, id pgtype.UUID) error {
+
+	err := hs.repository.DeleteHotelById(ctx, id)
+	if err != nil {
+		zap.S().Errorln("Failed to delete hotel")
+		return err
+	}
+
+	return nil
+}

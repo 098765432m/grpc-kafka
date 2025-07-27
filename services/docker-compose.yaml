@@ -18,7 +18,7 @@ services:
     networks:
       - grpc-kafka-net
     volumes:
-      - ./hotel/internal/database/persistent:/var/lib/postgresql/data
+      # - ./hotel/internal/database/persistent:/var/lib/postgresql/data
       - ./hotel/internal/database/script/hotel_init.sql:/docker-entrypoint-initdb.d/create_tables.sql
 
   # User Database
@@ -34,7 +34,7 @@ services:
     networks:
       - grpc-kafka-net
     volumes:
-      - ./user/internal/database/persistent:/var/lib/postgresql/data
+      # - ./user/internal/database/persistent:/var/lib/postgresql/data
       - ./user/internal/database/script/user_init.sql:/docker-entrypoint-initdb.d/create_tables.sql
 
   # Image Database
@@ -50,5 +50,5 @@ services:
     networks:
       - grpc-kafka-net
     volumes:
-      - ./image/internal/database/persistent:/var/lib/postgresql/data
+      # - ./image/internal/database/persistent:/var/lib/postgresql/data
       - ./image/internal/database/script/image_init.sql:/docker-entrypoint-initdb.d/create_tables.sql

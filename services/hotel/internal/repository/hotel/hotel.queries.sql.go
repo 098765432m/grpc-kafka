@@ -25,6 +25,15 @@ func (q *Queries) CreateHotel(ctx context.Context, arg CreateHotelParams) error 
 	return err
 }
 
+const deleteHotelById = `-- name: DeleteHotelById :exec
+DELETE FROM hotels WHERE id = $1
+`
+
+func (q *Queries) DeleteHotelById(ctx context.Context, id pgtype.UUID) error {
+	_, err := q.db.Exec(ctx, deleteHotelById, id)
+	return err
+}
+
 const getAll = `-- name: GetAll :many
 SELECT id, name, address FROM hotels
 `
@@ -58,4 +67,23 @@ func (q *Queries) GetHotelById(ctx context.Context, id pgtype.UUID) (Hotel, erro
 	var i Hotel
 	err := row.Scan(&i.ID, &i.Name, &i.Address)
 	return i, err
+}
+
+const updateHotelById = `-- name: UpdateHotelById :exec
+UPDATE hotels
+SET 
+    name = $1::text,
+    address = $2::text
+WHERE id = $3::uuid
+`
+
+type UpdateHotelByIdParams struct {
+	Name    string      `json:"name"`
+	Address string      `json:"address"`
+	ID      pgtype.UUID `json:"id"`
+}
+
+func (q *Queries) UpdateHotelById(ctx context.Context, arg UpdateHotelByIdParams) error {
+	_, err := q.db.Exec(ctx, updateHotelById, arg.Name, arg.Address, arg.ID)
+	return err
 }

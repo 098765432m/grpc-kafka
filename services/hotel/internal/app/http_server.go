@@ -32,7 +32,7 @@ func (h *HttpServer) Run() (*gin.Engine, error) {
 	hotelService := hotel_service.NewHotelService(hotelRepo)
 	hotelHandler := hotel_handler.NewHotelHttpHandler(hotelService)
 
-	api := router.Group(".api")
+	api := router.Group("/api")
 	hotelHandler.RegisterRoutes(api)
 
 	fmt.Printf("Running HTTP server on port %d\n", h.addr)
