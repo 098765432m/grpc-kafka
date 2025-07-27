@@ -7,3 +7,7 @@ const HOTEL_GRPC_PORT = 50051
 // User port
 const USER_HTTP_PORT = 3102
 const USER_GRPC_PORT = 50052
+
+// Image port
+const IMAGE_HTTP_PORT = 3103
+const IMAGE_GRPC_PORT = 50053
