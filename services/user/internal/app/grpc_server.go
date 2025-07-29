@@ -25,6 +25,7 @@ func (g *GrpcServer) Run() {
 	grpcServer := grpc.NewServer()
 
 	// Register our grpc services here
+	// user_pb.RegisterHotelServiceServer(grpcServer, )
 
 	log.Printf("Running grpc server on port: %d\n", g.addr)
 	if err := grpcServer.Serve(lis); err != nil {

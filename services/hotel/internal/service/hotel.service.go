@@ -18,7 +18,7 @@ func NewHotelService(repo *hotel_repo.Queries) *HotelService {
 	}
 }
 
-func (hs *HotelService) GetHotel(ctx context.Context, id pgtype.UUID) (any, error) {
+func (hs *HotelService) GetHotel(ctx context.Context, id pgtype.UUID) (*hotel_repo.Hotel, error) {
 
 	hotel, err := hs.repository.GetHotelById(ctx, id)
 	if err != nil {
@@ -26,12 +26,13 @@ func (hs *HotelService) GetHotel(ctx context.Context, id pgtype.UUID) (any, erro
 		return nil, err
 	}
 
-	return hotel, nil
+	return &hotel, nil
 }
 
-func (hs *HotelService) CreateHotel(ctx context.Context, name string) error {
+func (hs *HotelService) CreateHotel(ctx context.Context, newHotel *hotel_repo.CreateHotelParams) error {
 	err := hs.repository.CreateHotel(ctx, hotel_repo.CreateHotelParams{
-		Name: name,
+		Name:    newHotel.Name,
+		Address: newHotel.Address,
 	})
 	if err != nil {
 		zap.S().Error("Failed to create hotel: ", err)
