@@ -36,7 +36,6 @@ services:
     volumes:
       # - ./user/internal/database/persistent:/var/lib/postgresql/data
       - ./user/internal/database/script/user_init.sql:/docker-entrypoint-initdb.d/create_tables.sql
-
   # Image Database
   postgres-image:
     image: postgres:14.18
@@ -52,3 +51,19 @@ services:
     volumes:
       # - ./image/internal/database/persistent:/var/lib/postgresql/data
       - ./image/internal/database/script/image_init.sql:/docker-entrypoint-initdb.d/create_tables.sql
+
+  # Booking Database
+  postgres-booking:
+    image: postgres:14.18
+    container_name: postgres-booking
+    environment:
+      POSTGRES_DB: booking
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: 113446
+    ports:
+      - "5436:5432"
+    networks:
+      - grpc-kafka-net
+    volumes:
+      # - ./booking/internal/database/persistent:/var/lib/postgresql/data
+      - ./booking/internal/database/script/booking_init.sql:/docker-entrypoint-initdb.d/create_tables.sql
