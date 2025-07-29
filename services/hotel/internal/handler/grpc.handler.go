@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/098765432m/grpc-kafka/common/gen-proto/hotel_pb"
+	hotel_repo "github.com/098765432m/grpc-kafka/hotel/internal/repository/hotel"
 	hotel_service "github.com/098765432m/grpc-kafka/hotel/internal/service"
 )
 
@@ -29,7 +30,10 @@ func (hg *HotelGrpcHandler) GetHotel(ctx context.Context, req *hotel_pb.GetHotel
 }
 
 func (hg *HotelGrpcHandler) CreateHotel(ctx context.Context, req *hotel_pb.CreateHotelRequest) (*hotel_pb.CreateHotelResponse, error) {
-	err := hg.service.CreateHotel(ctx, req.Name)
+	err := hg.service.CreateHotel(ctx, &hotel_repo.CreateHotelParams{
+		Name:    req.Name,
+		Address: req.Address,
+	})
 	if err != nil {
 		return nil, err
 	}

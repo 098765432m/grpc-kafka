@@ -24,6 +24,7 @@ message GetHotelResponse {
 
 message CreateHotelRequest {
     string name = 1;
+    string address = 2;
 }
 
 message CreateHotelResponse {

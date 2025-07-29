@@ -72,7 +72,10 @@ func (hh *HotelHttpHandler) CreateHotel(ctx *gin.Context) {
 		return
 	}
 
-	err = hh.service.CreateHotel(ctx, hotelReq.Name)
+	err = hh.service.CreateHotel(ctx, &hotel_repo.CreateHotelParams{
+		Name:    hotelReq.Name,
+		Address: hotelReq.Address,
+	})
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, utils.ErrorResponse("Failed to create Hotel"))
 		return
