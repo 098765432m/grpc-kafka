@@ -46,17 +46,17 @@ func (hg *HotelGrpcHandler) GetAllHotels(ctx context.Context, req *hotel_pb.GetA
 		return nil, err
 	}
 
-	var grpc_Hotels []*hotel_pb.Hotel
+	var grpc_hotels []*hotel_pb.Hotel
 	for _, hotel := range hotels {
 		grpc_hotel := &hotel_pb.Hotel{
 			Id:   hotel.ID.String(),
 			Name: hotel.Name,
 		}
 
-		grpc_Hotels = append(grpc_Hotels, grpc_hotel)
+		grpc_hotels = append(grpc_hotels, grpc_hotel)
 	}
 
 	return &hotel_pb.GetAllHotelsResponse{
-		Hotels: grpc_Hotels,
+		Hotels: grpc_hotels,
 	}, nil
 }

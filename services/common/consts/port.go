@@ -15,3 +15,7 @@ const IMAGE_GRPC_PORT = 50053
 // Image port
 const BOOKING_HTTP_PORT = 3104
 const BOOKING_GRPC_PORT = 50054
+
+// Rating port
+const RATING_HTTP_PORT = 3107
+const RATING_GRPC_PORT = 50057

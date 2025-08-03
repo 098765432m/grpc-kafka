@@ -67,3 +67,19 @@ services:
     volumes:
       # - ./booking/internal/database/persistent:/var/lib/postgresql/data
       - ./booking/internal/database/script/booking_init.sql:/docker-entrypoint-initdb.d/create_tables.sql
+
+  # Rating Database
+  postgres-rating:
+    image: postgres:14.18
+    container_name: postgres-rating
+    environment:
+      POSTGRES_DB: rating
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: 113446
+    ports:
+      - "5437:5432"
+    networks:
+      - grpc-kafka-net
+    volumes:
+      # - ./rating/internal/database/persistent:/var/lib/postgresql/data
+      - ./rating/internal/database/script/rating_init.sql:/docker-entrypoint-initdb.d/create_tables.sql

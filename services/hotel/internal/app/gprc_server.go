@@ -35,7 +35,7 @@ func (g *GrpcServer) Run() {
 	//service
 	hotelService := hotel_service.NewHotelService(repo)
 
-	// Register our grpc services
+	// Register grpc services
 	hotel_pb.RegisterHotelServiceServer(grpcServer, hotel_handler.NewHotelGrpcHandler(hotelService))
 
 	log.Printf("Running grpc server on port: %d\n", g.addr)
