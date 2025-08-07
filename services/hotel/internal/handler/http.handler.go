@@ -6,7 +6,7 @@ import (
 
 	"github.com/098765432m/grpc-kafka/common/utils"
 	hotel_repo "github.com/098765432m/grpc-kafka/hotel/internal/repository/hotel"
-	hotel_service "github.com/098765432m/grpc-kafka/hotel/internal/service"
+	hotel_service "github.com/098765432m/grpc-kafka/hotel/internal/service/hotel"
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgtype"
 )

@@ -11,6 +11,42 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const createRoomType = `-- name: CreateRoomType :exec
+INSERT INTO room_types
+(
+    name,
+    price,
+    hotel_id
+)
+VALUES
+(
+    $1::text,
+    $2::int,
+    $3::uuid
+)
+`
+
+type CreateRoomTypeParams struct {
+	Name    string      `json:"name"`
+	Price   int32       `json:"price"`
+	HotelID pgtype.UUID `json:"hotel_id"`
+}
+
+func (q *Queries) CreateRoomType(ctx context.Context, arg CreateRoomTypeParams) error {
+	_, err := q.db.Exec(ctx, createRoomType, arg.Name, arg.Price, arg.HotelID)
+	return err
+}
+
+const deleteRoomTypeById = `-- name: DeleteRoomTypeById :exec
+DELETE FROM room_types
+WHERE id = $1
+`
+
+func (q *Queries) DeleteRoomTypeById(ctx context.Context, id pgtype.UUID) error {
+	_, err := q.db.Exec(ctx, deleteRoomTypeById, id)
+	return err
+}
+
 const getRoomTypeById = `-- name: GetRoomTypeById :one
 SELECT id, name, price, hotel_id
 FROM room_types

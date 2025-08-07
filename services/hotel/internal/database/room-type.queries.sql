@@ -10,7 +10,7 @@ SELECT *
 FROM room_types
 WHERE id = $1;
 
--- CreateRoomType :exec
+-- name: CreateRoomType :exec
 INSERT INTO room_types
 (
     name,
@@ -24,6 +24,6 @@ VALUES
     @hotel_id::uuid
 );
 
--- DeleteRoomTypeById :exec
+-- name: DeleteRoomTypeById :exec
 DELETE FROM room_types
 WHERE id = $1;

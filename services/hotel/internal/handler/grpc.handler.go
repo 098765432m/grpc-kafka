@@ -5,7 +5,7 @@ import (
 
 	"github.com/098765432m/grpc-kafka/common/gen-proto/hotel_pb"
 	hotel_repo "github.com/098765432m/grpc-kafka/hotel/internal/repository/hotel"
-	hotel_service "github.com/098765432m/grpc-kafka/hotel/internal/service"
+	hotel_service "github.com/098765432m/grpc-kafka/hotel/internal/service/hotel"
 )
 
 type HotelGrpcHandler struct {

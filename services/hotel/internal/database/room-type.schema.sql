@@ -3,5 +3,5 @@ CREATE TABLE room_types (
     name VARCHAR(255) NOT NULL,
     price INT NOT NULL,
     hotel_id UUID NOT NULL,
-    FOREIGN KEY (hotel_id) REFERENCES hotels(id)
+    FOREIGN KEY (hotel_id) REFERENCES hotels(id) ON DELETE CASCADE
 );
