@@ -35,7 +35,9 @@ func (q *Queries) DeleteHotelById(ctx context.Context, id pgtype.UUID) error {
 }
 
 const getAll = `-- name: GetAll :many
-SELECT id, name, address FROM hotels
+SELECT id, name, address 
+FROM hotels
+LIMIT 6
 `
 
 func (q *Queries) GetAll(ctx context.Context) ([]Hotel, error) {
@@ -59,7 +61,9 @@ func (q *Queries) GetAll(ctx context.Context) ([]Hotel, error) {
 }
 
 const getHotelById = `-- name: GetHotelById :one
-SELECT id, name, address FROM hotels WHERE id = $1
+SELECT id, name, address 
+FROM hotels 
+WHERE id = $1
 `
 
 func (q *Queries) GetHotelById(ctx context.Context, id pgtype.UUID) (Hotel, error) {

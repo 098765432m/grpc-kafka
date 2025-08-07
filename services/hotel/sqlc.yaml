@@ -12,3 +12,29 @@ sql:
         package: "hotel_repo"
         sql_package: "pgx/v5"
         emit_json_tags: true
+
+  # Room Type
+  - engine: "postgresql"
+    schema:
+      - "internal/database/room-type.schema.sql"
+    queries:
+      - "internal/database/room-type.queries.sql"
+    gen:
+      go:
+        out: "internal/repository/room-type"
+        package: "room_type_repo"
+        sql_package: "pgx/v5"
+        emit_json_tags: true
+
+  # Room
+  - engine: "postgresql"
+    schema:
+      - "internal/database/room.schema.sql"
+    queries:
+      - "internal/database/room.queries.sql"
+    gen:
+      go:
+        out: "internal/repository/room"
+        package: "room_repo"
+        sql_package: "pgx/v5"
+        emit_json_tags: true
