@@ -6,7 +6,7 @@ import (
 	"net"
 
 	"github.com/098765432m/grpc-kafka/common/gen-proto/hotel_pb"
-	hotel_handler "github.com/098765432m/grpc-kafka/hotel/internal/handler"
+	hotel_handler "github.com/098765432m/grpc-kafka/hotel/internal/handler/hotel"
 	hotel_repo "github.com/098765432m/grpc-kafka/hotel/internal/repository/hotel"
 	hotel_service "github.com/098765432m/grpc-kafka/hotel/internal/service/hotel"
 	"github.com/jackc/pgx/v5"

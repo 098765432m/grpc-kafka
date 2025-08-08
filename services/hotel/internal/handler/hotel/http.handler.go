@@ -7,28 +7,37 @@ import (
 	"github.com/098765432m/grpc-kafka/common/utils"
 	hotel_repo "github.com/098765432m/grpc-kafka/hotel/internal/repository/hotel"
 	hotel_service "github.com/098765432m/grpc-kafka/hotel/internal/service/hotel"
+	room_service "github.com/098765432m/grpc-kafka/hotel/internal/service/room"
+	room_type_service "github.com/098765432m/grpc-kafka/hotel/internal/service/room-type"
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
 type HotelHttpHandler struct {
-	service *hotel_service.HotelService
+	service         *hotel_service.HotelService
+	roomTypeService *room_type_service.RoomTypeService
+	roomService     *room_service.RoomService
 }
 
-func NewHotelHttpHandler(service *hotel_service.HotelService) *HotelHttpHandler {
+func NewHotelHttpHandler(service *hotel_service.HotelService, roomTypeService *room_type_service.RoomTypeService, roomService *room_service.RoomService) *HotelHttpHandler {
 	return &HotelHttpHandler{
-		service: service,
+		service:         service,
+		roomTypeService: roomTypeService,
+		roomService:     roomService,
 	}
 }
 
 func (hh *HotelHttpHandler) RegisterRoutes(handler *gin.RouterGroup) {
 	hotels := handler.Group("/hotels")
 
-	hotels.GET("/:id", hh.GetHotel)
 	hotels.GET("/", hh.GetAll)
 	hotels.POST("/", hh.CreateHotel)
+
+	hotels.GET("/:id", hh.GetHotel)
 	hotels.PUT("/:id", hh.UpdateHotel)
 	hotels.DELETE("/:id", hh.DeleteHotel)
+	hotels.GET("/:id/room-types", hh.GetRoomTypesByHotelId)
+	hotels.GET("/:id/rooms", hh.GetRoomsByHotelId)
 }
 
 func (hh *HotelHttpHandler) GetHotel(ctx *gin.Context) {
@@ -127,4 +136,36 @@ func (hh *HotelHttpHandler) DeleteHotel(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusOK, utils.SuccessResponse(nil, "Deleted Hotel successfully"))
+}
+
+func (hh *HotelHttpHandler) GetRoomTypesByHotelId(ctx *gin.Context) {
+	var id pgtype.UUID
+	if err := id.Scan(ctx.Param("id")); err != nil {
+		ctx.JSON(http.StatusBadRequest, utils.ErrorResponse("Failed to convert Hotel UUID format"))
+		return
+	}
+
+	roomTypes, err := hh.roomTypeService.GetRoomTypesByHotelId(ctx, id)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, "Failed to Room Types by Hotel Id")
+		return
+	}
+
+	ctx.JSON(http.StatusOK, utils.SuccessResponse(roomTypes, "Retrieved Room Types successfully"))
+}
+
+func (hh *HotelHttpHandler) GetRoomsByHotelId(ctx *gin.Context) {
+	var id pgtype.UUID
+	if err := id.Scan(ctx.Param("id")); err != nil {
+		ctx.JSON(http.StatusBadRequest, utils.ErrorResponse("Failed to convert Hotel UUID format"))
+		return
+	}
+
+	rooms, err := hh.roomService.GetRoomsByHotelId(ctx, id)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, "Failed to Rooms by Hotel Id")
+		return
+	}
+
+	ctx.JSON(http.StatusOK, utils.SuccessResponse(rooms, "Retrieved Rooms successfully"))
 }

@@ -38,7 +38,7 @@ func (rts *RoomTypeService) GetRoomTypesByHotelId(ctx context.Context, hotelId p
 	return roomTypes, nil
 }
 
-func (rts *RoomTypeService) CreateRoom(ctx context.Context, newRoomType *room_type_repo.CreateRoomTypeParams) error {
+func (rts *RoomTypeService) CreateRoomType(ctx context.Context, newRoomType *room_type_repo.CreateRoomTypeParams) error {
 
 	err := rts.repo.CreateRoomType(ctx, *newRoomType)
 	if err != nil {

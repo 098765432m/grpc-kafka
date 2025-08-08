@@ -1,0 +1,33 @@
+syntax = "proto3";
+
+option go_package = "gen-proto/room_pb;room_pb";
+
+service RoomService {
+    rpc GetRoomById(GetRoomByIdRequest) returns (GetRoomByIdResponse);
+    rpc GetRoomsByRoomTypeId(GetRoomsByRoomTypeIdRequest) returns (GetRoomsByRoomTypeIdResponse);
+}
+
+message Room {
+    string id = 1;
+    string name = 2;
+    string status = 3;
+    string room_type_id = 4;
+    string hotel_id = 5;
+}
+
+message GetRoomByIdRequest {
+    string id = 1;    
+}
+
+message GetRoomByIdResponse {
+    Room room = 1;
+}
+
+message GetRoomsByRoomTypeIdRequest {
+    string room_type_id = 1;
+}
+
+message GetRoomsByRoomTypeIdResponse {
+    repeated Room rooms = 1;
+    
+}

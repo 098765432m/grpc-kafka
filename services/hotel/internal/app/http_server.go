@@ -3,9 +3,13 @@ package app
 import (
 	"fmt"
 
-	hotel_handler "github.com/098765432m/grpc-kafka/hotel/internal/handler"
+	hotel_handler "github.com/098765432m/grpc-kafka/hotel/internal/handler/hotel"
 	hotel_repo "github.com/098765432m/grpc-kafka/hotel/internal/repository/hotel"
+	room_repo "github.com/098765432m/grpc-kafka/hotel/internal/repository/room"
+	room_type_repo "github.com/098765432m/grpc-kafka/hotel/internal/repository/room-type"
 	hotel_service "github.com/098765432m/grpc-kafka/hotel/internal/service/hotel"
+	room_service "github.com/098765432m/grpc-kafka/hotel/internal/service/room"
+	room_type_service "github.com/098765432m/grpc-kafka/hotel/internal/service/room-type"
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5"
 )
@@ -30,7 +34,14 @@ func (h *HttpServer) Run() (*gin.Engine, error) {
 
 	hotelRepo := hotel_repo.New(h.conn)
 	hotelService := hotel_service.NewHotelService(hotelRepo)
-	hotelHandler := hotel_handler.NewHotelHttpHandler(hotelService)
+
+	roomTypeRepo := room_type_repo.New(h.conn)
+	roomTypeService := room_type_service.NewRoomTypeService(roomTypeRepo)
+
+	roomRepo := room_repo.New(h.conn)
+	roomService := room_service.NewRoomService(roomRepo)
+
+	hotelHandler := hotel_handler.NewHotelHttpHandler(hotelService, roomTypeService, roomService)
 
 	api := router.Group("/api")
 	hotelHandler.RegisterRoutes(api)
