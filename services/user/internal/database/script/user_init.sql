@@ -8,6 +8,7 @@ CREATE TABLE users (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     username VARCHAR(255) NOT NULL UNIQUE,
     password VARCHAR(255) NOT NULL,
+    address TEXT NOT NULL,
     email VARCHAR(255) NOT NULL UNIQUE,
     phone_number VARCHAR(255) NOT NULL UNIQUE,
     full_name VARCHAR(255) NOT NULL,
@@ -16,4 +17,4 @@ CREATE TABLE users (
 );
 
 INSERT INTO users (username, password, address, email, phone_number, full_name, role, hotel_id) VALUES
-('john_doe', '113446', 'Ong Trang', 'jd@as.com', '1234567890', 'John Doe', 'GUEST', NULL),
+('john_doe', '113446', 'Ong Trang', 'jd@as.com', '1234567890', 'John Doe', 'GUEST', NULL);

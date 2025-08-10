@@ -19,7 +19,7 @@ services:
       - grpc-kafka-net
     volumes:
       # - ./hotel/internal/database/persistent:/var/lib/postgresql/data
-      - ./hotel/internal/database/script/hotel_init.sql:/docker-entrypoint-initdb.d/create_tables.sql
+      - ./hotel/internal/database/script/hotel_init.sql:/docker-entrypoint-initdb.d/create_hotel_tables.sql
 
   # User Database
   postgres-user:

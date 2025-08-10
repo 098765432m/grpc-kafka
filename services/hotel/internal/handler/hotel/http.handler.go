@@ -47,7 +47,7 @@ func (hh *HotelHttpHandler) GetHotel(ctx *gin.Context) {
 		return
 	}
 
-	hotel, err := hh.service.GetHotel(ctx, id)
+	hotel, err := hh.service.GetHotelById(ctx, id)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, utils.ErrorResponse("Failed to get Hotel"))
 		return
@@ -111,7 +111,7 @@ func (hh *HotelHttpHandler) UpdateHotel(ctx *gin.Context) {
 		return
 	}
 
-	if err := hh.service.UpdateHotel(ctx, &hotel_repo.UpdateHotelByIdParams{
+	if err := hh.service.UpdateHotelById(ctx, &hotel_repo.UpdateHotelByIdParams{
 		ID:      id,
 		Name:    hotelReq.Name,
 		Address: hotelReq.Address,
@@ -130,7 +130,7 @@ func (hh *HotelHttpHandler) DeleteHotel(ctx *gin.Context) {
 		return
 	}
 
-	if err := hh.service.DeleteHotel(ctx, id); err != nil {
+	if err := hh.service.DeleteHotelById(ctx, id); err != nil {
 		ctx.JSON(http.StatusInternalServerError, utils.ErrorResponse("Failed to delete Hotel"))
 		return
 	}

@@ -6,6 +6,8 @@ import (
 	"github.com/098765432m/grpc-kafka/common/gen-proto/hotel_pb"
 	hotel_repo "github.com/098765432m/grpc-kafka/hotel/internal/repository/hotel"
 	hotel_service "github.com/098765432m/grpc-kafka/hotel/internal/service/hotel"
+	"github.com/jackc/pgx/v5/pgtype"
+	"go.uber.org/zap"
 )
 
 type HotelGrpcHandler struct {
@@ -21,10 +23,23 @@ func NewHotelGrpcHandler(service *hotel_service.HotelService) *HotelGrpcHandler 
 
 func (hg *HotelGrpcHandler) GetHotel(ctx context.Context, req *hotel_pb.GetHotelRequest) (*hotel_pb.GetHotelResponse, error) {
 
+	var id pgtype.UUID
+	if err := id.Scan(req.Id); err != nil {
+		zap.S().Errorln("Failed to Hotel UUID")
+		return nil, err
+	}
+
+	hotel, err := hg.service.GetHotelById(ctx, id)
+	if err != nil {
+		zap.S().Errorln("Failed to get Hotel by Id")
+		return nil, err
+	}
+
 	return &hotel_pb.GetHotelResponse{
 		Hotel: &hotel_pb.Hotel{
-			Id:   req.Id,
-			Name: "Sample Hotel",
+			Id:      hotel.ID.String(),
+			Name:    hotel.Name,
+			Address: hotel.Address,
 		},
 	}, nil
 }

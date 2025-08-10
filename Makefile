@@ -27,7 +27,12 @@ docker-compose-up:
 
 docker-compose-down:
 	@echo ">> Start Docker Compose <<"
-	@cd services && sudo docker-compose down
+	@cd services && sudo docker-compose down -v --rmi all
+
+docker-compose-reset:
+	@echo ">> Reset Docker Compose <<"
+	@$(MAKE) docker-compose-down
+	@$(MAKE) docker-compose-up
 
 clean:
 	@echo ">> Cleaning generated files <<"

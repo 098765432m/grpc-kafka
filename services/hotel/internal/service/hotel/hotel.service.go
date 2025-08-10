@@ -18,7 +18,7 @@ func NewHotelService(repo *hotel_repo.Queries) *HotelService {
 	}
 }
 
-func (hs *HotelService) GetHotel(ctx context.Context, id pgtype.UUID) (*hotel_repo.Hotel, error) {
+func (hs *HotelService) GetHotelById(ctx context.Context, id pgtype.UUID) (*hotel_repo.Hotel, error) {
 
 	hotel, err := hs.repository.GetHotelById(ctx, id)
 	if err != nil {
@@ -52,7 +52,7 @@ func (hs *HotelService) GetAll(ctx context.Context) ([]hotel_repo.Hotel, error) 
 	return hotels, nil
 }
 
-func (hs *HotelService) UpdateHotel(ctx context.Context, hotelParam *hotel_repo.UpdateHotelByIdParams) error {
+func (hs *HotelService) UpdateHotelById(ctx context.Context, hotelParam *hotel_repo.UpdateHotelByIdParams) error {
 
 	err := hs.repository.UpdateHotelById(ctx, hotel_repo.UpdateHotelByIdParams{
 		ID:      hotelParam.ID,
@@ -67,7 +67,7 @@ func (hs *HotelService) UpdateHotel(ctx context.Context, hotelParam *hotel_repo.
 	return nil
 }
 
-func (hs *HotelService) DeleteHotel(ctx context.Context, id pgtype.UUID) error {
+func (hs *HotelService) DeleteHotelById(ctx context.Context, id pgtype.UUID) error {
 
 	err := hs.repository.DeleteHotelById(ctx, id)
 	if err != nil {
