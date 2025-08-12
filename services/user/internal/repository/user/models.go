@@ -63,5 +63,5 @@ type User struct {
 	PhoneNumber string      `json:"phone_number"`
 	FullName    string      `json:"full_name"`
 	Role        RoleEnum    `json:"role"`
-	HotelID     pgtype.Text `json:"hotel_id"`
+	HotelID     pgtype.UUID `json:"hotel_id"`
 }

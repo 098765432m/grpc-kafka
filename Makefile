@@ -26,12 +26,12 @@ docker-compose-up:
 	@cd services && sudo docker-compose up -d
 
 docker-compose-down:
-	@echo ">> Start Docker Compose <<"
+	@echo ">> Stop Docker Compose <<"
 	@cd services && sudo docker-compose down -v --rmi all
 
 docker-compose-reset:
 	@echo ">> Reset Docker Compose <<"
-	@$(MAKE) docker-compose-down
+	@cd services && sudo docker-compose down
 	@$(MAKE) docker-compose-up
 
 clean:

@@ -13,5 +13,5 @@ CREATE TABLE users (
     phone_number VARCHAR(255) NOT NULL UNIQUE,
     full_name VARCHAR(255) NOT NULL,
     role role_enum NOT NULL DEFAULT 'GUEST',
-    hotel_id TEXT DEFAULT NULL
+    hotel_id UUID DEFAULT NULL
 );

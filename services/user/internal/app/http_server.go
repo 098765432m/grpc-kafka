@@ -3,15 +3,20 @@ package app
 import (
 	"fmt"
 
+	user_handler "github.com/098765432m/grpc-kafka/user/internal/handler"
+	user_repo "github.com/098765432m/grpc-kafka/user/internal/repository/user"
+	user_service "github.com/098765432m/grpc-kafka/user/internal/service"
 	"github.com/gin-gonic/gin"
+	"github.com/jackc/pgx/v5"
 )
 
 type HttpServer struct {
-	addr int ``
+	addr int
+	conn *pgx.Conn
 }
 
-func NewHttpServer(addr int) *HttpServer {
-	return &HttpServer{addr: addr}
+func NewHttpServer(addr int, conn *pgx.Conn) *HttpServer {
+	return &HttpServer{addr: addr, conn: conn}
 }
 
 func (h *HttpServer) Run() {
@@ -22,6 +27,19 @@ func (h *HttpServer) Run() {
 			"message": "pong",
 		})
 	})
+
+	api := router.Group("/api")
+
+	// repo
+	repo := user_repo.New(h.conn)
+
+	// service
+	service := user_service.NewUserService(repo)
+
+	// handler
+	handler := user_handler.NewUserHttpHandler(service)
+
+	handler.RegisterRoutes(api)
 
 	fmt.Printf("Running HTTP server on port %d\n", h.addr)
 	if err := router.Run(fmt.Sprintf(":%d", h.addr)); err != nil {

@@ -1,16 +1,35 @@
+-- name: GetUsers :many
+SELECT * FROM users
+ORDER BY hotel_id
+LIMIT 20;
+
 -- name: GetUserById :one
 SELECT * FROM users WHERE id = $1;
 
+-- name: CheckUserExistsById :one
+SELECT EXISTS (
+    SELECT 1
+    FROM users
+    WHERE id = $1
+);
+
+-- name: CheckUserByUsername :one
+SELECT 
+    id,
+    password,
+    role
+FROM users WHERE username = $1;
+
 -- name: CreateUser :exec
 INSERT INTO users (
-    username, 
+    username,
     password,
     address,
     email,
     phone_number,
     full_name,
     role,
-    hotel_id 
+    hotel_id
 ) VALUES (
     @username::text, 
     @password::text,
@@ -19,10 +38,10 @@ INSERT INTO users (
     @phone_number::text,
     @full_name::text,
     @role::role_enum,
-    @hotel_id::text
+    @hotel_id::uuid
 );
 
--- name: UpdateUser :exec
+-- name: UpdateUserById :exec
 UPDATE users
 SET
     username = @username::text,
@@ -32,8 +51,8 @@ SET
     phone_number = @phone_number::text,
     full_name = @full_name::text,
     role = @role::role_enum,
-    hotel_id = @hotel_id::text
+    hotel_id = @hotel_id::uuid
 WHERE id = @id::uuid;
 
--- name: DeleteUser :exec
+-- name: DeleteUserById :exec
 DELETE FROM users WHERE id = $1;

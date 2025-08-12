@@ -11,16 +11,52 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const checkUserByUsername = `-- name: CheckUserByUsername :one
+SELECT 
+    id,
+    password,
+    role
+FROM users WHERE username = $1
+`
+
+type CheckUserByUsernameRow struct {
+	ID       pgtype.UUID `json:"id"`
+	Password string      `json:"password"`
+	Role     RoleEnum    `json:"role"`
+}
+
+func (q *Queries) CheckUserByUsername(ctx context.Context, username string) (CheckUserByUsernameRow, error) {
+	row := q.db.QueryRow(ctx, checkUserByUsername, username)
+	var i CheckUserByUsernameRow
+	err := row.Scan(&i.ID, &i.Password, &i.Role)
+	return i, err
+}
+
+const checkUserExistsById = `-- name: CheckUserExistsById :one
+SELECT EXISTS (
+    SELECT 1
+    FROM users
+    WHERE id = $1
+)
+`
+
+func (q *Queries) CheckUserExistsById(ctx context.Context, id pgtype.UUID) (bool, error) {
+	row := q.db.QueryRow(ctx, checkUserExistsById, id)
+	var exists bool
+	err := row.Scan(&exists)
+	return exists, err
+}
+
 const createUser = `-- name: CreateUser :exec
 INSERT INTO users (
-    username, 
+    username,
     password,
     address,
     email,
     phone_number,
     full_name,
     role,
-    hotel_id 
+    hotel_id
 ) VALUES (
     $1::text, 
     $2::text,
@@ -29,19 +65,19 @@ INSERT INTO users (
     $5::text,
     $6::text,
     $7::role_enum,
-    $8::text
+    $8::uuid
 )
 `
 
 type CreateUserParams struct {
-	Username    string   `json:"username"`
-	Password    string   `json:"password"`
-	Address     string   `json:"address"`
-	Email       string   `json:"email"`
-	PhoneNumber string   `json:"phone_number"`
-	FullName    string   `json:"full_name"`
-	Role        RoleEnum `json:"role"`
-	HotelID     string   `json:"hotel_id"`
+	Username    string      `json:"username"`
+	Password    string      `json:"password"`
+	Address     string      `json:"address"`
+	Email       string      `json:"email"`
+	PhoneNumber string      `json:"phone_number"`
+	FullName    string      `json:"full_name"`
+	Role        RoleEnum    `json:"role"`
+	HotelID     pgtype.UUID `json:"hotel_id"`
 }
 
 func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) error {
@@ -58,12 +94,12 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) error {
 	return err
 }
 
-const deleteUser = `-- name: DeleteUser :exec
+const deleteUserById = `-- name: DeleteUserById :exec
 DELETE FROM users WHERE id = $1
 `
 
-func (q *Queries) DeleteUser(ctx context.Context, id pgtype.UUID) error {
-	_, err := q.db.Exec(ctx, deleteUser, id)
+func (q *Queries) DeleteUserById(ctx context.Context, id pgtype.UUID) error {
+	_, err := q.db.Exec(ctx, deleteUserById, id)
 	return err
 }
 
@@ -88,7 +124,43 @@ func (q *Queries) GetUserById(ctx context.Context, id pgtype.UUID) (User, error)
 	return i, err
 }
 
-const updateUser = `-- name: UpdateUser :exec
+const getUsers = `-- name: GetUsers :many
+SELECT id, username, password, address, email, phone_number, full_name, role, hotel_id FROM users
+ORDER BY hotel_id
+LIMIT 20
+`
+
+func (q *Queries) GetUsers(ctx context.Context) ([]User, error) {
+	rows, err := q.db.Query(ctx, getUsers)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []User
+	for rows.Next() {
+		var i User
+		if err := rows.Scan(
+			&i.ID,
+			&i.Username,
+			&i.Password,
+			&i.Address,
+			&i.Email,
+			&i.PhoneNumber,
+			&i.FullName,
+			&i.Role,
+			&i.HotelID,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const updateUserById = `-- name: UpdateUserById :exec
 UPDATE users
 SET
     username = $1::text,
@@ -98,11 +170,11 @@ SET
     phone_number = $5::text,
     full_name = $6::text,
     role = $7::role_enum,
-    hotel_id = $8::text
+    hotel_id = $8::uuid
 WHERE id = $9::uuid
 `
 
-type UpdateUserParams struct {
+type UpdateUserByIdParams struct {
 	Username    string      `json:"username"`
 	Password    string      `json:"password"`
 	Address     string      `json:"address"`
@@ -110,12 +182,12 @@ type UpdateUserParams struct {
 	PhoneNumber string      `json:"phone_number"`
 	FullName    string      `json:"full_name"`
 	Role        RoleEnum    `json:"role"`
-	HotelID     string      `json:"hotel_id"`
+	HotelID     pgtype.UUID `json:"hotel_id"`
 	ID          pgtype.UUID `json:"id"`
 }
 
-func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) error {
-	_, err := q.db.Exec(ctx, updateUser,
+func (q *Queries) UpdateUserById(ctx context.Context, arg UpdateUserByIdParams) error {
+	_, err := q.db.Exec(ctx, updateUserById,
 		arg.Username,
 		arg.Password,
 		arg.Address,

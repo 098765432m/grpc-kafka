@@ -17,4 +17,4 @@ CREATE TABLE users (
 );
 
 INSERT INTO users (username, password, address, email, phone_number, full_name, role, hotel_id) VALUES
-('john_doe', '113446', 'Ong Trang', 'jd@as.com', '1234567890', 'John Doe', 'GUEST', NULL);
+('john_doe', '$2a$10$jCyE90CnRHDm4YiTN.6/beXQ5jfUUgVr.IPul0hOVyHaB38T9vktS', 'Ong Trang', 'jd@as.com', '1234567890', 'John Doe', 'GUEST', NULL);
