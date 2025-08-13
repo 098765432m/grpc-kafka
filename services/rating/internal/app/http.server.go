@@ -1,6 +1,8 @@
 package rating_app
 
 import (
+	"fmt"
+
 	rating_handler "github.com/098765432m/grpc-kafka/rating/internal/handler"
 	rating_repo "github.com/098765432m/grpc-kafka/rating/internal/repository/rating"
 	rating_service "github.com/098765432m/grpc-kafka/rating/internal/service"
@@ -38,7 +40,7 @@ func (h *HttpServer) Run() (*gin.Engine, error) {
 	ratingHandler.RegisterRoutes(api)
 
 	zap.S().Infof("Running HTTP server on port %d\n", h.addr)
-	if err := router.Run(); err != nil {
+	if err := router.Run(fmt.Sprintf(":%d", h.addr)); err != nil {
 		zap.S().Errorf("Failed to start HTTP server: %v\n", err)
 		return nil, err
 	}

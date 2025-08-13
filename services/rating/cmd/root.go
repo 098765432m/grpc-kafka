@@ -1,4 +1,4 @@
-package cmd
+package rating_cmd
 
 import (
 	"github.com/098765432m/grpc-kafka/common/consts"

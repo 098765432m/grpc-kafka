@@ -3,6 +3,7 @@ package app
 import (
 	"fmt"
 
+	common_middleware "github.com/098765432m/grpc-kafka/common/middleware"
 	hotel_handler "github.com/098765432m/grpc-kafka/hotel/internal/handler/hotel"
 	hotel_repo "github.com/098765432m/grpc-kafka/hotel/internal/repository/hotel"
 	room_repo "github.com/098765432m/grpc-kafka/hotel/internal/repository/room"
@@ -25,6 +26,8 @@ func NewHttpServer(addr int, conn *pgx.Conn) *HttpServer {
 
 func (h *HttpServer) Run() (*gin.Engine, error) {
 	router := gin.Default()
+
+	router.Use(common_middleware.CorsMiddleware())
 
 	router.GET("/ping", func(ctx *gin.Context) {
 		ctx.JSON(200, gin.H{

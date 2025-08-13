@@ -217,7 +217,7 @@ func (uh *UserHttpHandler) SignIn(ctx *gin.Context) {
 		return
 	}
 
-	jwt, err := uh.service.SignIn(ctx, signInReq.Username, signInReq.Password)
+	signInResult, err := uh.service.SignIn(ctx, signInReq.Username, signInReq.Password)
 	if err != nil {
 		switch {
 		case errors.Is(err, common_error.ErrNoRows):
@@ -229,5 +229,29 @@ func (uh *UserHttpHandler) SignIn(ctx *gin.Context) {
 		}
 	}
 
-	ctx.JSON(http.StatusOK, utils.SuccessResponse(jwt, "Dang nhap thanh cong"))
+	ctx.SetSameSite(http.SameSiteLaxMode)
+
+	cookie, err := ctx.Cookie("sign_in")
+	if err != nil {
+		zap.S().Errorln("Cookie err: ", err)
+		cookie = "NotSet"
+
+		ctx.SetCookie("sign_in", signInResult.Jwt, 3600, "/", "localhost", false, true)
+	}
+
+	zap.S().Infoln("COokie setting")
+
+	zap.S().Infoln(cookie)
+
+	ctx.JSON(http.StatusOK, utils.SuccessResponse(struct {
+		Id       string `json:"id"`
+		Username string `json:"username"`
+		Email    string `json:"email"`
+		Role     string `json:"role"`
+	}{
+		signInResult.Id,
+		signInResult.Username,
+		signInResult.Email,
+		signInResult.Role,
+	}, "Dang nhap thanh cong"))
 }

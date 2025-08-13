@@ -16,7 +16,9 @@ SELECT EXISTS (
 -- name: CheckUserByUsername :one
 SELECT 
     id,
+    username,
     password,
+    email,
     role
 FROM users WHERE username = $1;
 

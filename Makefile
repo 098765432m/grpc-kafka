@@ -25,10 +25,9 @@ sqlc:
 
 run-dev:
 	@echo ">> Running Development <<"
-	@trap "kill 0" SIGINT SIGTERM EXIT; \
-	$(foreach main, $(MAIN_FILES), \
+	@$(foreach main, $(MAIN_FILES), \
 		(cd $(dir $(main)) && go run main.go &); \
-	) \
+	)
 	wait
 
 docker-compose-up:

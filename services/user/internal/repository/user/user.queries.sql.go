@@ -14,21 +14,31 @@ import (
 const checkUserByUsername = `-- name: CheckUserByUsername :one
 SELECT 
     id,
+    username,
     password,
+    email,
     role
 FROM users WHERE username = $1
 `
 
 type CheckUserByUsernameRow struct {
 	ID       pgtype.UUID `json:"id"`
+	Username string      `json:"username"`
 	Password string      `json:"password"`
+	Email    string      `json:"email"`
 	Role     RoleEnum    `json:"role"`
 }
 
 func (q *Queries) CheckUserByUsername(ctx context.Context, username string) (CheckUserByUsernameRow, error) {
 	row := q.db.QueryRow(ctx, checkUserByUsername, username)
 	var i CheckUserByUsernameRow
-	err := row.Scan(&i.ID, &i.Password, &i.Role)
+	err := row.Scan(
+		&i.ID,
+		&i.Username,
+		&i.Password,
+		&i.Email,
+		&i.Role,
+	)
 	return i, err
 }
 

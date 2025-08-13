@@ -112,27 +112,35 @@ func (us *UserService) DeleteUserById(ctx context.Context, id pgtype.UUID) error
 	return nil
 }
 
-func (us *UserService) SignIn(ctx context.Context, username string, password string) (string, error) {
+type SignInResult struct {
+	Jwt      string
+	Id       string
+	Username string
+	Email    string
+	Role     string
+}
+
+func (us *UserService) SignIn(ctx context.Context, username string, password string) (*SignInResult, error) {
 
 	// Check User by username
 	checkUser, err := us.repo.CheckUserByUsername(ctx, username)
 	if err != nil {
 		zap.S().Errorln("Failed to get User by username: ", err)
-		return "", common_error.ErrNoRows
+		return nil, common_error.ErrNoRows
 	}
 
 	// Check Password and Hashed password
 	err = bcrypt.CompareHashAndPassword([]byte(checkUser.Password), []byte(password))
 	if err != nil {
 		zap.S().Errorln("Wrong password!: ", err)
-		return "", common_error.ErrNoRows
+		return nil, common_error.ErrNoRows
 	}
 
 	// Get secret key from env
 	secretKey := viper.GetString("JWT_SECRET_KEY")
 	if secretKey == "" {
 		zap.S().Errorln("Failed to get JWT SECRET KEY from env: ", err)
-		return "", err
+		return nil, err
 	}
 
 	exp := time.Now().Add(time.Hour * 24).Unix()
@@ -148,8 +156,14 @@ func (us *UserService) SignIn(ctx context.Context, username string, password str
 	signedStr, err := t.SignedString([]byte(secretKey))
 	if err != nil {
 		zap.S().Errorln("Failed to return JWT: ", err)
-		return "", err
+		return nil, err
 	}
 
-	return signedStr, nil
+	return &SignInResult{
+		Jwt:      signedStr,
+		Id:       checkUser.ID.String(),
+		Username: checkUser.Username,
+		Email:    checkUser.Email,
+		Role:     string(checkUser.Role),
+	}, nil
 }
