@@ -7,7 +7,8 @@ option go_package = "gen-proto/image_pb;image_pb";
 service ImageService {
     rpc UploadImage(UploadImageRequest) returns (UploadImageResponse);
     rpc GetImage(GetImageRequest) returns (GetImageResponse);
-    rpc GetHotelImages(GetHotelImagesRequest) returns (GetHotelImagesResponse);
+    rpc GetImagesByHotelId(GetImagesByHotelIdRequest) returns (GetImagesByHotelIdResponse);
+    rpc GetImagesByHotelIds(GetImagesByHotelIdsRequest) returns (GetImagesByHotelIdsResponse);
     rpc DeleteImage (DeleteImageRequest) returns (DeleteImageResponse);
     rpc DeleteImages (DeleteImagesRequest) returns (DeleteImagesResponse);
 };
@@ -44,11 +45,19 @@ message GetImageResponse {
     Image image = 1;
 }
 
-message GetHotelImagesRequest {
+message GetImagesByHotelIdRequest {
     string hotelId = 1;
 }
 
-message GetHotelImagesResponse {
+message GetImagesByHotelIdResponse {
+    repeated HotelImage images = 1;
+}
+
+message GetImagesByHotelIdsRequest {
+    repeated string hotelIds = 1;
+}
+
+message GetImagesByHotelIdsResponse {
     repeated HotelImage images = 1;
 }
 
