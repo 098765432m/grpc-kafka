@@ -12,14 +12,16 @@ INSERT INTO images (
     $3
 );
 
--- name: GetHotelImages :many
+-- name: GetImagesByHotelId :many
 SELECT 
-    id,
-    public_id,
-    format,
-    hotel_id
+*
 FROM images
 WHERE hotel_id = $1;
+
+-- name: GetImagesByHotelIds :many
+SELECT *
+FROM images
+WHERE hotel_id = ANY(@hotel_ids::uuid[]);
 
 -- name: DeleteImage :exec
 DELETE FROM images WHERE id = $1;

@@ -1,4 +1,4 @@
-package app
+package image_app
 
 import (
 	"fmt"

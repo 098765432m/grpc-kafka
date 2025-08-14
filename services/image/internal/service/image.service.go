@@ -35,8 +35,17 @@ func (is *ImageService) UpdaloadImage(ctx context.Context, newImage image_repo.U
 	return nil
 }
 
-func (is *ImageService) GetHotelImages(ctx context.Context, hotelId pgtype.UUID) ([]image_repo.Image, error) {
-	images, err := is.repo.GetHotelImages(ctx, hotelId)
+func (is *ImageService) GetImagesByHotelId(ctx context.Context, hotelId pgtype.UUID) ([]image_repo.Image, error) {
+	images, err := is.repo.GetImagesByHotelId(ctx, hotelId)
+	if err != nil {
+		return nil, err
+	}
+
+	return images, nil
+}
+
+func (is *ImageService) GetImagesByHotelIds(ctx context.Context, hotelIds []pgtype.UUID) ([]image_repo.Image, error) {
+	images, err := is.repo.GetImagesByHotelIds(ctx, hotelIds)
 	if err != nil {
 		return nil, err
 	}

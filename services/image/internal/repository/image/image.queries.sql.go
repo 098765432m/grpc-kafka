@@ -29,18 +29,31 @@ func (q *Queries) DeleteImages(ctx context.Context, dollar_1 []pgtype.UUID) erro
 	return err
 }
 
-const getHotelImages = `-- name: GetHotelImages :many
+const getImageById = `-- name: GetImageById :one
+SELECT id, public_id, format, hotel_id FROM images WHERE id = $1
+`
+
+func (q *Queries) GetImageById(ctx context.Context, id pgtype.UUID) (Image, error) {
+	row := q.db.QueryRow(ctx, getImageById, id)
+	var i Image
+	err := row.Scan(
+		&i.ID,
+		&i.PublicID,
+		&i.Format,
+		&i.HotelID,
+	)
+	return i, err
+}
+
+const getImagesByHotelId = `-- name: GetImagesByHotelId :many
 SELECT 
-    id,
-    public_id,
-    format,
-    hotel_id
+id, public_id, format, hotel_id
 FROM images
 WHERE hotel_id = $1
 `
 
-func (q *Queries) GetHotelImages(ctx context.Context, hotelID pgtype.UUID) ([]Image, error) {
-	rows, err := q.db.Query(ctx, getHotelImages, hotelID)
+func (q *Queries) GetImagesByHotelId(ctx context.Context, hotelID pgtype.UUID) ([]Image, error) {
+	rows, err := q.db.Query(ctx, getImagesByHotelId, hotelID)
 	if err != nil {
 		return nil, err
 	}
@@ -64,20 +77,35 @@ func (q *Queries) GetHotelImages(ctx context.Context, hotelID pgtype.UUID) ([]Im
 	return items, nil
 }
 
-const getImageById = `-- name: GetImageById :one
-SELECT id, public_id, format, hotel_id FROM images WHERE id = $1
+const getImagesByHotelIds = `-- name: GetImagesByHotelIds :many
+SELECT id, public_id, format, hotel_id
+FROM images
+WHERE hotel_id = ANY($1::uuid[])
 `
 
-func (q *Queries) GetImageById(ctx context.Context, id pgtype.UUID) (Image, error) {
-	row := q.db.QueryRow(ctx, getImageById, id)
-	var i Image
-	err := row.Scan(
-		&i.ID,
-		&i.PublicID,
-		&i.Format,
-		&i.HotelID,
-	)
-	return i, err
+func (q *Queries) GetImagesByHotelIds(ctx context.Context, hotelIds []pgtype.UUID) ([]Image, error) {
+	rows, err := q.db.Query(ctx, getImagesByHotelIds, hotelIds)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Image
+	for rows.Next() {
+		var i Image
+		if err := rows.Scan(
+			&i.ID,
+			&i.PublicID,
+			&i.Format,
+			&i.HotelID,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const uploadImage = `-- name: UploadImage :exec
