@@ -2,9 +2,12 @@ package hotel_service
 
 import (
 	"context"
+	"errors"
 
+	common_error "github.com/098765432m/grpc-kafka/common/error"
 	"github.com/098765432m/grpc-kafka/common/gen-proto/image_pb"
 	hotel_repo "github.com/098765432m/grpc-kafka/hotel/internal/repository/hotel"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
 	"go.uber.org/zap"
 )
@@ -25,6 +28,10 @@ func (hs *HotelService) GetHotelById(ctx context.Context, id pgtype.UUID) (*hote
 
 	hotel, err := hs.repo.GetHotelById(ctx, id)
 	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, common_error.ErrNoRows
+		}
+
 		zap.S().Error("Failed to get hotel by ID: ", err)
 		return nil, err
 	}

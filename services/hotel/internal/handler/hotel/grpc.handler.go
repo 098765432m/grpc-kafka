@@ -21,7 +21,7 @@ func NewHotelGrpcHandler(service *hotel_service.HotelService) *HotelGrpcHandler 
 	}
 }
 
-func (hg *HotelGrpcHandler) GetHotel(ctx context.Context, req *hotel_pb.GetHotelRequest) (*hotel_pb.GetHotelResponse, error) {
+func (hg *HotelGrpcHandler) GetHotelById(ctx context.Context, req *hotel_pb.GetHotelByIdRequest) (*hotel_pb.GetHotelByIdResponse, error) {
 
 	var id pgtype.UUID
 	if err := id.Scan(req.Id); err != nil {
@@ -31,11 +31,12 @@ func (hg *HotelGrpcHandler) GetHotel(ctx context.Context, req *hotel_pb.GetHotel
 
 	hotel, err := hg.service.GetHotelById(ctx, id)
 	if err != nil {
-		zap.S().Errorln("Failed to get Hotel by Id")
+
+		zap.S().Errorln("Failed to get Hotel by Id: ", err)
 		return nil, err
 	}
 
-	return &hotel_pb.GetHotelResponse{
+	return &hotel_pb.GetHotelByIdResponse{
 		Hotel: &hotel_pb.Hotel{
 			Id:      hotel.ID.String(),
 			Name:    hotel.Name,
