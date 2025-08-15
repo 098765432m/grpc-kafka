@@ -4,12 +4,15 @@ import (
 	"errors"
 	"net/http"
 
+	api_dto "github.com/098765432m/grpc-kafka/api-gateway/internal/dto"
 	common_error "github.com/098765432m/grpc-kafka/common/error"
 	"github.com/098765432m/grpc-kafka/common/gen-proto/image_pb"
 	"github.com/098765432m/grpc-kafka/common/gen-proto/user_pb"
 	"github.com/098765432m/grpc-kafka/common/utils"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 type UserHandler struct {
@@ -36,6 +39,138 @@ func (uh *UserHandler) RegisterRoutes(router *gin.RouterGroup) {
 type SignInRequest struct {
 	Username string `json:"username"`
 	Password string `json:"password"`
+}
+
+func (uh *UserHandler) GetUserById(ctx *gin.Context) {
+
+	id := ctx.Param("id")
+
+	userGrpc, err := uh.userClient.GetUserById(ctx, &user_pb.GetUserByIdRequest{
+		Id: id,
+	})
+	user := userGrpc.User
+
+	if err != nil {
+		st, ok := status.FromError(err)
+		if ok {
+			switch st.Code() {
+			case codes.NotFound:
+				ctx.JSON(int(st.Code()), utils.ErrorApiResponse(st.Message()))
+				return
+			}
+		}
+
+		ctx.JSON(http.StatusInternalServerError, utils.ErrorApiResponse(err.Error()))
+		return
+	}
+
+	imageGrpc, err := uh.imageClient.GetImagesByUserId(ctx, &image_pb.GetImagesByUserIdRequest{
+		UserId: user.GetId(),
+	})
+	image := imageGrpc.Image
+	if err != nil {
+		st, ok := status.FromError(err)
+		if ok {
+			switch st.Code() {
+			case codes.NotFound:
+
+			default:
+				ctx.JSON(http.StatusInternalServerError, utils.ErrorApiResponse(err.Error()))
+				return
+			}
+		} else {
+			ctx.JSON(http.StatusInternalServerError, utils.ErrorApiResponse(err.Error()))
+			return
+
+		}
+
+	}
+
+	resp := api_dto.UserResponse{
+		Id:          user.GetId(),
+		Username:    user.GetUsername(),
+		Email:       user.GetEmail(),
+		PhoneNumber: user.GetPhoneNumber(),
+		FullName:    user.GetFullName(),
+		Role:        user.GetRole(),
+		HotelId:     user.GetHotelId(),
+		Image: api_dto.UserImage{
+			Id:       image.GetId(),
+			PublicId: image.GetPublicId(),
+			Format:   image.GetFormat(),
+		},
+	}
+
+	ctx.JSON(http.StatusOK, utils.SuccessApiResponse(resp, "Thanh cong"))
+}
+
+type UpdateUserParams struct {
+	Username    string `json:"username"`
+	Password    string `json:"password"`
+	Address     string `json:"address"`
+	Email       string `json:"email"`
+	PhoneNumber string `json:"phone_number"`
+	FullName    string `json:"full_name"`
+	Role        string `json:"role,omitempty"`
+	HotelId     string `json:"hotel_id,omitempty"`
+}
+
+func (uh *UserHandler) UpdateUserById(ctx *gin.Context) {
+	id := ctx.Param("id")
+
+	updateReq := &UpdateUserParams{}
+	if err := ctx.ShouldBindJSON(updateReq); err != nil {
+		ctx.JSON(http.StatusBadRequest, utils.ErrorApiResponse("Khong cap nhat duoc tai khoan"))
+		return
+	}
+
+	_, err := uh.userClient.UpdateUserById(ctx, &user_pb.UpdateUserByIdRequest{
+		User: &user_pb.User{
+			Id:          id,
+			Username:    updateReq.Username,
+			Password:    updateReq.Password,
+			Address:     updateReq.Address,
+			Email:       updateReq.Email,
+			PhoneNumber: updateReq.PhoneNumber,
+			FullName:    updateReq.FullName,
+			Role:        updateReq.Role,
+			HotelId:     updateReq.HotelId,
+		},
+	})
+	if err != nil {
+		st, ok := status.FromError(err)
+		if ok {
+			switch st.Code() {
+			case codes.Internal:
+				ctx.JSON(http.StatusInternalServerError, utils.ErrorApiResponse(err.Error()))
+				return
+			}
+		}
+
+		ctx.JSON(http.StatusInternalServerError, utils.ErrorApiResponse("Loi he thong"))
+		return
+	}
+}
+
+func (uh *UserHandler) DeleteUserById(ctx *gin.Context) {
+	id := ctx.Param("id")
+
+	_, err := uh.userClient.DeleteUserById(ctx, &user_pb.DeleteUserByIdRequest{
+		Id: id,
+	})
+	if err != nil {
+		st, ok := status.FromError(err)
+		if ok {
+			switch st.Code() {
+			case codes.Internal:
+				ctx.JSON(http.StatusInternalServerError, utils.ErrorApiResponse(err.Error()))
+				return
+			}
+		}
+
+		ctx.JSON(http.StatusInternalServerError, utils.ErrorApiResponse("Loi he thong"))
+		return
+	}
 }
 
 func (uh *UserHandler) SignIn(ctx *gin.Context) {

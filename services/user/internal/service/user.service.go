@@ -91,6 +91,16 @@ func (us *UserService) CreateUser(ctx context.Context, newUser *user_repo.Create
 	return nil
 }
 
+func (us *UserService) UpdateUserById(ctx context.Context, params *user_repo.UpdateUserByIdParams) error {
+	err := us.repo.UpdateUserById(ctx, *params)
+	if err != nil {
+		zap.S().Errorln("Failed to update User by id")
+		return err
+	}
+
+	return nil
+}
+
 func (us *UserService) DeleteUserById(ctx context.Context, id pgtype.UUID) error {
 
 	const DEFAULT_ERR_MSG = "loi khong the tao tai khoan"
