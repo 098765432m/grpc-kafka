@@ -9,8 +9,10 @@ import (
 )
 
 type Image struct {
-	ID       pgtype.UUID `json:"id"`
-	PublicID string      `json:"public_id"`
-	Format   string      `json:"format"`
-	HotelID  pgtype.UUID `json:"hotel_id"`
+	ID         pgtype.UUID `json:"id"`
+	PublicID   string      `json:"public_id"`
+	Format     string      `json:"format"`
+	HotelID    pgtype.UUID `json:"hotel_id"`
+	UserID     pgtype.UUID `json:"user_id"`
+	RoomTypeID pgtype.UUID `json:"room_type_id"`
 }

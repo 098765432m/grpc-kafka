@@ -2,5 +2,7 @@ CREATE TABLE images (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     public_id TEXT NOT NULL,
     format VARCHAR(10) NOT NULL,
-    hotel_id UUID DEFAULT NULL
+    hotel_id UUID DEFAULT NULL,
+    user_id UUID DEFAULT NULL,
+    room_type_id UUID DEFAULT NULL
 );

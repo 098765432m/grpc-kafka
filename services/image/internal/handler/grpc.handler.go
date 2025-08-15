@@ -20,7 +20,7 @@ func NewImageGrpcHandler(service *image_service.ImageService) *ImageGrpcHandler 
 	}
 }
 
-func (ig *ImageGrpcHandler) GetImage(ctx context.Context, req *image_pb.GetImageRequest) (*image_pb.GetImageResponse, error) {
+func (ig *ImageGrpcHandler) GetImageById(ctx context.Context, req *image_pb.GetImageByIdRequest) (*image_pb.GetImageByIdResponse, error) {
 	var id pgtype.UUID
 	if err := id.Scan(req.Id); err != nil {
 		return nil, err
@@ -38,12 +38,14 @@ func (ig *ImageGrpcHandler) GetImage(ctx context.Context, req *image_pb.GetImage
 		hotelId = ""
 	}
 
-	return &image_pb.GetImageResponse{
+	return &image_pb.GetImageByIdResponse{
 		Image: &image_pb.Image{
-			Id:       image.ID.String(),
-			PublicId: image.PublicID,
-			Format:   image.Format,
-			HotelId:  hotelId,
+			Id:         image.ID.String(),
+			PublicId:   image.PublicID,
+			Format:     image.Format,
+			HotelId:    hotelId,
+			UserId:     image.UserID.String(),
+			RoomTypeId: image.RoomTypeID.String(),
 		},
 	}, nil
 }
@@ -73,6 +75,55 @@ func (ig *ImageGrpcHandler) GetImagesByHotelId(ctx context.Context, req *image_p
 
 	return &image_pb.GetImagesByHotelIdResponse{
 		Images: hotelImages,
+	}, nil
+}
+
+func (ig *ImageGrpcHandler) GetImagesByUserId(ctx context.Context, req *image_pb.GetImagesByUserIdRequest) (*image_pb.GetImagesByUserIdResponse, error) {
+	var userId pgtype.UUID
+	if err := userId.Scan(req.UserId); err != nil {
+		return nil, err
+	}
+
+	image, err := ig.service.GetImageByUserId(ctx, userId)
+	if err != nil {
+		return nil, err
+	}
+
+	return &image_pb.GetImagesByUserIdResponse{
+		Image: &image_pb.UserImage{
+			Id:       image.ID.String(),
+			PublicId: image.PublicID,
+			Format:   image.Format,
+			UserId:   image.UserID.String(),
+		},
+	}, nil
+}
+
+func (ig *ImageGrpcHandler) GetImagesByRoomTypeId(ctx context.Context, req *image_pb.GetImagesByRoomTypeIdRequest) (*image_pb.GetImagesByRoomTypeIdResponse, error) {
+	var roomTypeId pgtype.UUID
+	if err := roomTypeId.Scan(req.RoomTypeId); err != nil {
+		return nil, err
+	}
+
+	images, err := ig.service.GetImagesByRoomTypeId(ctx, roomTypeId)
+	if err != nil {
+		return nil, err
+	}
+
+	var roomTypeImages []*image_pb.RoomTypeImage
+	for _, img := range images {
+		hotelImage := &image_pb.RoomTypeImage{
+			Id:         img.ID.String(),
+			PublicId:   img.PublicID,
+			Format:     img.Format,
+			RoomTypeId: img.RoomTypeID.String(),
+		}
+
+		roomTypeImages = append(roomTypeImages, hotelImage)
+	}
+
+	return &image_pb.GetImagesByRoomTypeIdResponse{
+		Images: roomTypeImages,
 	}, nil
 }
 
@@ -117,7 +168,7 @@ func (ig *ImageGrpcHandler) UploadImage(ctx context.Context, req *image_pb.Uploa
 		return nil, err
 	}
 
-	err := ig.service.UpdaloadImage(ctx, image_repo.UploadImageParams{
+	err := ig.service.UploadHotelImage(ctx, image_repo.UploadHotelImageParams{
 		PublicID: req.PublicId,
 		Format:   req.Format,
 		HotelID:  hotelId,

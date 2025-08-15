@@ -6,8 +6,10 @@ option go_package = "gen-proto/image_pb;image_pb";
 
 service ImageService {
     rpc UploadImage(UploadImageRequest) returns (UploadImageResponse);
-    rpc GetImage(GetImageRequest) returns (GetImageResponse);
+    rpc GetImageById(GetImageByIdRequest) returns (GetImageByIdResponse);
     rpc GetImagesByHotelId(GetImagesByHotelIdRequest) returns (GetImagesByHotelIdResponse);
+    rpc GetImagesByUserId(GetImagesByUserIdRequest) returns (GetImagesByUserIdResponse);
+    rpc GetImagesByRoomTypeId(GetImagesByRoomTypeIdRequest) returns (GetImagesByRoomTypeIdResponse);
     rpc GetImagesByHotelIds(GetImagesByHotelIdsRequest) returns (GetImagesByHotelIdsResponse);
     rpc DeleteImage (DeleteImageRequest) returns (DeleteImageResponse);
     rpc DeleteImages (DeleteImagesRequest) returns (DeleteImagesResponse);
@@ -18,6 +20,8 @@ message Image {
     string publicId = 2;
     string format = 3;
     string hotelId = 4;
+    string userId = 5;
+    string roomTypeId = 6;
 }
 
 message HotelImage {
@@ -27,6 +31,21 @@ message HotelImage {
     string hotelId = 4;
 }
 
+message UserImage {
+    string id = 1;
+    string publicId = 2;
+    string format = 3;
+    string userId = 4;
+}
+
+message RoomTypeImage {
+    string id = 1;
+    string publicId = 2;
+    string format = 3;
+    string roomTypeId = 4;
+}
+
+// Upload Image
 message UploadImageRequest {
     string publicId = 1;
     string format = 2;
@@ -37,14 +56,17 @@ message UploadImageResponse {
     Image image = 1;
 }
 
-message GetImageRequest {
+// Get Image by id
+
+message GetImageByIdRequest {
     string id = 1;
 }
 
-message GetImageResponse {
+message GetImageByIdResponse {
     Image image = 1;
 }
 
+// Get Images By Hotel Id
 message GetImagesByHotelIdRequest {
     string hotelId = 1;
 }
@@ -53,6 +75,25 @@ message GetImagesByHotelIdResponse {
     repeated HotelImage images = 1;
 }
 
+// Get Images By User Id
+message GetImagesByUserIdRequest {
+    string userId = 1;
+}
+
+message GetImagesByUserIdResponse {
+    UserImage image = 1;
+}
+
+// Get Images By Room Type Id
+message GetImagesByRoomTypeIdRequest {
+    string roomTypeId = 1;
+}
+
+message GetImagesByRoomTypeIdResponse {
+    repeated RoomTypeImage images = 1;
+}
+
+// Get Images By Hotel Ids
 message GetImagesByHotelIdsRequest {
     repeated string hotelIds = 1;
 }
@@ -61,6 +102,8 @@ message GetImagesByHotelIdsResponse {
     repeated HotelImage images = 1;
 }
 
+// DeleteImageRequest
+
 message DeleteImageRequest {
     string id = 1;
 }
@@ -68,6 +111,8 @@ message DeleteImageRequest {
 message DeleteImageResponse {
     
 }
+
+// Delete Images
 
 message DeleteImagesRequest {
     repeated string ids = 1;

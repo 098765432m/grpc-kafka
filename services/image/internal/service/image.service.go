@@ -5,6 +5,7 @@ import (
 
 	image_repo "github.com/098765432m/grpc-kafka/image/internal/repository/image"
 	"github.com/jackc/pgx/v5/pgtype"
+	"go.uber.org/zap"
 )
 
 type ImageService struct {
@@ -26,8 +27,26 @@ func (is *ImageService) GetImage(ctx context.Context, id pgtype.UUID) (*image_re
 	return &image, nil
 }
 
-func (is *ImageService) UpdaloadImage(ctx context.Context, newImage image_repo.UploadImageParams) error {
-	err := is.repo.UploadImage(ctx, newImage)
+func (is *ImageService) UploadHotelImage(ctx context.Context, newImage image_repo.UploadHotelImageParams) error {
+	err := is.repo.UploadHotelImage(ctx, newImage)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (is *ImageService) UploadUserImage(ctx context.Context, newImage image_repo.UploadUserImageParams) error {
+	err := is.repo.UploadUserImage(ctx, newImage)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (is *ImageService) UploadRoomTypeImage(ctx context.Context, newImage image_repo.UploadRoomTypeImageParams) error {
+	err := is.repo.UploadRoomTypeImage(ctx, newImage)
 	if err != nil {
 		return err
 	}
@@ -47,6 +66,28 @@ func (is *ImageService) GetImagesByHotelId(ctx context.Context, hotelId pgtype.U
 func (is *ImageService) GetImagesByHotelIds(ctx context.Context, hotelIds []pgtype.UUID) ([]image_repo.Image, error) {
 	images, err := is.repo.GetImagesByHotelIds(ctx, hotelIds)
 	if err != nil {
+		return nil, err
+	}
+
+	return images, nil
+}
+
+func (is *ImageService) GetImageByUserId(ctx context.Context, userId pgtype.UUID) (*image_repo.Image, error) {
+
+	image, err := is.repo.GetImageByUserId(ctx, userId)
+	if err != nil {
+		zap.S().Errorln("Failed to get Image by User id")
+		return nil, err
+	}
+
+	return &image, nil
+}
+
+func (is *ImageService) GetImagesByRoomTypeId(ctx context.Context, roomTypeId pgtype.UUID) ([]image_repo.Image, error) {
+
+	images, err := is.repo.GetImagesByRoomTypeId(ctx, roomTypeId)
+	if err != nil {
+		zap.S().Errorln("Failed to get Images by Room Type id")
 		return nil, err
 	}
 

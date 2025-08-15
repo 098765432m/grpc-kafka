@@ -30,7 +30,7 @@ func (q *Queries) DeleteImages(ctx context.Context, dollar_1 []pgtype.UUID) erro
 }
 
 const getImageById = `-- name: GetImageById :one
-SELECT id, public_id, format, hotel_id FROM images WHERE id = $1
+SELECT id, public_id, format, hotel_id, user_id, room_type_id FROM images WHERE id = $1
 `
 
 func (q *Queries) GetImageById(ctx context.Context, id pgtype.UUID) (Image, error) {
@@ -41,13 +41,34 @@ func (q *Queries) GetImageById(ctx context.Context, id pgtype.UUID) (Image, erro
 		&i.PublicID,
 		&i.Format,
 		&i.HotelID,
+		&i.UserID,
+		&i.RoomTypeID,
+	)
+	return i, err
+}
+
+const getImageByUserId = `-- name: GetImageByUserId :one
+SELECT id, public_id, format, hotel_id, user_id, room_type_id
+FROM images
+WHERE user_id = $1
+`
+
+func (q *Queries) GetImageByUserId(ctx context.Context, userID pgtype.UUID) (Image, error) {
+	row := q.db.QueryRow(ctx, getImageByUserId, userID)
+	var i Image
+	err := row.Scan(
+		&i.ID,
+		&i.PublicID,
+		&i.Format,
+		&i.HotelID,
+		&i.UserID,
+		&i.RoomTypeID,
 	)
 	return i, err
 }
 
 const getImagesByHotelId = `-- name: GetImagesByHotelId :many
-SELECT 
-id, public_id, format, hotel_id
+SELECT id, public_id, format, hotel_id, user_id, room_type_id
 FROM images
 WHERE hotel_id = $1
 `
@@ -66,6 +87,8 @@ func (q *Queries) GetImagesByHotelId(ctx context.Context, hotelID pgtype.UUID) (
 			&i.PublicID,
 			&i.Format,
 			&i.HotelID,
+			&i.UserID,
+			&i.RoomTypeID,
 		); err != nil {
 			return nil, err
 		}
@@ -78,7 +101,7 @@ func (q *Queries) GetImagesByHotelId(ctx context.Context, hotelID pgtype.UUID) (
 }
 
 const getImagesByHotelIds = `-- name: GetImagesByHotelIds :many
-SELECT id, public_id, format, hotel_id
+SELECT id, public_id, format, hotel_id, user_id, room_type_id
 FROM images
 WHERE hotel_id = ANY($1::uuid[])
 `
@@ -97,6 +120,8 @@ func (q *Queries) GetImagesByHotelIds(ctx context.Context, hotelIds []pgtype.UUI
 			&i.PublicID,
 			&i.Format,
 			&i.HotelID,
+			&i.UserID,
+			&i.RoomTypeID,
 		); err != nil {
 			return nil, err
 		}
@@ -108,25 +133,104 @@ func (q *Queries) GetImagesByHotelIds(ctx context.Context, hotelIds []pgtype.UUI
 	return items, nil
 }
 
-const uploadImage = `-- name: UploadImage :exec
+const getImagesByRoomTypeId = `-- name: GetImagesByRoomTypeId :many
+SELECT id, public_id, format, hotel_id, user_id, room_type_id
+FROM images
+WHERE room_type_id = $1
+`
+
+func (q *Queries) GetImagesByRoomTypeId(ctx context.Context, roomTypeID pgtype.UUID) ([]Image, error) {
+	rows, err := q.db.Query(ctx, getImagesByRoomTypeId, roomTypeID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Image
+	for rows.Next() {
+		var i Image
+		if err := rows.Scan(
+			&i.ID,
+			&i.PublicID,
+			&i.Format,
+			&i.HotelID,
+			&i.UserID,
+			&i.RoomTypeID,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const uploadHotelImage = `-- name: UploadHotelImage :exec
 INSERT INTO images (
     public_id,
     format,
     hotel_id
 ) VALUES (
-    $1,
-    $2,
-    $3
+    $1::text,
+    $2::text,
+    $3::uuid
 )
 `
 
-type UploadImageParams struct {
+type UploadHotelImageParams struct {
 	PublicID string      `json:"public_id"`
 	Format   string      `json:"format"`
 	HotelID  pgtype.UUID `json:"hotel_id"`
 }
 
-func (q *Queries) UploadImage(ctx context.Context, arg UploadImageParams) error {
-	_, err := q.db.Exec(ctx, uploadImage, arg.PublicID, arg.Format, arg.HotelID)
+func (q *Queries) UploadHotelImage(ctx context.Context, arg UploadHotelImageParams) error {
+	_, err := q.db.Exec(ctx, uploadHotelImage, arg.PublicID, arg.Format, arg.HotelID)
+	return err
+}
+
+const uploadRoomTypeImage = `-- name: UploadRoomTypeImage :exec
+INSERT INTO images (
+    public_id,
+    format,
+    room_type_id
+) VALUES (
+    $1::text,
+    $2::text,
+    $3::uuid
+)
+`
+
+type UploadRoomTypeImageParams struct {
+	PublicID   string      `json:"public_id"`
+	Format     string      `json:"format"`
+	RoomTypeID pgtype.UUID `json:"room_type_id"`
+}
+
+func (q *Queries) UploadRoomTypeImage(ctx context.Context, arg UploadRoomTypeImageParams) error {
+	_, err := q.db.Exec(ctx, uploadRoomTypeImage, arg.PublicID, arg.Format, arg.RoomTypeID)
+	return err
+}
+
+const uploadUserImage = `-- name: UploadUserImage :exec
+INSERT INTO images (
+    public_id,
+    format,
+    user_id
+) VALUES (
+    $1::text,
+    $2::text,
+    $3::uuid
+)
+`
+
+type UploadUserImageParams struct {
+	PublicID string      `json:"public_id"`
+	Format   string      `json:"format"`
+	UserID   pgtype.UUID `json:"user_id"`
+}
+
+func (q *Queries) UploadUserImage(ctx context.Context, arg UploadUserImageParams) error {
+	_, err := q.db.Exec(ctx, uploadUserImage, arg.PublicID, arg.Format, arg.UserID)
 	return err
 }
