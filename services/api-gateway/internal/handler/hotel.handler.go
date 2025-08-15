@@ -10,7 +10,6 @@ import (
 	"github.com/098765432m/grpc-kafka/common/gen-proto/image_pb"
 	"github.com/098765432m/grpc-kafka/common/utils"
 	"github.com/gin-gonic/gin"
-	"github.com/jackc/pgx/v5/pgtype"
 )
 
 type HotelHandler struct {
@@ -32,13 +31,14 @@ func (hh *HotelHandler) RegisterRoutes(router *gin.RouterGroup) {
 	hotelHandler := router.Group("/hotels")
 
 	hotelHandler.GET("/", hh.GetAll)
+	hotelHandler.GET("/:id", hh.GetHotelById)
 }
 
 func (hh *HotelHandler) GetAll(ctx *gin.Context) {
 
 	hotels, err := hh.hotelClient.GetAllHotels(ctx, &hotel_pb.GetAllHotelsRequest{})
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, utils.ErrorResponse("Failed to get all Hotels"))
+		ctx.JSON(http.StatusInternalServerError, utils.ErrorApiResponse("Failed to get all Hotels"))
 		return
 	}
 
@@ -53,7 +53,7 @@ func (hh *HotelHandler) GetAll(ctx *gin.Context) {
 		HotelIds: hotelIds,
 	})
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, utils.ErrorResponse("Failed to get Images By Hotel ids"))
+		ctx.JSON(http.StatusInternalServerError, utils.ErrorApiResponse("Failed to get Images By Hotel ids"))
 		return
 	}
 
@@ -84,29 +84,25 @@ func (hh *HotelHandler) GetAll(ctx *gin.Context) {
 		responses = append(responses, resp)
 	}
 
-	ctx.JSON(http.StatusOK, utils.SuccessResponse(responses, "Hotels retrieved successfully"))
+	ctx.JSON(http.StatusOK, utils.SuccessApiResponse(responses, "Hotels retrieved successfully"))
 }
 
 func (hh *HotelHandler) GetHotelById(ctx *gin.Context) {
 
-	var id *pgtype.UUID
-	if err := id.Scan(ctx.Param("id")); err != nil {
-		ctx.JSON(http.StatusBadRequest, utils.ErrorResponse("Id Khach san khong hop le"))
-		return
-	}
+	id := ctx.Param("id")
 	hotelGrpc, err := hh.hotelClient.GetHotelById(ctx, &hotel_pb.GetHotelByIdRequest{
-		Id: id.String(),
+		Id: id,
 	})
 	hotel := hotelGrpc.GetHotel()
 	if err != nil {
 
 		switch {
 		case errors.Is(err, common_error.ErrNoRows):
-			ctx.JSON(http.StatusBadRequest, utils.ErrorResponse("Khach san khong ton tai"))
+			ctx.JSON(http.StatusBadRequest, utils.ErrorApiResponse("Khach san khong ton tai"))
 			return
 
 		default:
-			ctx.JSON(http.StatusInternalServerError, utils.ErrorResponse("Khong the "))
+			ctx.JSON(http.StatusInternalServerError, utils.ErrorApiResponse("Khong the "))
 			return
 		}
 	}
@@ -114,7 +110,7 @@ func (hh *HotelHandler) GetHotelById(ctx *gin.Context) {
 	images, err := hh.imageClient.GetImagesByHotelId(ctx, &image_pb.GetImagesByHotelIdRequest{HotelId: hotel.Id})
 	if err != nil {
 
-		ctx.JSON(http.StatusInternalServerError, utils.ErrorResponse("Khong the "))
+		ctx.JSON(http.StatusInternalServerError, utils.ErrorApiResponse("Khong the "))
 		return
 	}
 
@@ -132,5 +128,5 @@ func (hh *HotelHandler) GetHotelById(ctx *gin.Context) {
 		})
 	}
 
-	ctx.JSON(http.StatusOK, utils.SuccessResponse(resp, "Hotel retrieved successfully"))
+	ctx.JSON(http.StatusOK, utils.SuccessApiResponse(resp, "Hotel retrieved successfully"))
 }

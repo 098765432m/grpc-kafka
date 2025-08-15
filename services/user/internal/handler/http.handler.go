@@ -55,7 +55,7 @@ func (uh *UserHttpHandler) GetUsers(ctx *gin.Context) {
 
 	users, err := uh.service.GetUsers(ctx)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, utils.ErrorResponse("Loi khong lay duoc danh sach tai khoan"))
+		ctx.JSON(http.StatusInternalServerError, utils.ErrorApiResponse("Loi khong lay duoc danh sach tai khoan"))
 		return
 	}
 
@@ -74,7 +74,7 @@ func (uh *UserHttpHandler) GetUsers(ctx *gin.Context) {
 		usersDtoRes = append(usersDtoRes, userDtoRes)
 	}
 
-	ctx.JSON(http.StatusOK, utils.SuccessResponse(usersDtoRes, "Thanh cong"))
+	ctx.JSON(http.StatusOK, utils.SuccessApiResponse(usersDtoRes, "Thanh cong"))
 }
 
 func (uh *UserHttpHandler) GetUserById(ctx *gin.Context) {
@@ -83,22 +83,22 @@ func (uh *UserHttpHandler) GetUserById(ctx *gin.Context) {
 	var id pgtype.UUID
 	if err := id.Scan(ctx.Param("id")); err != nil {
 		zap.S().Errorln("Invalid UUID format: ", err)
-		ctx.JSON(http.StatusBadRequest, utils.ErrorResponse("Loi he thong"))
+		ctx.JSON(http.StatusBadRequest, utils.ErrorApiResponse("Loi he thong"))
 		return
 	}
 
 	user, err := uh.service.GetUserById(ctx, id)
 	if err != nil {
 		if errors.Is(err, common_error.ErrNoRows) {
-			ctx.JSON(http.StatusBadRequest, utils.ErrorResponse("Tai khoan khong ton tai"))
+			ctx.JSON(http.StatusBadRequest, utils.ErrorApiResponse("Tai khoan khong ton tai"))
 			return
 		}
 
-		ctx.JSON(http.StatusInternalServerError, utils.ErrorResponse("Loi khong tim duoc tai khoan"))
+		ctx.JSON(http.StatusInternalServerError, utils.ErrorApiResponse("Loi khong tim duoc tai khoan"))
 		return
 	}
 
-	ctx.JSON(http.StatusOK, utils.SuccessResponse(UserDtoResponse{
+	ctx.JSON(http.StatusOK, utils.SuccessApiResponse(UserDtoResponse{
 		Id:          user.ID.String(),
 		Username:    user.Username,
 		Email:       user.Email,
@@ -125,7 +125,7 @@ func (uh *UserHttpHandler) CreateUser(ctx *gin.Context) {
 	// Get request body
 	createUserReq := &CreateUserRequest{}
 	if err := ctx.ShouldBindJSON(createUserReq); err != nil {
-		ctx.JSON(http.StatusBadRequest, utils.ErrorResponse("Loi he thong"))
+		ctx.JSON(http.StatusBadRequest, utils.ErrorApiResponse("Loi he thong"))
 		return
 	}
 
@@ -136,7 +136,7 @@ func (uh *UserHttpHandler) CreateUser(ctx *gin.Context) {
 			hotelId.Valid = false
 		} else {
 			zap.S().Errorln("Invalid UUID: ", err)
-			ctx.JSON(http.StatusInternalServerError, utils.ErrorResponse("Loi he thong"))
+			ctx.JSON(http.StatusInternalServerError, utils.ErrorApiResponse("Loi he thong"))
 			return
 		}
 	}
@@ -146,7 +146,7 @@ func (uh *UserHttpHandler) CreateUser(ctx *gin.Context) {
 	if err := userRole.Scan(createUserReq.Role); err != nil {
 
 		zap.S().Errorln("Invalid User role enum")
-		ctx.JSON(http.StatusInternalServerError, utils.ErrorResponse("Loi he thong"))
+		ctx.JSON(http.StatusInternalServerError, utils.ErrorApiResponse("Loi he thong"))
 		return
 
 	}
@@ -170,15 +170,15 @@ func (uh *UserHttpHandler) CreateUser(ctx *gin.Context) {
 	if err != nil {
 
 		if errors.Is(err, common_error.ErrDuplicateRecord) {
-			ctx.JSON(http.StatusBadRequest, utils.ErrorResponse("Thong tin bi trung"))
+			ctx.JSON(http.StatusBadRequest, utils.ErrorApiResponse("Thong tin bi trung"))
 			return
 		}
 
-		ctx.JSON(http.StatusInternalServerError, utils.ErrorResponse("Khong the tao tai khoan"))
+		ctx.JSON(http.StatusInternalServerError, utils.ErrorApiResponse("Khong the tao tai khoan"))
 		return
 	}
 
-	ctx.JSON(http.StatusCreated, utils.SuccessResponse(nil, "Tao tai khoan thanh cong"))
+	ctx.JSON(http.StatusCreated, utils.SuccessApiResponse(nil, "Tao tai khoan thanh cong"))
 }
 
 func (uh *UserHttpHandler) DeleteUserById(ctx *gin.Context) {
@@ -187,7 +187,7 @@ func (uh *UserHttpHandler) DeleteUserById(ctx *gin.Context) {
 	var id pgtype.UUID
 	if err := id.Scan(ctx.Param("id")); err != nil {
 		zap.S().Errorln("Invalid UUID: ", err)
-		ctx.JSON(http.StatusBadRequest, utils.ErrorResponse("Loi ID tai khoan khong hop le"))
+		ctx.JSON(http.StatusBadRequest, utils.ErrorApiResponse("Loi ID tai khoan khong hop le"))
 		return
 	}
 
@@ -195,15 +195,15 @@ func (uh *UserHttpHandler) DeleteUserById(ctx *gin.Context) {
 		switch {
 		// Catch no rows found
 		case errors.Is(err, common_error.ErrNoRows):
-			ctx.JSON(http.StatusBadRequest, utils.ErrorResponse("Tai khoan khong ton tai"))
+			ctx.JSON(http.StatusBadRequest, utils.ErrorApiResponse("Tai khoan khong ton tai"))
 			return
 		default:
-			ctx.JSON(http.StatusInternalServerError, utils.ErrorResponse("Loi khong the xoa tai khoan"))
+			ctx.JSON(http.StatusInternalServerError, utils.ErrorApiResponse("Loi khong the xoa tai khoan"))
 			return
 		}
 	}
 
-	ctx.JSON(http.StatusOK, utils.SuccessResponse(nil, "Xoa tai khoan thanh cong"))
+	ctx.JSON(http.StatusOK, utils.SuccessApiResponse(nil, "Xoa tai khoan thanh cong"))
 }
 
 func (uh *UserHttpHandler) SignIn(ctx *gin.Context) {
@@ -213,7 +213,7 @@ func (uh *UserHttpHandler) SignIn(ctx *gin.Context) {
 	err := ctx.ShouldBindJSON(signInReq)
 	if err != nil {
 		zap.S().Errorln("Failed to get sign in request: ", err)
-		ctx.JSON(http.StatusBadRequest, utils.ErrorResponse("Loi he thong"))
+		ctx.JSON(http.StatusBadRequest, utils.ErrorApiResponse("Loi he thong"))
 		return
 	}
 
@@ -221,10 +221,10 @@ func (uh *UserHttpHandler) SignIn(ctx *gin.Context) {
 	if err != nil {
 		switch {
 		case errors.Is(err, common_error.ErrNoRows):
-			ctx.JSON(http.StatusBadRequest, utils.ErrorResponse("Tai khoan hoac mat khau khong dung"))
+			ctx.JSON(http.StatusBadRequest, utils.ErrorApiResponse("Tai khoan hoac mat khau khong dung"))
 			return
 		default:
-			ctx.JSON(http.StatusInternalServerError, utils.ErrorResponse("Loi khong the dang nhap"))
+			ctx.JSON(http.StatusInternalServerError, utils.ErrorApiResponse("Loi khong the dang nhap"))
 			return
 		}
 	}
@@ -243,7 +243,7 @@ func (uh *UserHttpHandler) SignIn(ctx *gin.Context) {
 
 	zap.S().Infoln(cookie)
 
-	ctx.JSON(http.StatusOK, utils.SuccessResponse(struct {
+	ctx.JSON(http.StatusOK, utils.SuccessApiResponse(struct {
 		Id       string `json:"id"`
 		Username string `json:"username"`
 		Email    string `json:"email"`

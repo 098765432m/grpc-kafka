@@ -39,42 +39,42 @@ type BookingRoomRequest struct {
 func (bh *BookingHttpHandler) GetBooking(ctx *gin.Context) {
 	var id pgtype.UUID
 	if err := id.Scan(id); err != nil {
-		ctx.JSON(http.StatusBadRequest, utils.ErrorResponse("Invalid Booking UUID"))
+		ctx.JSON(http.StatusBadRequest, utils.ErrorApiResponse("Invalid Booking UUID"))
 		return
 	}
 
 	booking, err := bh.service.GetBookingById(ctx, id)
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, utils.ErrorResponse(fmt.Sprintf("Cannot get Booking: %v", err)))
+		ctx.JSON(http.StatusBadRequest, utils.ErrorApiResponse(fmt.Sprintf("Cannot get Booking: %v", err)))
 		return
 	}
 
-	ctx.JSON(http.StatusOK, utils.SuccessResponse(booking, "Get Booking successfully"))
+	ctx.JSON(http.StatusOK, utils.SuccessApiResponse(booking, "Get Booking successfully"))
 }
 
 func (bh *BookingHttpHandler) BookingRoom(ctx *gin.Context) {
 
 	bookingReq := &BookingRoomRequest{}
 	if err := ctx.ShouldBindJSON(bookingReq); err != nil {
-		ctx.JSON(http.StatusBadGateway, utils.ErrorResponse("Invalid request body"))
+		ctx.JSON(http.StatusBadGateway, utils.ErrorApiResponse("Invalid request body"))
 		return
 	}
 
 	checkIn, err := utils.ParsePgDate(bookingReq.CheckIn)
 	if err != nil {
-		ctx.JSON(http.StatusBadGateway, utils.ErrorResponse("Invalid date format"))
+		ctx.JSON(http.StatusBadGateway, utils.ErrorApiResponse("Invalid date format"))
 		return
 	}
 
 	checkOut, err := utils.ParsePgDate(bookingReq.CheckOut)
 	if err != nil {
-		ctx.JSON(http.StatusBadGateway, utils.ErrorResponse("Invalid date format"))
+		ctx.JSON(http.StatusBadGateway, utils.ErrorApiResponse("Invalid date format"))
 		return
 	}
 
 	var bookingStatus booking_repo.BookingStatus
 	if err := bookingStatus.Scan(bookingReq.Status); err != nil {
-		ctx.JSON(http.StatusBadGateway, utils.ErrorResponse("Invalid booking status"))
+		ctx.JSON(http.StatusBadGateway, utils.ErrorApiResponse("Invalid booking status"))
 		return
 	}
 
@@ -85,25 +85,25 @@ func (bh *BookingHttpHandler) BookingRoom(ctx *gin.Context) {
 		Status:   bookingStatus,
 	})
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, utils.ErrorResponse("Cannot create Booking"))
+		ctx.JSON(http.StatusInternalServerError, utils.ErrorApiResponse("Cannot create Booking"))
 		return
 	}
 
-	ctx.JSON(http.StatusCreated, utils.SuccessResponse(nil, "Booking Room successfully"))
+	ctx.JSON(http.StatusCreated, utils.SuccessApiResponse(nil, "Booking Room successfully"))
 }
 
 func (bh *BookingHttpHandler) DeleteBooking(ctx *gin.Context) {
 	var id pgtype.UUID
 	if err := id.Scan(id); err != nil {
-		ctx.JSON(http.StatusBadRequest, utils.ErrorResponse("Invalid Booking UUID"))
+		ctx.JSON(http.StatusBadRequest, utils.ErrorApiResponse("Invalid Booking UUID"))
 		return
 	}
 
 	err := bh.service.DeleteBooking(ctx, id)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, utils.ErrorResponse("Cannot delete Booking"))
+		ctx.JSON(http.StatusInternalServerError, utils.ErrorApiResponse("Cannot delete Booking"))
 		return
 	}
 
-	ctx.JSON(http.StatusOK, utils.SuccessResponse(nil, "Deleted Booking successfully"))
+	ctx.JSON(http.StatusOK, utils.SuccessApiResponse(nil, "Deleted Booking successfully"))
 }

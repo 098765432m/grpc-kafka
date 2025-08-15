@@ -39,21 +39,21 @@ func (rh *RatingHttpHandler) CreateRating(ctx *gin.Context) {
 	createRatingReq := &CreateRatingParams{}
 	if err := ctx.ShouldBindJSON(createRatingReq); err != nil {
 		zap.S().Errorln("Failed to get request body: ", err)
-		ctx.JSON(http.StatusBadRequest, utils.ErrorResponse("Failed to get request body"))
+		ctx.JSON(http.StatusBadRequest, utils.ErrorApiResponse("Failed to get request body"))
 	}
 
 	var hotelId pgtype.UUID
 	if err := hotelId.Scan(createRatingReq.HotelId); err != nil {
 		errMsg := "Failed to convert hotel UUID"
 		zap.S().Errorln(errMsg, err)
-		ctx.JSON(http.StatusBadRequest, utils.ErrorResponse(errMsg))
+		ctx.JSON(http.StatusBadRequest, utils.ErrorApiResponse(errMsg))
 	}
 
 	var userId pgtype.UUID
 	if err := userId.Scan(createRatingReq.UserId); err != nil {
 		errMsg := "Failed to convert user UUID"
 		zap.S().Errorln(errMsg, err)
-		ctx.JSON(http.StatusBadRequest, utils.ErrorResponse(errMsg))
+		ctx.JSON(http.StatusBadRequest, utils.ErrorApiResponse(errMsg))
 	}
 
 	err := rh.service.CreateRating(ctx, &rating_repo.CreateRatingParams{
@@ -66,8 +66,8 @@ func (rh *RatingHttpHandler) CreateRating(ctx *gin.Context) {
 	if err != nil {
 		errMsg := "Failed to create Rating"
 		zap.S().Errorln(errMsg, err)
-		ctx.JSON(http.StatusInternalServerError, utils.ErrorResponse(errMsg))
+		ctx.JSON(http.StatusInternalServerError, utils.ErrorApiResponse(errMsg))
 	}
 
-	ctx.JSON(http.StatusCreated, utils.SuccessResponse(nil, "Created rating successfully"))
+	ctx.JSON(http.StatusCreated, utils.SuccessApiResponse(nil, "Created rating successfully"))
 }

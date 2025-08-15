@@ -43,28 +43,28 @@ func (hh *HotelHttpHandler) RegisterRoutes(handler *gin.RouterGroup) {
 func (hh *HotelHttpHandler) GetHotel(ctx *gin.Context) {
 	var id pgtype.UUID
 	if err := id.Scan(ctx.Param("id")); err != nil {
-		ctx.JSON(http.StatusBadGateway, utils.ErrorResponse("Invalid hotel Id format"))
+		ctx.JSON(http.StatusBadGateway, utils.ErrorApiResponse("Invalid hotel Id format"))
 		return
 	}
 
 	hotel, err := hh.service.GetHotelById(ctx, id)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, utils.ErrorResponse("Failed to get Hotel"))
+		ctx.JSON(http.StatusInternalServerError, utils.ErrorApiResponse("Failed to get Hotel"))
 		return
 	}
 
-	ctx.JSON(http.StatusOK, utils.SuccessResponse(hotel, "Hotel retrieved successfully"))
+	ctx.JSON(http.StatusOK, utils.SuccessApiResponse(hotel, "Hotel retrieved successfully"))
 
 }
 
 func (hh *HotelHttpHandler) GetAll(ctx *gin.Context) {
 	hotels, err := hh.service.GetAll(ctx)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, utils.ErrorResponse("Failed to get all Hotels"))
+		ctx.JSON(http.StatusInternalServerError, utils.ErrorApiResponse("Failed to get all Hotels"))
 		return
 	}
 
-	ctx.JSON(http.StatusOK, utils.SuccessResponse(hotels, "Hotels retrieved successfully"))
+	ctx.JSON(http.StatusOK, utils.SuccessApiResponse(hotels, "Hotels retrieved successfully"))
 }
 
 type CreateHotelRequest struct {
@@ -77,7 +77,7 @@ func (hh *HotelHttpHandler) CreateHotel(ctx *gin.Context) {
 
 	err := ctx.ShouldBindJSON(hotelReq)
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, utils.ErrorResponse("Invalid request body"))
+		ctx.JSON(http.StatusBadRequest, utils.ErrorApiResponse("Invalid request body"))
 		return
 	}
 
@@ -86,11 +86,11 @@ func (hh *HotelHttpHandler) CreateHotel(ctx *gin.Context) {
 		Address: hotelReq.Address,
 	})
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, utils.ErrorResponse("Failed to create Hotel"))
+		ctx.JSON(http.StatusInternalServerError, utils.ErrorApiResponse("Failed to create Hotel"))
 		return
 	}
 
-	ctx.JSON(http.StatusOK, utils.SuccessResponse(nil, "Hotel created successfully"))
+	ctx.JSON(http.StatusOK, utils.SuccessApiResponse(nil, "Hotel created successfully"))
 }
 
 type UpdateHotelRequest struct {
@@ -101,13 +101,13 @@ type UpdateHotelRequest struct {
 func (hh *HotelHttpHandler) UpdateHotel(ctx *gin.Context) {
 	hotelReq := &UpdateHotelRequest{}
 	if err := ctx.ShouldBindJSON(hotelReq); err != nil {
-		ctx.JSON(http.StatusBadGateway, utils.ErrorResponse("Failed to Bind Request"))
+		ctx.JSON(http.StatusBadGateway, utils.ErrorApiResponse("Failed to Bind Request"))
 		return
 	}
 
 	var id pgtype.UUID
 	if err := id.Scan(ctx.Param("id")); err != nil {
-		ctx.JSON(http.StatusBadGateway, utils.ErrorResponse("Failed to convert UUID"))
+		ctx.JSON(http.StatusBadGateway, utils.ErrorApiResponse("Failed to convert UUID"))
 		return
 	}
 
@@ -116,32 +116,32 @@ func (hh *HotelHttpHandler) UpdateHotel(ctx *gin.Context) {
 		Name:    hotelReq.Name,
 		Address: hotelReq.Address,
 	}); err != nil {
-		ctx.JSON(http.StatusInternalServerError, utils.ErrorResponse(fmt.Sprintf("Failed to update Hotel: %v", err)))
+		ctx.JSON(http.StatusInternalServerError, utils.ErrorApiResponse(fmt.Sprintf("Failed to update Hotel: %v", err)))
 		return
 	}
 
-	ctx.JSON(http.StatusOK, utils.SuccessResponse(nil, "Updated Hotel successfully"))
+	ctx.JSON(http.StatusOK, utils.SuccessApiResponse(nil, "Updated Hotel successfully"))
 }
 
 func (hh *HotelHttpHandler) DeleteHotel(ctx *gin.Context) {
 	var id pgtype.UUID
 	if err := id.Scan(ctx.Param("id")); err != nil {
-		ctx.JSON(http.StatusBadGateway, utils.ErrorResponse("Failed to convert UUID"))
+		ctx.JSON(http.StatusBadGateway, utils.ErrorApiResponse("Failed to convert UUID"))
 		return
 	}
 
 	if err := hh.service.DeleteHotelById(ctx, id); err != nil {
-		ctx.JSON(http.StatusInternalServerError, utils.ErrorResponse("Failed to delete Hotel"))
+		ctx.JSON(http.StatusInternalServerError, utils.ErrorApiResponse("Failed to delete Hotel"))
 		return
 	}
 
-	ctx.JSON(http.StatusOK, utils.SuccessResponse(nil, "Deleted Hotel successfully"))
+	ctx.JSON(http.StatusOK, utils.SuccessApiResponse(nil, "Deleted Hotel successfully"))
 }
 
 func (hh *HotelHttpHandler) GetRoomTypesByHotelId(ctx *gin.Context) {
 	var id pgtype.UUID
 	if err := id.Scan(ctx.Param("id")); err != nil {
-		ctx.JSON(http.StatusBadRequest, utils.ErrorResponse("Failed to convert Hotel UUID format"))
+		ctx.JSON(http.StatusBadRequest, utils.ErrorApiResponse("Failed to convert Hotel UUID format"))
 		return
 	}
 
@@ -151,13 +151,13 @@ func (hh *HotelHttpHandler) GetRoomTypesByHotelId(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, utils.SuccessResponse(roomTypes, "Retrieved Room Types successfully"))
+	ctx.JSON(http.StatusOK, utils.SuccessApiResponse(roomTypes, "Retrieved Room Types successfully"))
 }
 
 func (hh *HotelHttpHandler) GetRoomsByHotelId(ctx *gin.Context) {
 	var id pgtype.UUID
 	if err := id.Scan(ctx.Param("id")); err != nil {
-		ctx.JSON(http.StatusBadRequest, utils.ErrorResponse("Failed to convert Hotel UUID format"))
+		ctx.JSON(http.StatusBadRequest, utils.ErrorApiResponse("Failed to convert Hotel UUID format"))
 		return
 	}
 
@@ -167,5 +167,5 @@ func (hh *HotelHttpHandler) GetRoomsByHotelId(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, utils.SuccessResponse(rooms, "Retrieved Rooms successfully"))
+	ctx.JSON(http.StatusOK, utils.SuccessApiResponse(rooms, "Retrieved Rooms successfully"))
 }

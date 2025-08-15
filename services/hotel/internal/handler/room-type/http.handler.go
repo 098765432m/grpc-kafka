@@ -31,17 +31,17 @@ func (rth *RoomTypeHttpHandler) RegisterRoutes(handler *gin.RouterGroup) {
 func (rth *RoomTypeHttpHandler) GetRoomType(ctx *gin.Context) {
 	var id pgtype.UUID
 	if err := id.Scan(ctx.Param("id")); err != nil {
-		ctx.JSON(http.StatusBadGateway, utils.ErrorResponse("Invalid Room Type Id format"))
+		ctx.JSON(http.StatusBadGateway, utils.ErrorApiResponse("Invalid Room Type Id format"))
 		return
 	}
 
 	roomType, err := rth.service.GetRoomTypeById(ctx, id)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, utils.ErrorResponse("Failed to get Room Type"))
+		ctx.JSON(http.StatusInternalServerError, utils.ErrorApiResponse("Failed to get Room Type"))
 		return
 	}
 
-	ctx.JSON(http.StatusOK, utils.SuccessResponse(roomType, "Room Type retrieved successfully"))
+	ctx.JSON(http.StatusOK, utils.SuccessApiResponse(roomType, "Room Type retrieved successfully"))
 
 }
 
@@ -56,12 +56,12 @@ func (rth *RoomTypeHttpHandler) CreateRoomType(ctx *gin.Context) {
 
 	var hotelId pgtype.UUID
 	if err := hotelId.Scan(hotelId); err != nil {
-		ctx.JSON(http.StatusBadRequest, utils.ErrorResponse("Invalid hotel UUID format"))
+		ctx.JSON(http.StatusBadRequest, utils.ErrorApiResponse("Invalid hotel UUID format"))
 	}
 
 	err := ctx.ShouldBindJSON(roomTypeReq)
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, utils.ErrorResponse("Invalid request body"))
+		ctx.JSON(http.StatusBadRequest, utils.ErrorApiResponse("Invalid request body"))
 		return
 	}
 
@@ -72,24 +72,24 @@ func (rth *RoomTypeHttpHandler) CreateRoomType(ctx *gin.Context) {
 	})
 
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, utils.ErrorResponse("Failed to create Room Type"))
+		ctx.JSON(http.StatusInternalServerError, utils.ErrorApiResponse("Failed to create Room Type"))
 		return
 	}
 
-	ctx.JSON(http.StatusOK, utils.SuccessResponse(nil, "Room Type created successfully"))
+	ctx.JSON(http.StatusOK, utils.SuccessApiResponse(nil, "Room Type created successfully"))
 }
 
 func (rth *RoomTypeHttpHandler) DeleteRoomType(ctx *gin.Context) {
 	var id pgtype.UUID
 	if err := id.Scan(ctx.Param("id")); err != nil {
-		ctx.JSON(http.StatusBadGateway, utils.ErrorResponse("Failed to convert UUID"))
+		ctx.JSON(http.StatusBadGateway, utils.ErrorApiResponse("Failed to convert UUID"))
 		return
 	}
 
 	if err := rth.service.DeleteRoomTypeById(ctx, id); err != nil {
-		ctx.JSON(http.StatusInternalServerError, utils.ErrorResponse("Failed to delete Room Type"))
+		ctx.JSON(http.StatusInternalServerError, utils.ErrorApiResponse("Failed to delete Room Type"))
 		return
 	}
 
-	ctx.JSON(http.StatusOK, utils.SuccessResponse(nil, "Deleted Room Type successfully"))
+	ctx.JSON(http.StatusOK, utils.SuccessApiResponse(nil, "Deleted Room Type successfully"))
 }
