@@ -10,6 +10,7 @@ import (
 	"github.com/098765432m/grpc-kafka/common/gen-proto/image_pb"
 	"github.com/098765432m/grpc-kafka/common/utils"
 	"github.com/gin-gonic/gin"
+	"go.uber.org/zap"
 )
 
 type HotelHandler struct {
@@ -102,6 +103,7 @@ func (hh *HotelHandler) GetHotelById(ctx *gin.Context) {
 			return
 
 		default:
+			zap.S().Errorln(err)
 			ctx.JSON(http.StatusInternalServerError, utils.ErrorApiResponse("Khong the "))
 			return
 		}

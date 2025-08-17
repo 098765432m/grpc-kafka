@@ -16,12 +16,12 @@ import (
 )
 
 type UserHandler struct {
-	userClient  user_pb.HotelServiceClient
+	userClient  user_pb.UserServiceClient
 	imageClient image_pb.ImageServiceClient
 }
 
 func NewUserHandler(
-	userClient user_pb.HotelServiceClient,
+	userClient user_pb.UserServiceClient,
 	imageClient image_pb.ImageServiceClient,
 ) *UserHandler {
 	return &UserHandler{
@@ -32,6 +32,11 @@ func NewUserHandler(
 
 func (uh *UserHandler) RegisterRoutes(router *gin.RouterGroup) {
 	userHandler := router.Group("/users")
+
+	userHandler.POST("/")
+
+	userHandler.GET("/:id", uh.GetUserById)
+	userHandler.PUT("/:id", uh.UpdateUserById)
 
 	userHandler.POST("/sign-in", uh.SignIn)
 }
@@ -152,6 +157,13 @@ func (uh *UserHandler) UpdateUserById(ctx *gin.Context) {
 	}
 }
 
+type SignUpRequest struct {
+}
+
+func (uh *UserHandler) SignUp(ctx *gin.Context) {
+
+}
+
 func (uh *UserHandler) DeleteUserById(ctx *gin.Context) {
 	id := ctx.Param("id")
 
@@ -194,6 +206,7 @@ func (uh *UserHandler) SignIn(ctx *gin.Context) {
 			ctx.JSON(http.StatusBadRequest, utils.ErrorApiResponse("Tai khoan hoac mat khau khong dung"))
 			return
 		default:
+			zap.S().Errorln("Failed to Sign In: ", err)
 			ctx.JSON(http.StatusInternalServerError, utils.ErrorApiResponse("Loi khong the dang nhap"))
 			return
 		}

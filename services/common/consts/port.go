@@ -1,5 +1,8 @@
 package consts
 
+// api-gateway
+const API_GATEWAY_PORT = 5025
+
 // Hotel port
 const HOTEL_HTTP_PORT = 3101
 const HOTEL_GRPC_PORT = 50051

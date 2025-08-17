@@ -5,6 +5,9 @@ PROTO_FILES := $(wildcard $(PROTO_SRC)/*.proto)
 SQLC_CONFIG_FILES = $(wildcard services/*/sqlc.yaml)
 
 MAIN_FILES = $(wildcard services/*/main.go)
+API_GATEWAY_MAIN_FILE = $(wildcard services/api-gateway/*/main.go)
+MAIN_FILES_WITHOUT_API_GATEWAY = ${filter-out ${API_GATEWAY_MAIN_FILE}, ${MAIN_FILES}}
+
 all:
 	@echo ">> Running all targets <<"
 	@$(MAKE) proto
@@ -25,9 +28,11 @@ sqlc:
 
 run-dev:
 	@echo ">> Running Development <<"
-	@$(foreach main, $(MAIN_FILES), \
+	@$(foreach main, $(MAIN_FILES_WITHOUT_API_GATEWAY), \
 		(cd $(dir $(main)) && go run main.go &); \
 	)
+	@sleep 3
+	@(cd $(dir $(API_GATEWAY_MAIN_FILE)) && go run main.go &)
 	wait
 
 docker-compose-up:

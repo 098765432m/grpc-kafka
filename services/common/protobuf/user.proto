@@ -2,7 +2,7 @@ syntax = "proto3";
 
 option go_package = "gen-proto/user_pb;user_pb";
 
-service HotelService {
+service UserService {
     rpc GetUserById(GetUserByIdRequest) returns (GetUserByIdResponse);
     rpc CreateUser(CreateUserRequest) returns (CreateUserResponse);
     rpc UpdateUserById(UpdateUserByIdRequest) returns (UpdateUserByIdResponse);

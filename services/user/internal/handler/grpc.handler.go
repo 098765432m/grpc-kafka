@@ -15,7 +15,7 @@ import (
 )
 
 type UserGrpcHandler struct {
-	user_pb.UnimplementedHotelServiceServer
+	user_pb.UnimplementedUserServiceServer
 	service *user_service.UserService
 }
 
@@ -134,7 +134,7 @@ func (ug *UserGrpcHandler) DeleteUserById(ctx context.Context, req *user_pb.Dele
 }
 
 func (ug *UserGrpcHandler) SignIn(ctx context.Context, req *user_pb.SignInRequest) (*user_pb.SignInResponse, error) {
-
+	zap.S().Infoln("SignIn Call")
 	signInResult, err := ug.service.SignIn(ctx, req.GetUsername(), req.GetPassword())
 	if err != nil {
 		if errors.Is(err, common_error.ErrNoRows) {
