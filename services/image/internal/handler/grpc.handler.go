@@ -182,7 +182,7 @@ func (ig *ImageGrpcHandler) UploadImage(ctx context.Context, req *image_pb.Uploa
 
 }
 
-func (ig *ImageGrpcHandler) DeleteImage(ctx context.Context, req *image_pb.DeleteImageRequest) (*image_pb.DeleteImageResponse, error) {
+func (ig *ImageGrpcHandler) DeleteImageById(ctx context.Context, req *image_pb.DeleteImageByIdRequest) (*image_pb.DeleteImageByIdResponse, error) {
 
 	var id pgtype.UUID
 	if err := id.Scan(req.Id); err != nil {
@@ -194,10 +194,10 @@ func (ig *ImageGrpcHandler) DeleteImage(ctx context.Context, req *image_pb.Delet
 		return nil, err
 	}
 
-	return &image_pb.DeleteImageResponse{}, nil
+	return &image_pb.DeleteImageByIdResponse{}, nil
 }
 
-func (ig *ImageGrpcHandler) DeleteImages(ctx context.Context, req *image_pb.DeleteImagesRequest) (*image_pb.DeleteImagesResponse, error) {
+func (ig *ImageGrpcHandler) DeleteImagesByIds(ctx context.Context, req *image_pb.DeleteImagesByIdsRequest) (*image_pb.DeleteImagesByIdsResponse, error) {
 
 	// Convert string to pgtype UUID
 	var ids []pgtype.UUID
@@ -217,5 +217,5 @@ func (ig *ImageGrpcHandler) DeleteImages(ctx context.Context, req *image_pb.Dele
 		return nil, err
 	}
 
-	return &image_pb.DeleteImagesResponse{}, nil
+	return &image_pb.DeleteImagesByIdsResponse{}, nil
 }

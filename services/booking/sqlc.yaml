@@ -1,6 +1,6 @@
 version: "2"
 sql:
-  # Hotel
+  # Booking
   - engine: "postgresql"
     schema:
       - "internal/database/booking.schema.sql"
