@@ -1,16 +1,16 @@
 package api_handler
 
 import (
-	"errors"
 	"net/http"
 
 	api_dto "github.com/098765432m/grpc-kafka/api-gateway/internal/dto"
-	common_error "github.com/098765432m/grpc-kafka/common/error"
 	"github.com/098765432m/grpc-kafka/common/gen-proto/hotel_pb"
 	"github.com/098765432m/grpc-kafka/common/gen-proto/image_pb"
 	"github.com/098765432m/grpc-kafka/common/utils"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 type HotelHandler struct {
@@ -96,23 +96,24 @@ func (hh *HotelHandler) GetHotelById(ctx *gin.Context) {
 	})
 	hotel := hotelGrpc.GetHotel()
 	if err != nil {
-
-		switch {
-		case errors.Is(err, common_error.ErrNoRows):
-			ctx.JSON(http.StatusBadRequest, utils.ErrorApiResponse("Khach san khong ton tai"))
-			return
-
-		default:
-			zap.S().Errorln(err)
-			ctx.JSON(http.StatusInternalServerError, utils.ErrorApiResponse("Khong the "))
-			return
+		st, ok := status.FromError(err)
+		if ok {
+			switch st.Code() {
+			case codes.NotFound:
+				ctx.JSON(http.StatusBadRequest, utils.ErrorApiResponse("Khach san khong ton tai"))
+				return
+			}
 		}
+
+		zap.S().Errorln(err)
+		ctx.JSON(http.StatusInternalServerError, utils.ErrorApiResponse("Loi he thong khi lay khach san"))
+		return
 	}
 
 	images, err := hh.imageClient.GetImagesByHotelId(ctx, &image_pb.GetImagesByHotelIdRequest{HotelId: hotel.Id})
 	if err != nil {
 
-		ctx.JSON(http.StatusInternalServerError, utils.ErrorApiResponse("Khong the "))
+		ctx.JSON(http.StatusInternalServerError, utils.ErrorApiResponse("Loi he thong khi lay hinh anh khach san"))
 		return
 	}
 

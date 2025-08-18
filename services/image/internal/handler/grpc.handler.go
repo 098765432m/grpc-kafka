@@ -61,7 +61,7 @@ func (ig *ImageGrpcHandler) GetImagesByHotelId(ctx context.Context, req *image_p
 	images, err := ig.service.GetImagesByHotelId(ctx, hotelId)
 	if err != nil {
 		if errors.Is(err, common_error.ErrNoRows) {
-
+			return nil, nil
 		}
 		return nil, err
 	}

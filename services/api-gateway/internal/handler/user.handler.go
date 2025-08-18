@@ -60,12 +60,12 @@ func (uh *UserHandler) GetUserById(ctx *gin.Context) {
 		if ok {
 			switch st.Code() {
 			case codes.NotFound:
-				ctx.JSON(http.StatusBadRequest, utils.ErrorApiResponse(st.Message()))
+				ctx.JSON(http.StatusBadRequest, utils.ErrorApiResponse("Tai khoan khong ton tai"))
 				return
 			}
 		}
 
-		ctx.JSON(http.StatusInternalServerError, utils.ErrorApiResponse(err.Error()))
+		ctx.JSON(http.StatusInternalServerError, utils.ErrorApiResponse("Loi he thong"))
 		return
 	}
 

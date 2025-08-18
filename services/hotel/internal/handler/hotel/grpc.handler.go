@@ -2,7 +2,9 @@ package hotel_handler
 
 import (
 	"context"
+	"errors"
 
+	common_error "github.com/098765432m/grpc-kafka/common/error"
 	"github.com/098765432m/grpc-kafka/common/gen-proto/hotel_pb"
 	hotel_repo "github.com/098765432m/grpc-kafka/hotel/internal/repository/hotel"
 	hotel_service "github.com/098765432m/grpc-kafka/hotel/internal/service/hotel"
@@ -10,6 +12,8 @@ import (
 	room_type_service "github.com/098765432m/grpc-kafka/hotel/internal/service/room-type"
 	"github.com/jackc/pgx/v5/pgtype"
 	"go.uber.org/zap"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 type HotelGrpcHandler struct {
@@ -35,12 +39,16 @@ func (hg *HotelGrpcHandler) GetHotelById(ctx context.Context, req *hotel_pb.GetH
 
 	var id pgtype.UUID
 	if err := id.Scan(req.Id); err != nil {
-		zap.S().Errorln("Failed to Hotel UUID")
-		return nil, err
+		zap.S().Errorln("Invalid Hotel UUID")
+		return nil, status.Error(codes.InvalidArgument, "Loi UUID khach san")
 	}
 
 	hotel, err := hg.service.GetHotelById(ctx, id)
 	if err != nil {
+		switch {
+		case errors.Is(err, common_error.ErrNoRows):
+			return nil, status.Error(codes.NotFound, "Khach san khong ton tai")
+		}
 
 		zap.S().Errorln("Failed to get Hotel by Id: ", err)
 		return nil, err

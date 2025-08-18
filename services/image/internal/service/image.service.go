@@ -69,9 +69,6 @@ func (is *ImageService) GetImagesByHotelId(ctx context.Context, hotelId pgtype.U
 func (is *ImageService) GetImagesByHotelIds(ctx context.Context, hotelIds []pgtype.UUID) ([]image_repo.Image, error) {
 	images, err := is.repo.GetImagesByHotelIds(ctx, hotelIds)
 	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, common_error.ErrNoRows
-		}
 		return nil, err
 	}
 
