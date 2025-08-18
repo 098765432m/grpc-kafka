@@ -53,14 +53,14 @@ func (uh *UserHandler) GetUserById(ctx *gin.Context) {
 	userGrpc, err := uh.userClient.GetUserById(ctx, &user_pb.GetUserByIdRequest{
 		Id: id,
 	})
-	user := userGrpc.User
+	user := userGrpc.GetUser()
 
 	if err != nil {
 		st, ok := status.FromError(err)
 		if ok {
 			switch st.Code() {
 			case codes.NotFound:
-				ctx.JSON(int(st.Code()), utils.ErrorApiResponse(st.Message()))
+				ctx.JSON(http.StatusBadRequest, utils.ErrorApiResponse(st.Message()))
 				return
 			}
 		}
@@ -69,10 +69,10 @@ func (uh *UserHandler) GetUserById(ctx *gin.Context) {
 		return
 	}
 
-	imageGrpc, err := uh.imageClient.GetImagesByUserId(ctx, &image_pb.GetImagesByUserIdRequest{
+	imageGrpc, err := uh.imageClient.GetImageByUserId(ctx, &image_pb.GetImageByUserIdRequest{
 		UserId: user.GetId(),
 	})
-	image := imageGrpc.Image
+	image := imageGrpc.GetImage()
 	if err != nil {
 		st, ok := status.FromError(err)
 		if ok {
@@ -125,6 +125,7 @@ func (uh *UserHandler) UpdateUserById(ctx *gin.Context) {
 
 	updateReq := &UpdateUserParams{}
 	if err := ctx.ShouldBindJSON(updateReq); err != nil {
+		zap.S().Errorln("Cannot bind JSON Request: ", err)
 		ctx.JSON(http.StatusBadRequest, utils.ErrorApiResponse("Khong cap nhat duoc tai khoan"))
 		return
 	}
@@ -146,8 +147,11 @@ func (uh *UserHandler) UpdateUserById(ctx *gin.Context) {
 		st, ok := status.FromError(err)
 		if ok {
 			switch st.Code() {
-			case codes.Internal:
-				ctx.JSON(http.StatusInternalServerError, utils.ErrorApiResponse(err.Error()))
+			case codes.NotFound:
+				ctx.JSON(http.StatusBadRequest, utils.ErrorApiResponse("Tai khoan khong ton tai de cap nhat"))
+				return
+			default:
+				ctx.JSON(http.StatusInternalServerError, utils.ErrorApiResponse("Loi he thong"))
 				return
 			}
 		}
@@ -155,6 +159,8 @@ func (uh *UserHandler) UpdateUserById(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, utils.ErrorApiResponse("Loi he thong"))
 		return
 	}
+
+	ctx.JSON(http.StatusOK, utils.SuccessApiResponse(nil, "Cap nhat tai khoan thanh cong"))
 }
 
 type SignUpRequest struct {
@@ -174,6 +180,9 @@ func (uh *UserHandler) DeleteUserById(ctx *gin.Context) {
 		st, ok := status.FromError(err)
 		if ok {
 			switch st.Code() {
+			case codes.NotFound:
+				ctx.JSON(http.StatusBadRequest, utils.ErrorApiResponse("Tai khoan khong ton tai de xoa"))
+				return
 			case codes.Internal:
 				ctx.JSON(http.StatusInternalServerError, utils.ErrorApiResponse(err.Error()))
 				return
@@ -214,12 +223,12 @@ func (uh *UserHandler) SignIn(ctx *gin.Context) {
 
 	ctx.SetSameSite(http.SameSiteLaxMode)
 
-	cookie, err := ctx.Cookie("sign_in")
+	cookie, err := ctx.Cookie("user")
 	if err != nil {
 		zap.S().Errorln("Cookie err: ", err)
 		cookie = "NotSet"
 
-		ctx.SetCookie("sign_in", signInResult.Jwt, 3600, "/", "localhost", false, true)
+		ctx.SetCookie("user", signInResult.Jwt, 3600, "/", "localhost", false, true)
 	}
 
 	zap.S().Infoln("Cookie setting")

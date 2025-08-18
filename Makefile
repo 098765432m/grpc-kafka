@@ -26,15 +26,6 @@ sqlc:
 	@$(foreach config, $(SQLC_CONFIG_FILES), \
 		(cd $(dir $(config)) && sqlc generate);)
 
-run-dev:
-	@echo ">> Running Development <<"
-	@$(foreach main, $(MAIN_FILES_WITHOUT_API_GATEWAY), \
-		(cd $(dir $(main)) && go run main.go &); \
-	)
-	@sleep 3
-	@(cd $(dir $(API_GATEWAY_MAIN_FILE)) && go run main.go &)
-	wait
-
 docker-compose-up:
 	@echo ">> Start Docker Compose <<"
 	@cd services && sudo docker-compose up -d
@@ -55,3 +46,15 @@ clean:
 kill-main:
 	@pkill -x main
 
+run-dev:
+	@echo ">> Running Development <<"
+	@$(foreach main, $(MAIN_FILES_WITHOUT_API_GATEWAY), \
+		(cd $(dir $(main)) && go run main.go &); \
+	)
+	@sleep 2
+	@(cd $(dir $(API_GATEWAY_MAIN_FILE)) && go run main.go &)
+	wait
+
+run-reset:
+	@$(MAKE) kill-main
+	@$(MAKE) run-dev

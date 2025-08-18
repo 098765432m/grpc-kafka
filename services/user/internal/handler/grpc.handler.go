@@ -27,7 +27,7 @@ func NewUserGrpcHandler(service *user_service.UserService) *UserGrpcHandler {
 
 func (ug *UserGrpcHandler) GetUserById(ctx context.Context, req *user_pb.GetUserByIdRequest) (*user_pb.GetUserByIdResponse, error) {
 	var id pgtype.UUID
-	if err := id.Scan(req.GetId()); err != nil {
+	if err := id.Scan(req.Id); err != nil {
 		zap.S().Errorln("Invalid UUID: ", err)
 		return nil, status.Errorf(codes.InvalidArgument, "UUID khong hop le")
 	}
@@ -101,6 +101,12 @@ func (ug *UserGrpcHandler) UpdateUserById(ctx context.Context, req *user_pb.Upda
 		}
 	}
 
+	// Default Role if empty
+	var newRole user_repo.RoleEnum
+	if req.User.GetRole() == "" {
+		newRole = user_repo.RoleEnumGUEST
+	}
+
 	err := ug.service.UpdateUserById(ctx, &user_repo.UpdateUserByIdParams{
 		ID:          id,
 		Username:    req.User.Username,
@@ -108,10 +114,16 @@ func (ug *UserGrpcHandler) UpdateUserById(ctx context.Context, req *user_pb.Upda
 		Email:       req.User.Email,
 		PhoneNumber: req.User.PhoneNumber,
 		FullName:    req.User.FullName,
-		Role:        user_repo.RoleEnum(req.User.Role),
+		Role:        newRole,
 		HotelID:     hotelId,
 	})
 	if err != nil {
+		switch {
+		case errors.Is(err, common_error.ErrNoRows):
+
+			return nil, status.Error(codes.NotFound, "Tai khoan khong ton tai de cap nhat")
+		}
+
 		zap.S().Errorln(err)
 		return nil, status.Error(codes.Internal, "Loi he thong")
 	}
@@ -134,7 +146,6 @@ func (ug *UserGrpcHandler) DeleteUserById(ctx context.Context, req *user_pb.Dele
 }
 
 func (ug *UserGrpcHandler) SignIn(ctx context.Context, req *user_pb.SignInRequest) (*user_pb.SignInResponse, error) {
-	zap.S().Infoln("SignIn Call")
 	signInResult, err := ug.service.SignIn(ctx, req.GetUsername(), req.GetPassword())
 	if err != nil {
 		if errors.Is(err, common_error.ErrNoRows) {

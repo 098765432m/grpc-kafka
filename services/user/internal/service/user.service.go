@@ -92,9 +92,20 @@ func (us *UserService) CreateUser(ctx context.Context, newUser *user_repo.Create
 }
 
 func (us *UserService) UpdateUserById(ctx context.Context, params *user_repo.UpdateUserByIdParams) error {
-	err := us.repo.UpdateUserById(ctx, *params)
+	isUserExisted, err := us.repo.CheckUserExistsById(ctx, params.ID)
 	if err != nil {
-		zap.S().Errorln("Failed to update User by id")
+		zap.S().Error("Cannot check user exist by id")
+		return err
+	}
+
+	if !isUserExisted {
+		zap.S().Errorln("User is not existed to update")
+		return common_error.ErrNoRows
+	}
+	err = us.repo.UpdateUserById(ctx, *params)
+	if err != nil {
+
+		zap.S().Errorln("Failed to update User by id: ", err)
 		return err
 	}
 

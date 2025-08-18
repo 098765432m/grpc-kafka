@@ -2,7 +2,9 @@ package image_handler
 
 import (
 	"context"
+	"errors"
 
+	common_error "github.com/098765432m/grpc-kafka/common/error"
 	"github.com/098765432m/grpc-kafka/common/gen-proto/image_pb"
 	image_repo "github.com/098765432m/grpc-kafka/image/internal/repository/image"
 	image_service "github.com/098765432m/grpc-kafka/image/internal/service"
@@ -58,6 +60,9 @@ func (ig *ImageGrpcHandler) GetImagesByHotelId(ctx context.Context, req *image_p
 
 	images, err := ig.service.GetImagesByHotelId(ctx, hotelId)
 	if err != nil {
+		if errors.Is(err, common_error.ErrNoRows) {
+
+		}
 		return nil, err
 	}
 
@@ -78,7 +83,7 @@ func (ig *ImageGrpcHandler) GetImagesByHotelId(ctx context.Context, req *image_p
 	}, nil
 }
 
-func (ig *ImageGrpcHandler) GetImagesByUserId(ctx context.Context, req *image_pb.GetImagesByUserIdRequest) (*image_pb.GetImagesByUserIdResponse, error) {
+func (ig *ImageGrpcHandler) GetImageByUserId(ctx context.Context, req *image_pb.GetImageByUserIdRequest) (*image_pb.GetImageByUserIdResponse, error) {
 	var userId pgtype.UUID
 	if err := userId.Scan(req.UserId); err != nil {
 		return nil, err
@@ -86,10 +91,17 @@ func (ig *ImageGrpcHandler) GetImagesByUserId(ctx context.Context, req *image_pb
 
 	image, err := ig.service.GetImageByUserId(ctx, userId)
 	if err != nil {
-		return nil, err
+		switch {
+
+		case errors.Is(err, common_error.ErrNoRows):
+			return nil, nil
+		default:
+
+			return nil, err
+		}
 	}
 
-	return &image_pb.GetImagesByUserIdResponse{
+	return &image_pb.GetImageByUserIdResponse{
 		Image: &image_pb.UserImage{
 			Id:       image.ID.String(),
 			PublicId: image.PublicID,
