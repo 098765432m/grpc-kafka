@@ -17,27 +17,6 @@ var rootCmd = &cobra.Command{
 	Use:   "user",
 	Short: "User service command line interface",
 	Run: func(cmd *cobra.Command, args []string) {
-		// Dial grpc
-		// hotelConn := NewGrpcClient(consts.HOTEL_GRPC_PORT)
-		// defer hotelConn.Close()
-
-		// hotelClient := hotel_pb.NewHotelServiceClient(hotelConn)
-
-		// _, err := hotelClient.CreateHotel(context.Background(), &hotel_pb.CreateHotelRequest{Name: "Test Hotel"})
-		// if err != nil {
-		// 	log.Fatalf("Failed to create hotel: %v", err)
-		// }
-
-		// fmt.Println("Hotel created successfully")
-
-		// hotels, err := hotelClient.GetAllHotels(context.Background(), &hotel_pb.GetAllHotelsRequest{})
-		// if err != nil {
-		// 	log.Fatalf("Failed to get all hotels: %v", err)
-		// }
-
-		// for _, hotel := range hotels.Hotels {
-		// 	fmt.Printf("Hotel ID: %s, Name: %s\n", hotel.Id, hotel.Name)
-		// }
 
 		conn, err := user_database.Connect()
 		if err != nil {
@@ -45,7 +24,7 @@ var rootCmd = &cobra.Command{
 		}
 
 		// Start grpc server
-		grpcServer := app.NewGrpcServer(consts.USER_GRPC_PORT)
+		grpcServer := app.NewGrpcServer(consts.USER_GRPC_PORT, conn)
 		go grpcServer.Run()
 
 		// Start HTTP server

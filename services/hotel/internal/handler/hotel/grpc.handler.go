@@ -6,18 +6,28 @@ import (
 	"github.com/098765432m/grpc-kafka/common/gen-proto/hotel_pb"
 	hotel_repo "github.com/098765432m/grpc-kafka/hotel/internal/repository/hotel"
 	hotel_service "github.com/098765432m/grpc-kafka/hotel/internal/service/hotel"
+	room_service "github.com/098765432m/grpc-kafka/hotel/internal/service/room"
+	room_type_service "github.com/098765432m/grpc-kafka/hotel/internal/service/room-type"
 	"github.com/jackc/pgx/v5/pgtype"
 	"go.uber.org/zap"
 )
 
 type HotelGrpcHandler struct {
 	hotel_pb.UnimplementedHotelServiceServer
-	service *hotel_service.HotelService
+	service         *hotel_service.HotelService
+	roomTypeService *room_type_service.RoomTypeService
+	roomService     *room_service.RoomService
 }
 
-func NewHotelGrpcHandler(service *hotel_service.HotelService) *HotelGrpcHandler {
+func NewHotelGrpcHandler(
+	service *hotel_service.HotelService,
+	roomTypeService *room_type_service.RoomTypeService,
+	roomService *room_service.RoomService,
+) *HotelGrpcHandler {
 	return &HotelGrpcHandler{
-		service: service,
+		service:         service,
+		roomTypeService: roomTypeService,
+		roomService:     roomService,
 	}
 }
 

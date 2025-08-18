@@ -33,6 +33,7 @@ func (g *GrpcServer) Run() {
 	// Register our grpc services
 	repo := image_repo.New(g.conn)
 	service := image_service.NewImageService(repo)
+
 	image_pb.RegisterImageServiceServer(grpcServer, image_handler.NewImageGrpcHandler(service))
 
 	log.Printf("Running grpc server on port: %d\n", g.addr)

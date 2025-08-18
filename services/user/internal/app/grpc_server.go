@@ -5,15 +5,21 @@ import (
 	"log"
 	"net"
 
+	"github.com/098765432m/grpc-kafka/common/gen-proto/user_pb"
+	user_handler "github.com/098765432m/grpc-kafka/user/internal/handler"
+	user_repo "github.com/098765432m/grpc-kafka/user/internal/repository/user"
+	user_service "github.com/098765432m/grpc-kafka/user/internal/service"
+	"github.com/jackc/pgx/v5"
 	"google.golang.org/grpc"
 )
 
 type GrpcServer struct {
 	addr int
+	conn *pgx.Conn
 }
 
-func NewGrpcServer(addr int) *GrpcServer {
-	return &GrpcServer{addr: addr}
+func NewGrpcServer(addr int, conn *pgx.Conn) *GrpcServer {
+	return &GrpcServer{addr: addr, conn: conn}
 }
 
 func (g *GrpcServer) Run() {
@@ -24,8 +30,16 @@ func (g *GrpcServer) Run() {
 
 	grpcServer := grpc.NewServer()
 
-	// Register our grpc services here
-	// user_pb.RegisterHotelServiceServer(grpcServer, )
+	// repo
+	repo := user_repo.New(g.conn)
+
+	// service
+	service := user_service.NewUserService(repo)
+
+	// handler
+	handler := user_handler.NewUserGrpcHandler(service)
+
+	user_pb.RegisterUserServiceServer(grpcServer, handler)
 
 	log.Printf("Running grpc server on port: %d\n", g.addr)
 	if err := grpcServer.Serve(lis); err != nil {
