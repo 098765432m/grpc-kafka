@@ -170,6 +170,40 @@ func (q *Queries) GetUsers(ctx context.Context) ([]User, error) {
 	return items, nil
 }
 
+const getUsersByIds = `-- name: GetUsersByIds :many
+SELECT id, username, password, address, email, phone_number, full_name, role, hotel_id FROM users WHERE id = ANY($1::uuid[])
+`
+
+func (q *Queries) GetUsersByIds(ctx context.Context, ids []pgtype.UUID) ([]User, error) {
+	rows, err := q.db.Query(ctx, getUsersByIds, ids)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []User
+	for rows.Next() {
+		var i User
+		if err := rows.Scan(
+			&i.ID,
+			&i.Username,
+			&i.Password,
+			&i.Address,
+			&i.Email,
+			&i.PhoneNumber,
+			&i.FullName,
+			&i.Role,
+			&i.HotelID,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const updateUserById = `-- name: UpdateUserById :exec
 UPDATE users
 SET

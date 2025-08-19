@@ -166,6 +166,39 @@ func (q *Queries) GetImagesByRoomTypeId(ctx context.Context, roomTypeID pgtype.U
 	return items, nil
 }
 
+const getImagesByUserIds = `-- name: GetImagesByUserIds :many
+SELECT id, public_id, format, hotel_id, user_id, room_type_id
+FROM images
+WHERE user_id = ANY($1::uuid[])
+`
+
+func (q *Queries) GetImagesByUserIds(ctx context.Context, userIds []pgtype.UUID) ([]Image, error) {
+	rows, err := q.db.Query(ctx, getImagesByUserIds, userIds)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Image
+	for rows.Next() {
+		var i Image
+		if err := rows.Scan(
+			&i.ID,
+			&i.PublicID,
+			&i.Format,
+			&i.HotelID,
+			&i.UserID,
+			&i.RoomTypeID,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const uploadHotelImage = `-- name: UploadHotelImage :exec
 INSERT INTO images (
     public_id,

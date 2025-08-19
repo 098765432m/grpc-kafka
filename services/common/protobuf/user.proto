@@ -4,6 +4,7 @@ option go_package = "gen-proto/user_pb;user_pb";
 
 service UserService {
     rpc GetUserById(GetUserByIdRequest) returns (GetUserByIdResponse);
+    rpc GetUsersByIds(GetUsersByIdsRequest) returns (GetUsersByIdsResponse);
     rpc CreateUser(CreateUserRequest) returns (CreateUserResponse);
     rpc UpdateUserById(UpdateUserByIdRequest) returns (UpdateUserByIdResponse);
     rpc DeleteUserById(DeleteUserByIdRequest) returns (DeleteUserByIdResponse);
@@ -29,6 +30,13 @@ message GetUserByIdRequest {
 
 message GetUserByIdResponse {
     User user = 1;
+}
+message GetUsersByIdsRequest {
+    repeated string ids = 1;
+}
+
+message GetUsersByIdsResponse {
+    repeated User users = 1;
 }
 
 message CreateUserRequest {

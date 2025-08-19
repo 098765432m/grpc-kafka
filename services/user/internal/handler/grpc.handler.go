@@ -56,10 +56,49 @@ func (ug *UserGrpcHandler) GetUserById(ctx context.Context, req *user_pb.GetUser
 	}, nil
 }
 
+func (ug *UserGrpcHandler) GetUsersByIds(ctx context.Context, req *user_pb.GetUsersByIdsRequest) (*user_pb.GetUsersByIdsResponse, error) {
+	ids := make([]pgtype.UUID, 0, len(req.GetIds()))
+	for _, userIdReq := range req.Ids {
+		var id pgtype.UUID
+		// id := &pgtype.UUID{}
+		if err := id.Scan(userIdReq); err != nil {
+			zap.S().Info("Invalid User UUID: ", err)
+			return nil, status.Error(codes.InvalidArgument, "Loi user UUID")
+		}
+
+		ids = append(ids, id)
+	}
+
+	users, err := ug.service.GetUsersByIds(ctx, ids)
+	if err != nil {
+		return nil, status.Error(codes.Internal, "Loi he thong")
+	}
+
+	usersGrpcResult := make([]*user_pb.User, 0, len(users))
+	for _, user := range users {
+		userGrpcResult := &user_pb.User{
+			Id:          user.ID.String(),
+			Username:    user.Username,
+			Password:    user.Password,
+			Address:     user.Address,
+			Email:       user.Username,
+			PhoneNumber: user.PhoneNumber,
+			FullName:    user.FullName,
+			HotelId:     user.HotelID.String(),
+			Role:        string(user.Role),
+		}
+		usersGrpcResult = append(usersGrpcResult, userGrpcResult)
+	}
+
+	return &user_pb.GetUsersByIdsResponse{
+		Users: usersGrpcResult,
+	}, nil
+}
+
 func (ug *UserGrpcHandler) CreateUser(ctx context.Context, req *user_pb.CreateUserRequest) (*user_pb.CreateUserResponse, error) {
 
 	var hotelId pgtype.UUID
-	if req.HotelId == "" {
+	if req.HotelId != "" {
 		if err := hotelId.Scan(req.HotelId); err != nil {
 			zap.S().Errorln("Invalid UUID")
 			return nil, status.Error(codes.InvalidArgument, "Loi he thong")
@@ -76,7 +115,11 @@ func (ug *UserGrpcHandler) CreateUser(ctx context.Context, req *user_pb.CreateUs
 		HotelID:     hotelId,
 	})
 	if err != nil {
-		zap.S().Errorln(err)
+		switch {
+		case errors.Is(err, common_error.ErrDuplicateRecord):
+			return nil, status.Error(codes.AlreadyExists, "Tai khoan da ton tai")
+		}
+
 		return nil, status.Error(codes.Internal, "Loi he thong")
 	}
 

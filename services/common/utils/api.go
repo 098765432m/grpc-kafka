@@ -5,7 +5,7 @@ import "github.com/gin-gonic/gin"
 func ErrorApiResponse(msg string) gin.H {
 	return gin.H{
 		"success": false,
-		"error":   msg,
+		"message": msg,
 	}
 }
 

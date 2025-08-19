@@ -8,6 +8,8 @@ import (
 	rating_service "github.com/098765432m/grpc-kafka/rating/internal/service"
 	"github.com/jackc/pgx/v5/pgtype"
 	"go.uber.org/zap"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 type RatingGrpcHandler struct {
@@ -21,24 +23,24 @@ func NewRatingGrpcHandler(service *rating_service.RatingService) *RatingGrpcHand
 	}
 }
 
-func (rg *RatingGrpcHandler) GetRatingsByHotel(ctx context.Context, req *rating_pb.GetRatingsByHotelRequest) (*rating_pb.GetRatingsByHotelRepsonse, error) {
-	var id pgtype.UUID
-	if err := id.Scan(req.HotelId); err != nil {
+func (rg *RatingGrpcHandler) GetRatingsByHotelId(ctx context.Context, req *rating_pb.GetRatingsByHotelIdRequest) (*rating_pb.GetRatingsByHotelIdRepsonse, error) {
+	var hotelId pgtype.UUID
+	if err := hotelId.Scan(req.GetHotelId()); err != nil {
 		zap.S().Errorln("Failed to convert UUID")
-		return nil, err
+		return nil, status.Error(codes.InvalidArgument, "Loi UUID khach san")
 	}
 
-	ratings, err := rg.service.GetRatingsByHotel(ctx, id)
+	ratings, err := rg.service.GetRatingsByHotelId(ctx, hotelId)
 	if err != nil {
 		zap.S().Errorln(err)
-		return nil, err
+		return nil, status.Error(codes.Internal, "Loi he thong")
 	}
 
 	var grpc_ratings []*rating_pb.Rating
 	for _, rating := range ratings {
 		grpc_rating := &rating_pb.Rating{
 			Id:      rating.ID.String(),
-			Rating:  rating.Rating,
+			Score:   rating.Score,
 			HotelId: rating.HotelID.String(),
 			UserId:  rating.UserID.String(),
 			Comment: rating.Comment.String,
@@ -46,16 +48,16 @@ func (rg *RatingGrpcHandler) GetRatingsByHotel(ctx context.Context, req *rating_
 		grpc_ratings = append(grpc_ratings, grpc_rating)
 	}
 
-	return &rating_pb.GetRatingsByHotelRepsonse{
+	return &rating_pb.GetRatingsByHotelIdRepsonse{
 		Ratings: grpc_ratings,
 	}, nil
 }
 
-func (rg *RatingGrpcHandler) UpdateRating(ctx context.Context, req *rating_pb.UpdateRatingRequest) (*rating_pb.UpdateRatingResponse, error) {
+func (rg *RatingGrpcHandler) UpdateRatingById(ctx context.Context, req *rating_pb.UpdateRatingByIdRequest) (*rating_pb.UpdateRatingByIdResponse, error) {
 
 	err := rg.service.UpdateRating(ctx, &rating_repo.UpdateRatingParams{
 		ID:      req.NewRating.Id,
-		Rating:  req.NewRating.Rating,
+		Score:   req.NewRating.Score,
 		HotelID: req.NewRating.HotelId,
 		UserID:  req.NewRating.UserId,
 		Comment: req.NewRating.Comment,
@@ -66,10 +68,10 @@ func (rg *RatingGrpcHandler) UpdateRating(ctx context.Context, req *rating_pb.Up
 		return nil, err
 	}
 
-	return &rating_pb.UpdateRatingResponse{}, nil
+	return &rating_pb.UpdateRatingByIdResponse{}, nil
 }
 
-func (rg *RatingGrpcHandler) DeleteRating(ctx context.Context, req *rating_pb.DeleteRatingRequest) (*rating_pb.DeleteRatingResponse, error) {
+func (rg *RatingGrpcHandler) DeleteRatingById(ctx context.Context, req *rating_pb.DeleteRatingByIdRequest) (*rating_pb.DeleteRatingByIdResponse, error) {
 
 	var id pgtype.UUID
 	if err := id.Scan(req.Id); err != nil {
@@ -84,5 +86,5 @@ func (rg *RatingGrpcHandler) DeleteRating(ctx context.Context, req *rating_pb.De
 		return nil, err
 	}
 
-	return &rating_pb.DeleteRatingResponse{}, nil
+	return &rating_pb.DeleteRatingByIdResponse{}, nil
 }

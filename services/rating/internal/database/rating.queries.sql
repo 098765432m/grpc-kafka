@@ -6,14 +6,14 @@ WHERE hotel_id = $1;
 -- name: CreateRating :exec
 INSERT INTO ratings
 (
-    rating,
+    score,
     hotel_id,
     user_id,
     comment
 )
 VALUES
 (
-    @rating::int,
+    @score::int,
     @hotel_id::text,
     @user_id::text,
     @comment::text
@@ -22,7 +22,7 @@ VALUES
 -- name: UpdateRating :exec
 UPDATE ratings
 SET 
-    rating = @rating::int,
+    score = @score::int,
     hotel_id = @hotel_id::text,
     user_id = @user_id::text,
     comment = @comment::text

@@ -8,6 +8,7 @@ import (
 	"github.com/098765432m/grpc-kafka/common/consts"
 	"github.com/098765432m/grpc-kafka/common/gen-proto/hotel_pb"
 	"github.com/098765432m/grpc-kafka/common/gen-proto/image_pb"
+	"github.com/098765432m/grpc-kafka/common/gen-proto/rating_pb"
 	"github.com/098765432m/grpc-kafka/common/gen-proto/user_pb"
 	common_middleware "github.com/098765432m/grpc-kafka/common/middleware"
 	"github.com/098765432m/grpc-kafka/common/utils"
@@ -41,14 +42,18 @@ func main() {
 	imageConn := utils.NewGrpcClient(strconv.Itoa(consts.IMAGE_GRPC_PORT))
 	defer imageConn.Close()
 
+	ratingConn := utils.NewGrpcClient(strconv.Itoa(consts.RATING_GRPC_PORT))
+	defer ratingConn.Close()
+
 	hotelClient := hotel_pb.NewHotelServiceClient(hotelConn)
 	userClient := user_pb.NewUserServiceClient(userConn)
 	imageClient := image_pb.NewImageServiceClient(imageConn)
+	ratingClient := rating_pb.NewRatingServiceClient(ratingConn)
 
 	userHandler := api_handler.NewUserHandler(userClient, imageClient)
 	userHandler.RegisterRoutes(api)
 
-	hotelHandler := api_handler.NewHotelHandler(hotelClient, imageClient)
+	hotelHandler := api_handler.NewHotelHandler(hotelClient, userClient, imageClient, ratingClient)
 	hotelHandler.RegisterRoutes(api)
 
 	imageHandler := api_handler.NewImageHandler(imageClient)

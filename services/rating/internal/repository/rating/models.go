@@ -10,7 +10,7 @@ import (
 
 type Rating struct {
 	ID      pgtype.UUID `json:"id"`
-	Rating  int32       `json:"rating"`
+	Score   int32       `json:"score"`
 	HotelID pgtype.UUID `json:"hotel_id"`
 	UserID  pgtype.UUID `json:"user_id"`
 	Comment pgtype.Text `json:"comment"`

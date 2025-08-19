@@ -75,6 +75,17 @@ func (is *ImageService) GetImagesByHotelIds(ctx context.Context, hotelIds []pgty
 	return images, nil
 }
 
+func (is *ImageService) GetImagesByUserIds(ctx context.Context, userIds []pgtype.UUID) ([]image_repo.Image, error) {
+
+	images, err := is.repo.GetImagesByUserIds(ctx, userIds)
+	if err != nil {
+		zap.S().Error("Failed to get Images by User ids: ", err)
+		return nil, err
+	}
+
+	return images, err
+}
+
 func (is *ImageService) GetImageByUserId(ctx context.Context, userId pgtype.UUID) (*image_repo.Image, error) {
 
 	image, err := is.repo.GetImageByUserId(ctx, userId)

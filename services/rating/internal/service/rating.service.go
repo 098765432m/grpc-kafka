@@ -18,11 +18,11 @@ func NewRatingService(repo *rating_repo.Queries) *RatingService {
 	}
 }
 
-func (rs *RatingService) GetRatingsByHotel(ctx context.Context, hotelId pgtype.UUID) ([]rating_repo.Rating, error) {
+func (rs *RatingService) GetRatingsByHotelId(ctx context.Context, hotelId pgtype.UUID) ([]rating_repo.Rating, error) {
 
 	ratings, err := rs.repo.GetRatingsByHotel(ctx, hotelId)
 	if err != nil {
-		zap.S().Errorln("Failed to get Ratings by Hotel id")
+		zap.S().Errorln("Failed to get Ratings by Hotel id: ", err)
 		return nil, err
 	}
 

@@ -11,6 +11,7 @@ service ImageService {
     rpc GetImageByUserId(GetImageByUserIdRequest) returns (GetImageByUserIdResponse);
     rpc GetImagesByRoomTypeId(GetImagesByRoomTypeIdRequest) returns (GetImagesByRoomTypeIdResponse);
     rpc GetImagesByHotelIds(GetImagesByHotelIdsRequest) returns (GetImagesByHotelIdsResponse);
+    rpc GetImagesByUserIds(GetImagesByUserIdsRequest) returns (GetImagesByUserIdsResponse);
     rpc DeleteImageById (DeleteImageByIdRequest) returns (DeleteImageByIdResponse);
     rpc DeleteImagesByIds (DeleteImagesByIdsRequest) returns (DeleteImagesByIdsResponse);
 };
@@ -100,6 +101,15 @@ message GetImagesByHotelIdsRequest {
 
 message GetImagesByHotelIdsResponse {
     repeated HotelImage images = 1;
+}
+
+// Get Images By User Ids
+message GetImagesByUserIdsRequest {
+    repeated string userIds = 1;
+}
+
+message GetImagesByUserIdsResponse {
+    repeated UserImage images = 1;
 }
 
 // DeleteImageRequest

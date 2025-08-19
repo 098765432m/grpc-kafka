@@ -28,7 +28,7 @@ func (rh *RatingHttpHandler) RegisterRoutes(router *gin.RouterGroup) {
 }
 
 type CreateRatingParams struct {
-	Rating  int    `json:"rating"`
+	Score   int    `json:"score"`
 	HotelId string `json:"hotel_id"`
 	UserId  string `json:"user_id"`
 	Comment string `json:"comment,omitempty"`
@@ -57,7 +57,7 @@ func (rh *RatingHttpHandler) CreateRating(ctx *gin.Context) {
 	}
 
 	err := rh.service.CreateRating(ctx, &rating_repo.CreateRatingParams{
-		Rating:  int32(createRatingReq.Rating),
+		Score:   int32(createRatingReq.Score),
 		HotelID: hotelId.String(),
 		UserID:  userId.String(),
 		Comment: createRatingReq.Comment,

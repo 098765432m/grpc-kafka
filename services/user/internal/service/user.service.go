@@ -53,6 +53,17 @@ func (us *UserService) GetUserById(ctx context.Context, id pgtype.UUID) (*user_r
 	return &user, nil
 }
 
+func (us *UserService) GetUsersByIds(ctx context.Context, ids []pgtype.UUID) ([]user_repo.User, error) {
+
+	users, err := us.repo.GetUsersByIds(ctx, ids)
+	if err != nil {
+		zap.S().Errorln("Failed to Get Users By Ids: ", err)
+		return nil, err
+	}
+
+	return users, nil
+}
+
 func (us *UserService) CreateUser(ctx context.Context, newUser *user_repo.CreateUserParams) error {
 
 	// Hashed new password
@@ -79,7 +90,7 @@ func (us *UserService) CreateUser(ctx context.Context, newUser *user_repo.Create
 		var pgErr *pgconn.PgError
 		if errors.As(err, &pgErr) {
 			if pgErr.Code == "23505" {
-				zap.S().Errorln("Duplicated User", err)
+				zap.S().Info("Duplicated User: ", err)
 				return common_error.ErrDuplicateRecord
 			}
 		}
@@ -146,8 +157,11 @@ func (us *UserService) SignIn(ctx context.Context, username string, password str
 	// Check User by username
 	checkUser, err := us.repo.CheckUserByUsername(ctx, username)
 	if err != nil {
-		zap.S().Errorln("Failed to get User by username: ", err)
-		return nil, common_error.ErrNoRows
+		if errors.Is(err, pgx.ErrNoRows) {
+			zap.S().Info("user with this username is not existed: ", err)
+			return nil, common_error.ErrNoRows
+		}
+		return nil, err
 	}
 
 	// Check Password and Hashed password

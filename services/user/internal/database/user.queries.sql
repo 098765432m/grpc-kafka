@@ -6,6 +6,9 @@ LIMIT 20;
 -- name: GetUserById :one
 SELECT * FROM users WHERE id = $1;
 
+-- name: GetUsersByIds :many
+SELECT * FROM users WHERE id = ANY(@ids::uuid[]);
+
 -- name: CheckUserExistsById :one
 SELECT EXISTS (
     SELECT 1

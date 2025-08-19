@@ -1,13 +1,12 @@
 package api_handler
 
 import (
-	"errors"
 	"net/http"
 
 	api_dto "github.com/098765432m/grpc-kafka/api-gateway/internal/dto"
-	common_error "github.com/098765432m/grpc-kafka/common/error"
 	"github.com/098765432m/grpc-kafka/common/gen-proto/image_pb"
 	"github.com/098765432m/grpc-kafka/common/gen-proto/user_pb"
+	"github.com/098765432m/grpc-kafka/common/model"
 	"github.com/098765432m/grpc-kafka/common/utils"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
@@ -39,6 +38,7 @@ func (uh *UserHandler) RegisterRoutes(router *gin.RouterGroup) {
 	userHandler.PUT("/:id", uh.UpdateUserById)
 
 	userHandler.POST("/sign-in", uh.SignIn)
+	userHandler.POST("/sign-up", uh.SignUp)
 }
 
 type SignInRequest struct {
@@ -163,13 +163,6 @@ func (uh *UserHandler) UpdateUserById(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, utils.SuccessApiResponse(nil, "Cap nhat tai khoan thanh cong"))
 }
 
-type SignUpRequest struct {
-}
-
-func (uh *UserHandler) SignUp(ctx *gin.Context) {
-
-}
-
 func (uh *UserHandler) DeleteUserById(ctx *gin.Context) {
 	id := ctx.Param("id")
 
@@ -194,6 +187,49 @@ func (uh *UserHandler) DeleteUserById(ctx *gin.Context) {
 	}
 }
 
+type SignUpRequest struct {
+	Username    string `json:"username"`
+	Password    string `json:"password"`
+	Address     string `json:"address"`
+	FullName    string `json:"full_name"`
+	PhoneNumber string `json:"phone_number"`
+	Email       string `json:"email"`
+}
+
+func (uh *UserHandler) SignUp(ctx *gin.Context) {
+	req := &SignUpRequest{}
+	if err := ctx.ShouldBindJSON(req); err != nil {
+		zap.S().Info("Failed to parsed req body: ", err)
+		ctx.JSON(http.StatusBadRequest, utils.ErrorApiResponse("Loi request body"))
+		return
+	}
+
+	_, err := uh.userClient.CreateUser(ctx, &user_pb.CreateUserRequest{
+		Username:    req.Username,
+		Password:    req.Password,
+		Address:     req.Address,
+		FullName:    req.FullName,
+		PhoneNumber: req.PhoneNumber,
+		Email:       req.Email,
+		Role:        model.GUEST_ROLE,
+	})
+	if err != nil {
+		st, ok := status.FromError(err)
+		if ok {
+			switch st.Code() {
+			case codes.AlreadyExists:
+				ctx.JSON(http.StatusBadRequest, utils.ErrorApiResponse("Tai khoan da ton tai"))
+				return
+			}
+		}
+
+		ctx.JSON(http.StatusInternalServerError, utils.ErrorApiResponse("Dang ky that bai"))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, utils.SuccessApiResponse(nil, "Dang ky thanh cong"))
+}
+
 func (uh *UserHandler) SignIn(ctx *gin.Context) {
 	// Get request body
 	signInReq := &SignInRequest{}
@@ -210,15 +246,17 @@ func (uh *UserHandler) SignIn(ctx *gin.Context) {
 	})
 
 	if err != nil {
-		switch {
-		case errors.Is(err, common_error.ErrNoRows):
-			ctx.JSON(http.StatusBadRequest, utils.ErrorApiResponse("Tai khoan hoac mat khau khong dung"))
-			return
-		default:
-			zap.S().Errorln("Failed to Sign In: ", err)
-			ctx.JSON(http.StatusInternalServerError, utils.ErrorApiResponse("Loi khong the dang nhap"))
-			return
+		st, ok := status.FromError(err)
+		if ok {
+			switch st.Code() {
+			case codes.NotFound:
+				ctx.JSON(http.StatusBadRequest, utils.ErrorApiResponse("Tai khoan hoac mat khau khong dung"))
+				return
+			}
 		}
+
+		ctx.JSON(http.StatusInternalServerError, utils.ErrorApiResponse("Loi khong the dang nhap"))
+		return
 	}
 
 	ctx.SetSameSite(http.SameSiteLaxMode)

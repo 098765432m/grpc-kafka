@@ -9,6 +9,9 @@ import (
 	image_repo "github.com/098765432m/grpc-kafka/image/internal/repository/image"
 	image_service "github.com/098765432m/grpc-kafka/image/internal/service"
 	"github.com/jackc/pgx/v5/pgtype"
+	"go.uber.org/zap"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 type ImageGrpcHandler struct {
@@ -146,7 +149,8 @@ func (ig *ImageGrpcHandler) GetImagesByHotelIds(ctx context.Context, req *image_
 	for _, hotelId := range req.HotelIds {
 		var tempHotelId pgtype.UUID
 		if err := tempHotelId.Scan(hotelId); err != nil {
-			return nil, err
+			zap.S().Info("Invalid Hotel UUID: ", err)
+			return nil, status.Error(codes.InvalidArgument, "Loi UUID khach san")
 		}
 
 		hotelIds = append(hotelIds, tempHotelId)
@@ -154,7 +158,8 @@ func (ig *ImageGrpcHandler) GetImagesByHotelIds(ctx context.Context, req *image_
 
 	images, err := ig.service.GetImagesByHotelIds(ctx, hotelIds)
 	if err != nil {
-		return nil, err
+		zap.S().Errorln("Failed to get images by hotel ids: ", err)
+		return nil, status.Error(codes.Internal, "Loi he thong")
 	}
 
 	var hotelImages []*image_pb.HotelImage
@@ -171,6 +176,39 @@ func (ig *ImageGrpcHandler) GetImagesByHotelIds(ctx context.Context, req *image_
 
 	return &image_pb.GetImagesByHotelIdsResponse{
 		Images: hotelImages,
+	}, nil
+}
+
+func (ig *ImageGrpcHandler) GetImagesByUserIds(ctx context.Context, req *image_pb.GetImagesByUserIdsRequest) (*image_pb.GetImagesByUserIdsResponse, error) {
+	userIds := make([]pgtype.UUID, 0, len(req.GetUserIds()))
+	for _, userIdReq := range req.GetUserIds() {
+		var id pgtype.UUID
+		if err := id.Scan(userIdReq); err != nil {
+			zap.S().Info("Invalid User UUID: ", err)
+			return nil, status.Error(codes.InvalidArgument, "Loi user UUID")
+		}
+
+		userIds = append(userIds, id)
+	}
+
+	images, err := ig.service.GetImagesByUserIds(ctx, userIds)
+	if err != nil {
+		return nil, status.Error(codes.Internal, "Khong the tim images bang user ids")
+	}
+
+	imagesGrpcResult := make([]*image_pb.UserImage, 0, len(images))
+	for _, image := range images {
+		imageGrpc := &image_pb.UserImage{
+			Id:       image.ID.String(),
+			PublicId: image.PublicID,
+			Format:   image.Format,
+			UserId:   image.UserID.String(),
+		}
+
+		imagesGrpcResult = append(imagesGrpcResult, imageGrpc)
+	}
+	return &image_pb.GetImagesByUserIdsResponse{
+		Images: imagesGrpcResult,
 	}, nil
 }
 

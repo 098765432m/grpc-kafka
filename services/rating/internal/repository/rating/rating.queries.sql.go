@@ -14,7 +14,7 @@ import (
 const createRating = `-- name: CreateRating :exec
 INSERT INTO ratings
 (
-    rating,
+    score,
     hotel_id,
     user_id,
     comment
@@ -29,7 +29,7 @@ VALUES
 `
 
 type CreateRatingParams struct {
-	Rating  int32  `json:"rating"`
+	Score   int32  `json:"score"`
 	HotelID string `json:"hotel_id"`
 	UserID  string `json:"user_id"`
 	Comment string `json:"comment"`
@@ -37,7 +37,7 @@ type CreateRatingParams struct {
 
 func (q *Queries) CreateRating(ctx context.Context, arg CreateRatingParams) error {
 	_, err := q.db.Exec(ctx, createRating,
-		arg.Rating,
+		arg.Score,
 		arg.HotelID,
 		arg.UserID,
 		arg.Comment,
@@ -56,7 +56,7 @@ func (q *Queries) DeleteRating(ctx context.Context, id pgtype.UUID) error {
 }
 
 const getRatingsByHotel = `-- name: GetRatingsByHotel :many
-SELECT id, rating, hotel_id, user_id, comment
+SELECT id, score, hotel_id, user_id, comment
 FROM ratings
 WHERE hotel_id = $1
 `
@@ -72,7 +72,7 @@ func (q *Queries) GetRatingsByHotel(ctx context.Context, hotelID pgtype.UUID) ([
 		var i Rating
 		if err := rows.Scan(
 			&i.ID,
-			&i.Rating,
+			&i.Score,
 			&i.HotelID,
 			&i.UserID,
 			&i.Comment,
@@ -90,7 +90,7 @@ func (q *Queries) GetRatingsByHotel(ctx context.Context, hotelID pgtype.UUID) ([
 const updateRating = `-- name: UpdateRating :exec
 UPDATE ratings
 SET 
-    rating = $1::int,
+    score = $1::int,
     hotel_id = $2::text,
     user_id = $3::text,
     comment = $4::text
@@ -98,7 +98,7 @@ WHERE id = $5::text
 `
 
 type UpdateRatingParams struct {
-	Rating  int32  `json:"rating"`
+	Score   int32  `json:"score"`
 	HotelID string `json:"hotel_id"`
 	UserID  string `json:"user_id"`
 	Comment string `json:"comment"`
@@ -107,7 +107,7 @@ type UpdateRatingParams struct {
 
 func (q *Queries) UpdateRating(ctx context.Context, arg UpdateRatingParams) error {
 	_, err := q.db.Exec(ctx, updateRating,
-		arg.Rating,
+		arg.Score,
 		arg.HotelID,
 		arg.UserID,
 		arg.Comment,

@@ -6,6 +6,8 @@ import (
 	api_dto "github.com/098765432m/grpc-kafka/api-gateway/internal/dto"
 	"github.com/098765432m/grpc-kafka/common/gen-proto/hotel_pb"
 	"github.com/098765432m/grpc-kafka/common/gen-proto/image_pb"
+	"github.com/098765432m/grpc-kafka/common/gen-proto/rating_pb"
+	"github.com/098765432m/grpc-kafka/common/gen-proto/user_pb"
 	"github.com/098765432m/grpc-kafka/common/utils"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
@@ -14,17 +16,23 @@ import (
 )
 
 type HotelHandler struct {
-	hotelClient hotel_pb.HotelServiceClient
-	imageClient image_pb.ImageServiceClient
+	hotelClient  hotel_pb.HotelServiceClient
+	userClient   user_pb.UserServiceClient
+	imageClient  image_pb.ImageServiceClient
+	ratingClient rating_pb.RatingServiceClient
 }
 
 func NewHotelHandler(
 	hotelClient hotel_pb.HotelServiceClient,
+	userClient user_pb.UserServiceClient,
 	imageClient image_pb.ImageServiceClient,
+	ratingClient rating_pb.RatingServiceClient,
 ) *HotelHandler {
 	return &HotelHandler{
-		hotelClient: hotelClient,
-		imageClient: imageClient,
+		hotelClient:  hotelClient,
+		userClient:   userClient,
+		imageClient:  imageClient,
+		ratingClient: ratingClient,
 	}
 }
 
@@ -33,6 +41,8 @@ func (hh *HotelHandler) RegisterRoutes(router *gin.RouterGroup) {
 
 	hotelHandler.GET("/", hh.GetAll)
 	hotelHandler.GET("/:id", hh.GetHotelById)
+
+	hotelHandler.GET("/:id/ratings", hh.GetRatingsByHotelId)
 }
 
 func (hh *HotelHandler) GetAll(ctx *gin.Context) {
@@ -132,4 +142,84 @@ func (hh *HotelHandler) GetHotelById(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusOK, utils.SuccessApiResponse(resp, "Hotel retrieved successfully"))
+}
+
+func (hh *HotelHandler) GetRatingsByHotelId(ctx *gin.Context) {
+	id := ctx.Param("id")
+
+	ratingGrpcResult, err := hh.ratingClient.GetRatingsByHotelId(ctx, &rating_pb.GetRatingsByHotelIdRequest{
+		HotelId: id,
+	})
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, utils.ErrorApiResponse("Loi he thong"))
+		return
+	}
+
+	// Get User Ids for merge user to rating
+	var userIds []string
+	for _, rating := range ratingGrpcResult.GetRatings() {
+		userIds = append(userIds, rating.UserId)
+	}
+
+	usersGrpcResult, err := hh.userClient.GetUsersByIds(ctx, &user_pb.GetUsersByIdsRequest{
+		Ids: userIds,
+	})
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, utils.ErrorApiResponse("Loi he thong"))
+		return
+	}
+
+	imagesGrpcResult, err := hh.imageClient.GetImagesByUserIds(ctx, &image_pb.GetImagesByUserIdsRequest{
+		UserIds: userIds,
+	})
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, utils.ErrorApiResponse("Loi he thong"))
+		return
+	}
+
+	// Look up with O(1) -- no need nested loop
+	imageMap := make(map[string]*api_dto.RatingImageResponse)
+	for _, image := range imagesGrpcResult.GetImages() {
+		// only work when image 1-1 relation with user
+		imageMap[image.UserId] = &api_dto.RatingImageResponse{
+			ImageId:  image.Id,
+			PublicId: image.PublicId,
+			Format:   image.Format,
+			UserId:   image.UserId,
+		}
+	}
+
+	// Look up with O(1) -- no need nested loop
+	userMap := make(map[string]*api_dto.RatingUserResponse)
+	for _, user := range usersGrpcResult.GetUsers() {
+		userMap[user.Id] = &api_dto.RatingUserResponse{
+			UserId:   user.Id,
+			Username: user.Username,
+			Image: api_dto.RatingImageResponse{
+				ImageId:  imageMap[user.Id].ImageId,
+				PublicId: imageMap[user.Id].PublicId,
+				UserId:   user.Id,
+			},
+		}
+	}
+
+	ratingResult := make([]api_dto.RatingResponse, 0, len(ratingGrpcResult.Ratings))
+	for _, rating := range ratingGrpcResult.GetRatings() {
+
+		user := userMap[rating.GetUserId()] // Get User direct from map
+
+		ratingResult = append(ratingResult, api_dto.RatingResponse{
+			Id:      rating.Id,
+			Rating:  int(rating.Score),
+			Comment: rating.GetComment(),
+			HotelId: rating.GetHotelId(),
+			User: api_dto.RatingUserResponse{
+				UserId:   user.UserId,
+				Username: user.Username,
+				Image:    user.Image,
+			},
+		})
+	}
+
+	ctx.JSON(http.StatusOK, utils.SuccessApiResponse(ratingResult, "Lay binh luan thanh cong"))
 }

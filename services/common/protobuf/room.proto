@@ -5,6 +5,7 @@ option go_package = "gen-proto/room_pb;room_pb";
 service RoomService {
     rpc GetRoomById(GetRoomByIdRequest) returns (GetRoomByIdResponse);
     rpc GetRoomsByRoomTypeId(GetRoomsByRoomTypeIdRequest) returns (GetRoomsByRoomTypeIdResponse);
+    rpc GetRoomsByHotelId(GetRoomsByHotelIdRequest) returns (GetRoomsByHotelIdResponse);
 }
 
 message Room {
@@ -28,6 +29,15 @@ message GetRoomsByRoomTypeIdRequest {
 }
 
 message GetRoomsByRoomTypeIdResponse {
+    repeated Room rooms = 1;
+    
+}
+
+message GetRoomsByHotelIdRequest {
+    string hotel_id = 1;
+}
+
+message GetRoomsByHotelIdResponse {
     repeated Room rooms = 1;
     
 }

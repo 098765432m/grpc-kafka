@@ -54,6 +54,11 @@ SELECT *
 FROM images
 WHERE hotel_id = ANY(@hotel_ids::uuid[]);
 
+-- name: GetImagesByUserIds :many
+SELECT *
+FROM images
+WHERE user_id = ANY(@user_ids::uuid[]);
+
 -- name: DeleteImage :exec
 DELETE FROM images WHERE id = $1;
 
