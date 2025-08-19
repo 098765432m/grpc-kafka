@@ -19,7 +19,7 @@ func NewRoomTypeGrpcHandler(service *room_type_service.RoomTypeService) *RoomTyp
 	}
 }
 
-func (rtg *RoomTypeGrpcHandler) GetHotelById(ctx context.Context, req *room_type_pb.GetRoomTypeByIdRequest) (*room_type_pb.GetRoomTypeByIdResponse, error) {
+func (rtg *RoomTypeGrpcHandler) GetRoomTypeById(ctx context.Context, req *room_type_pb.GetRoomTypeByIdRequest) (*room_type_pb.GetRoomTypeByIdResponse, error) {
 
 	var id pgtype.UUID
 	if err := id.Scan(req.Id); err != nil {
@@ -41,7 +41,7 @@ func (rtg *RoomTypeGrpcHandler) GetHotelById(ctx context.Context, req *room_type
 	}, nil
 }
 
-func (rtg *RoomTypeGrpcHandler) GetHotelByHotelId(ctx context.Context, req *room_type_pb.GetRoomTypesByHotelIdRequest) (*room_type_pb.GetRoomTypesByHotelIdResponse, error) {
+func (rtg *RoomTypeGrpcHandler) GetRoomTypesByHotelId(ctx context.Context, req *room_type_pb.GetRoomTypesByHotelIdRequest) (*room_type_pb.GetRoomTypesByHotelIdResponse, error) {
 
 	var hotelId pgtype.UUID
 	if err := hotelId.Scan(req.HotelId); err != nil {

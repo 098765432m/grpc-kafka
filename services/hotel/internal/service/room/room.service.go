@@ -2,7 +2,9 @@ package room_service
 
 import (
 	"context"
+	"errors"
 
+	common_error "github.com/098765432m/grpc-kafka/common/error"
 	room_repo "github.com/098765432m/grpc-kafka/hotel/internal/repository/room"
 	"github.com/jackc/pgx/v5/pgtype"
 	"go.uber.org/zap"
@@ -23,7 +25,7 @@ func (rs *RoomService) GetRoomsByHotelId(ctx context.Context, hotelId pgtype.UUI
 	rooms, err := rs.repo.GetRoomsByHotelId(ctx, hotelId)
 	if err != nil {
 
-		zap.S().Errorln("Cannot get Rooms by Hotel Id")
+		zap.S().Errorln("Cannot get Rooms by Hotel Id: ", err)
 		return nil, err
 	}
 
@@ -32,26 +34,30 @@ func (rs *RoomService) GetRoomsByHotelId(ctx context.Context, hotelId pgtype.UUI
 
 func (rs *RoomService) GetRoomsByRoomTypeId(ctx context.Context, roomTypeId pgtype.UUID) ([]room_repo.Room, error) {
 
-	rooms, err := rs.repo.GetRoomsByHotelId(ctx, roomTypeId)
+	rooms, err := rs.repo.GetRoomsByRoomTypeId(ctx, roomTypeId)
 	if err != nil {
 
-		zap.S().Errorln("Cannot get Rooms by Hotel Id")
+		zap.S().Errorln("Cannot get Rooms by Hotel Id: ", err)
 		return nil, err
 	}
 
 	return rooms, nil
 }
 
-func (rs *RoomService) GetRoomsById(ctx context.Context, id pgtype.UUID) ([]room_repo.Room, error) {
+func (rs *RoomService) GetRoomsById(ctx context.Context, id pgtype.UUID) (*room_repo.Room, error) {
 
-	rooms, err := rs.repo.GetRoomsByHotelId(ctx, id)
+	room, err := rs.repo.GetRoomsById(ctx, id)
 	if err != nil {
+		if errors.Is(err, common_error.ErrNoRows) {
+			zap.S().Info("Phong khong ton tai")
+			return nil, common_error.ErrNoRows
+		}
 
 		zap.S().Errorln("Cannot get Rooms by Hotel Id")
 		return nil, err
 	}
 
-	return rooms, nil
+	return &room, nil
 
 }
 
