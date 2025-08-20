@@ -1,4 +1,4 @@
-package app
+package hotel_app
 
 import (
 	"fmt"

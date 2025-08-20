@@ -7,6 +7,14 @@ const API_GATEWAY_PORT = 5025
 const HOTEL_HTTP_PORT = 3101
 const HOTEL_GRPC_PORT = 50051
 
+// Room Type port
+const ROOM_TYPE_HTTP_PORT = 3108
+const ROOM_TYPE_GRPC_PORT = 50058
+
+// Room port
+const ROOM_HTTP_PORT = 3109
+const ROOM_GRPC_PORT = 50059
+
 // User port
 const USER_HTTP_PORT = 3102
 const USER_GRPC_PORT = 50052

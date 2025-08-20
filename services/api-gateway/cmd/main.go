@@ -9,6 +9,8 @@ import (
 	"github.com/098765432m/grpc-kafka/common/gen-proto/hotel_pb"
 	"github.com/098765432m/grpc-kafka/common/gen-proto/image_pb"
 	"github.com/098765432m/grpc-kafka/common/gen-proto/rating_pb"
+	"github.com/098765432m/grpc-kafka/common/gen-proto/room_pb"
+	"github.com/098765432m/grpc-kafka/common/gen-proto/room_type_pb"
 	"github.com/098765432m/grpc-kafka/common/gen-proto/user_pb"
 	common_middleware "github.com/098765432m/grpc-kafka/common/middleware"
 	"github.com/098765432m/grpc-kafka/common/utils"
@@ -36,6 +38,12 @@ func main() {
 	hotelConn := utils.NewGrpcClient(strconv.Itoa(consts.HOTEL_GRPC_PORT))
 	defer hotelConn.Close()
 
+	roomTypeConn := utils.NewGrpcClient(strconv.Itoa(consts.ROOM_TYPE_GRPC_PORT))
+	defer hotelConn.Close()
+
+	roomConn := utils.NewGrpcClient(strconv.Itoa(consts.ROOM_GRPC_PORT))
+	defer hotelConn.Close()
+
 	userConn := utils.NewGrpcClient(strconv.Itoa(consts.USER_GRPC_PORT))
 	defer userConn.Close()
 
@@ -46,6 +54,8 @@ func main() {
 	defer ratingConn.Close()
 
 	hotelClient := hotel_pb.NewHotelServiceClient(hotelConn)
+	roomTypeClient := room_type_pb.NewRoomTypeServiceClient(roomTypeConn)
+	roomClient := room_pb.NewRoomServiceClient(roomConn)
 	userClient := user_pb.NewUserServiceClient(userConn)
 	imageClient := image_pb.NewImageServiceClient(imageConn)
 	ratingClient := rating_pb.NewRatingServiceClient(ratingConn)
@@ -53,8 +63,14 @@ func main() {
 	userHandler := api_handler.NewUserHandler(userClient, imageClient)
 	userHandler.RegisterRoutes(api)
 
-	hotelHandler := api_handler.NewHotelHandler(hotelClient, userClient, imageClient, ratingClient)
+	hotelHandler := api_handler.NewHotelHandler(hotelClient, roomTypeClient, roomClient, userClient, imageClient, ratingClient)
 	hotelHandler.RegisterRoutes(api)
+
+	roomTypeHandler := api_handler.NewRoomTypeGrpchandler(roomTypeClient, roomClient)
+	roomTypeHandler.RegisterRoutes(api)
+
+	roomHandler := api_handler.NewRoomGrpchandler(roomClient)
+	roomHandler.RegisterRoutes(api)
 
 	imageHandler := api_handler.NewImageHandler(imageClient)
 	imageHandler.RegisterRoutes(api)

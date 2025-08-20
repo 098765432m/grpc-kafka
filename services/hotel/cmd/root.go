@@ -4,7 +4,9 @@ import (
 	"log"
 
 	"github.com/098765432m/grpc-kafka/common/consts"
-	"github.com/098765432m/grpc-kafka/hotel/internal/app"
+	hotel_app "github.com/098765432m/grpc-kafka/hotel/internal/app/hotel"
+	room_app "github.com/098765432m/grpc-kafka/hotel/internal/app/room"
+	room_type_app "github.com/098765432m/grpc-kafka/hotel/internal/app/room-type"
 	"github.com/098765432m/grpc-kafka/hotel/internal/database"
 	"github.com/spf13/cobra"
 )
@@ -22,12 +24,14 @@ var rootCmd = &cobra.Command{
 		}
 
 		// Start grpc server
-		grpcServer := app.NewGrpcServer(consts.HOTEL_GRPC_PORT, conn)
-		grpcServer.Run()
+		hotelGrpcServer := hotel_app.NewGrpcServer(consts.HOTEL_GRPC_PORT, conn)
+		go hotelGrpcServer.Run()
 
-		// Start Http server
-		// httpServer := app.NewHttpServer(consts.HOTEL_HTTP_PORT, conn)
-		// httpServer.Run()
+		roomTypeGrpcServer := room_type_app.NewGrpcServer(consts.ROOM_TYPE_GRPC_PORT, conn)
+		go roomTypeGrpcServer.Run()
+
+		roomGrpcServer := room_app.NewGrpcServer(consts.ROOM_GRPC_PORT, conn)
+		roomGrpcServer.Run()
 
 	},
 }

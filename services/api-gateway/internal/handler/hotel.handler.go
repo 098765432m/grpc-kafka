@@ -7,6 +7,8 @@ import (
 	"github.com/098765432m/grpc-kafka/common/gen-proto/hotel_pb"
 	"github.com/098765432m/grpc-kafka/common/gen-proto/image_pb"
 	"github.com/098765432m/grpc-kafka/common/gen-proto/rating_pb"
+	"github.com/098765432m/grpc-kafka/common/gen-proto/room_pb"
+	"github.com/098765432m/grpc-kafka/common/gen-proto/room_type_pb"
 	"github.com/098765432m/grpc-kafka/common/gen-proto/user_pb"
 	"github.com/098765432m/grpc-kafka/common/utils"
 	"github.com/gin-gonic/gin"
@@ -16,23 +18,29 @@ import (
 )
 
 type HotelHandler struct {
-	hotelClient  hotel_pb.HotelServiceClient
-	userClient   user_pb.UserServiceClient
-	imageClient  image_pb.ImageServiceClient
-	ratingClient rating_pb.RatingServiceClient
+	hotelClient    hotel_pb.HotelServiceClient
+	roomTypeClient room_type_pb.RoomTypeServiceClient
+	roomClient     room_pb.RoomServiceClient
+	userClient     user_pb.UserServiceClient
+	imageClient    image_pb.ImageServiceClient
+	ratingClient   rating_pb.RatingServiceClient
 }
 
 func NewHotelHandler(
 	hotelClient hotel_pb.HotelServiceClient,
+	roomTypeClient room_type_pb.RoomTypeServiceClient,
+	roomClient room_pb.RoomServiceClient,
 	userClient user_pb.UserServiceClient,
 	imageClient image_pb.ImageServiceClient,
 	ratingClient rating_pb.RatingServiceClient,
 ) *HotelHandler {
 	return &HotelHandler{
-		hotelClient:  hotelClient,
-		userClient:   userClient,
-		imageClient:  imageClient,
-		ratingClient: ratingClient,
+		hotelClient:    hotelClient,
+		roomTypeClient: roomTypeClient,
+		roomClient:     roomClient,
+		userClient:     userClient,
+		imageClient:    imageClient,
+		ratingClient:   ratingClient,
 	}
 }
 
@@ -42,7 +50,10 @@ func (hh *HotelHandler) RegisterRoutes(router *gin.RouterGroup) {
 	hotelHandler.GET("/", hh.GetAll)
 	hotelHandler.GET("/:id", hh.GetHotelById)
 
+	hotelHandler.GET("/:id/room-types", hh.GetRoomTypesByHotelId)
+	hotelHandler.GET("/:id/rooms", hh.GetRoomsByHotelId)
 	hotelHandler.GET("/:id/ratings", hh.GetRatingsByHotelId)
+
 }
 
 func (hh *HotelHandler) GetAll(ctx *gin.Context) {
@@ -222,4 +233,32 @@ func (hh *HotelHandler) GetRatingsByHotelId(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusOK, utils.SuccessApiResponse(ratingResult, "Lay binh luan thanh cong"))
+}
+
+func (hh *HotelHandler) GetRoomTypesByHotelId(ctx *gin.Context) {
+	hotelId := ctx.Param("id")
+
+	roomTypesResult, err := hh.roomTypeClient.GetRoomTypesByHotelId(ctx, &room_type_pb.GetRoomTypesByHotelIdRequest{
+		HotelId: hotelId,
+	})
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, utils.ErrorApiResponse("Loi khong lay duoc danh sach loai phong"))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, utils.SuccessApiResponse(roomTypesResult.RoomTypes, "Lay danh sach loai phong thanh cong"))
+}
+
+func (hh *HotelHandler) GetRoomsByHotelId(ctx *gin.Context) {
+	hotelId := ctx.Param("id")
+
+	roomsResult, err := hh.roomClient.GetRoomsByHotelId(ctx, &room_pb.GetRoomsByHotelIdRequest{
+		HotelId: hotelId,
+	})
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, utils.ErrorApiResponse("Loi khong lay duoc danh sach phong"))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, utils.SuccessApiResponse(roomsResult.Rooms, "Lay danh sach phong thanh cong"))
 }

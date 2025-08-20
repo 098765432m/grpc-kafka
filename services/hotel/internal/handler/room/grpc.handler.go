@@ -14,7 +14,7 @@ import (
 )
 
 type RoomGrpcHandler struct {
-	rg      *RoomGrpcHandler
+	room_pb.UnimplementedRoomServiceServer
 	service *room_service.RoomService
 }
 
