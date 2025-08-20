@@ -95,7 +95,7 @@ func (hh *HotelHandler) GetAll(ctx *gin.Context) {
 		// Merge Image into hotel
 		for _, img := range images.Images {
 			if img.HotelId == hotel.Id { // Append image if match hotelId
-				resp.Images = append(resp.Images, api_dto.Image{
+				resp.Images = append(resp.Images, api_dto.HotelImage{
 					Id:       img.Id,
 					PublicId: img.PublicId,
 					Format:   img.Format,
@@ -145,7 +145,7 @@ func (hh *HotelHandler) GetHotelById(ctx *gin.Context) {
 	}
 
 	for _, img := range images.GetImages() {
-		resp.Images = append(resp.Images, api_dto.Image{
+		resp.Images = append(resp.Images, api_dto.HotelImage{
 			Id:       img.GetId(),
 			PublicId: img.GetPublicId(),
 			Format:   img.GetFormat(),
@@ -238,7 +238,7 @@ func (hh *HotelHandler) GetRatingsByHotelId(ctx *gin.Context) {
 func (hh *HotelHandler) GetRoomTypesByHotelId(ctx *gin.Context) {
 	hotelId := ctx.Param("id")
 
-	roomTypesResult, err := hh.roomTypeClient.GetRoomTypesByHotelId(ctx, &room_type_pb.GetRoomTypesByHotelIdRequest{
+	roomTypesGrpcResult, err := hh.roomTypeClient.GetRoomTypesByHotelId(ctx, &room_type_pb.GetRoomTypesByHotelIdRequest{
 		HotelId: hotelId,
 	})
 	if err != nil {
@@ -246,7 +246,44 @@ func (hh *HotelHandler) GetRoomTypesByHotelId(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, utils.SuccessApiResponse(roomTypesResult.RoomTypes, "Lay danh sach loai phong thanh cong"))
+	roomTypeIds := make([]string, 0, len(roomTypesGrpcResult.GetRoomTypes()))
+	for _, roomType := range roomTypesGrpcResult.GetRoomTypes() {
+		roomTypeIds = append(roomTypeIds, roomType.Id)
+	}
+
+	imagesGrpcResult, err := hh.imageClient.GetImagesByRoomTypeIds(ctx, &image_pb.GetImagesByRoomTypeIdsRequest{
+		RoomTypeIds: roomTypeIds,
+	})
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, utils.ErrorApiResponse("Loi khong lay duoc hinh anh loai phong"))
+		return
+	}
+	imageMap := make(map[string]*api_dto.RoomTypeImage)
+	for _, image := range imagesGrpcResult.GetImages() {
+		imageMap[image.RoomTypeId] = &api_dto.RoomTypeImage{
+			Id:         image.Id,
+			PublicId:   image.PublicId,
+			Format:     image.Format,
+			RoomTypeId: image.RoomTypeId,
+		}
+	}
+
+	roomTypesResponse := make([]*api_dto.RoomTypeResponse, 0, len(roomTypeIds))
+	for _, roomType := range roomTypesGrpcResult.GetRoomTypes() {
+		roomTypeResponse := &api_dto.RoomTypeResponse{
+			Id:    roomType.Id,
+			Name:  roomType.Name,
+			Price: int(roomType.Price),
+		}
+
+		if image, exists := imageMap[roomType.Id]; exists {
+			roomTypeResponse.Images = append(roomTypeResponse.Images, *image)
+		}
+
+		roomTypesResponse = append(roomTypesResponse, roomTypeResponse)
+	}
+
+	ctx.JSON(http.StatusOK, utils.SuccessApiResponse(roomTypesResponse, "Lay danh sach loai phong thanh cong"))
 }
 
 func (hh *HotelHandler) GetRoomsByHotelId(ctx *gin.Context) {

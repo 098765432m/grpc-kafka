@@ -142,6 +142,39 @@ func (ig *ImageGrpcHandler) GetImagesByRoomTypeId(ctx context.Context, req *imag
 	}, nil
 }
 
+func (ig *ImageGrpcHandler) GetImagesByRoomTypeIds(ctx context.Context, req *image_pb.GetImagesByRoomTypeIdsRequest) (*image_pb.GetImagesByRoomTypeIdsResponse, error) {
+	var roomTypeIds []pgtype.UUID
+	for _, roomTypeIdReq := range req.RoomTypeIds {
+		var roomTypeId pgtype.UUID
+		if err := roomTypeId.Scan(roomTypeIdReq); err != nil {
+			return nil, err
+		}
+
+		roomTypeIds = append(roomTypeIds, roomTypeId)
+	}
+
+	images, err := ig.service.GetImagesByRoomTypeIds(ctx, roomTypeIds)
+	if err != nil {
+		return nil, status.Error(codes.Internal, "Loi lay hinh anh loai phong")
+	}
+
+	var roomTypeImages []*image_pb.RoomTypeImage
+	for _, img := range images {
+		hotelImage := &image_pb.RoomTypeImage{
+			Id:         img.ID.String(),
+			PublicId:   img.PublicID,
+			Format:     img.Format,
+			RoomTypeId: img.RoomTypeID.String(),
+		}
+
+		roomTypeImages = append(roomTypeImages, hotelImage)
+	}
+
+	return &image_pb.GetImagesByRoomTypeIdsResponse{
+		Images: roomTypeImages,
+	}, nil
+}
+
 func (ig *ImageGrpcHandler) GetImagesByHotelIds(ctx context.Context, req *image_pb.GetImagesByHotelIdsRequest) (*image_pb.GetImagesByHotelIdsResponse, error) {
 	var hotelIds []pgtype.UUID
 

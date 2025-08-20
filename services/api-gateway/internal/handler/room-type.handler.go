@@ -27,7 +27,8 @@ func NewRoomTypeGrpchandler(roomTypeClient room_type_pb.RoomTypeServiceClient,
 func (rth *RoomTypeGrpcHandler) RegisterRoutes(router *gin.RouterGroup) {
 	roomTypeHandler := router.Group("/room-types")
 
-	roomTypeHandler.GET("/:id")
+	roomTypeHandler.GET("/:id", rth.GetRoomTypeById)
+	roomTypeHandler.GET("/:id/rooms", rth.GetRoomsByRoomTypeId)
 }
 
 func (rth *RoomTypeGrpcHandler) GetRoomTypeById(ctx *gin.Context) {

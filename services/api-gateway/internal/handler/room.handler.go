@@ -23,7 +23,7 @@ func NewRoomGrpchandler(roomClient room_pb.RoomServiceClient) *RoomGrpcHandler {
 func (rh *RoomGrpcHandler) RegisterRoutes(router *gin.RouterGroup) {
 	roomHandler := router.Group("/rooms")
 
-	roomHandler.GET("/:id")
+	roomHandler.GET("/:id", rh.GetRoomById)
 }
 
 func (rh *RoomGrpcHandler) GetRoomById(ctx *gin.Context) {

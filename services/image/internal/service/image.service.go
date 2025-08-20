@@ -117,6 +117,17 @@ func (is *ImageService) GetImagesByRoomTypeId(ctx context.Context, roomTypeId pg
 	return images, nil
 }
 
+func (is *ImageService) GetImagesByRoomTypeIds(ctx context.Context, roomTypeIds []pgtype.UUID) ([]image_repo.Image, error) {
+
+	images, err := is.repo.GetImagesByRoomTypeIds(ctx, roomTypeIds)
+	if err != nil {
+		zap.S().Errorln("Failed to get Images by Room Type id")
+		return nil, err
+	}
+
+	return images, nil
+}
+
 func (is *ImageService) DeleteImage(ctx context.Context, id pgtype.UUID) error {
 	err := is.repo.DeleteImage(ctx, id)
 	if err != nil {

@@ -49,6 +49,11 @@ SELECT *
 FROM images
 WHERE room_type_id = $1;
 
+-- name: GetImagesByRoomTypeIds :many
+SELECT *
+FROM images
+WHERE room_type_id = ANY(@room_type_ids::uuid[]);
+
 -- name: GetImagesByHotelIds :many
 SELECT *
 FROM images
