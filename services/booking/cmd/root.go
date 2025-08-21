@@ -21,6 +21,9 @@ var rootCmd = &cobra.Command{
 			log.Fatalf("Failed to connect to database: %v\n", err)
 		}
 
+		grpcServer := booking_app.NewBookingGrpcServer(consts.BOOKING_GRPC_PORT, conn)
+		go grpcServer.Run()
+
 		httpServer := booking_app.NewHttpServer(consts.BOOKING_HTTP_PORT, conn)
 		httpServer.Run()
 	},

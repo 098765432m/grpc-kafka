@@ -6,6 +6,7 @@ import (
 
 	api_handler "github.com/098765432m/grpc-kafka/api-gateway/internal/handler"
 	"github.com/098765432m/grpc-kafka/common/consts"
+	"github.com/098765432m/grpc-kafka/common/gen-proto/booking_pb"
 	"github.com/098765432m/grpc-kafka/common/gen-proto/hotel_pb"
 	"github.com/098765432m/grpc-kafka/common/gen-proto/image_pb"
 	"github.com/098765432m/grpc-kafka/common/gen-proto/rating_pb"
@@ -53,23 +54,35 @@ func main() {
 	ratingConn := utils.NewGrpcClient(strconv.Itoa(consts.RATING_GRPC_PORT))
 	defer ratingConn.Close()
 
+	bookingConn := utils.NewGrpcClient(strconv.Itoa(consts.BOOKING_GRPC_PORT))
+	defer bookingConn.Close()
+
 	hotelClient := hotel_pb.NewHotelServiceClient(hotelConn)
 	roomTypeClient := room_type_pb.NewRoomTypeServiceClient(roomTypeConn)
 	roomClient := room_pb.NewRoomServiceClient(roomConn)
 	userClient := user_pb.NewUserServiceClient(userConn)
 	imageClient := image_pb.NewImageServiceClient(imageConn)
 	ratingClient := rating_pb.NewRatingServiceClient(ratingConn)
+	bookingClient := booking_pb.NewBookingServiceClient(bookingConn)
 
 	userHandler := api_handler.NewUserHandler(userClient, imageClient)
 	userHandler.RegisterRoutes(api)
 
-	hotelHandler := api_handler.NewHotelHandler(hotelClient, roomTypeClient, roomClient, userClient, imageClient, ratingClient)
+	hotelHandler := api_handler.NewHotelHandler(&api_handler.HotelHandlerImpl{
+		HotelClient:    hotelClient,
+		RoomTypeClient: roomTypeClient,
+		RoomClient:     roomClient,
+		UserClient:     userClient,
+		ImageClient:    imageClient,
+		RatingClient:   ratingClient,
+		BookingClient:  bookingClient,
+	})
 	hotelHandler.RegisterRoutes(api)
 
-	roomTypeHandler := api_handler.NewRoomTypeGrpchandler(roomTypeClient, roomClient)
+	roomTypeHandler := api_handler.NewRoomTypeHandler(roomTypeClient, roomClient)
 	roomTypeHandler.RegisterRoutes(api)
 
-	roomHandler := api_handler.NewRoomGrpchandler(roomClient)
+	roomHandler := api_handler.NewRoomHandler(roomClient)
 	roomHandler.RegisterRoutes(api)
 
 	imageHandler := api_handler.NewImageHandler(imageClient)

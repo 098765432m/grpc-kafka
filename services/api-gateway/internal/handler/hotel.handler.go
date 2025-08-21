@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	api_dto "github.com/098765432m/grpc-kafka/api-gateway/internal/dto"
+	"github.com/098765432m/grpc-kafka/common/gen-proto/booking_pb"
 	"github.com/098765432m/grpc-kafka/common/gen-proto/hotel_pb"
 	"github.com/098765432m/grpc-kafka/common/gen-proto/image_pb"
 	"github.com/098765432m/grpc-kafka/common/gen-proto/rating_pb"
@@ -24,23 +25,28 @@ type HotelHandler struct {
 	userClient     user_pb.UserServiceClient
 	imageClient    image_pb.ImageServiceClient
 	ratingClient   rating_pb.RatingServiceClient
+	bookingClient  booking_pb.BookingServiceClient
 }
 
-func NewHotelHandler(
-	hotelClient hotel_pb.HotelServiceClient,
-	roomTypeClient room_type_pb.RoomTypeServiceClient,
-	roomClient room_pb.RoomServiceClient,
-	userClient user_pb.UserServiceClient,
-	imageClient image_pb.ImageServiceClient,
-	ratingClient rating_pb.RatingServiceClient,
-) *HotelHandler {
+type HotelHandlerImpl struct {
+	HotelClient    hotel_pb.HotelServiceClient
+	RoomTypeClient room_type_pb.RoomTypeServiceClient
+	RoomClient     room_pb.RoomServiceClient
+	UserClient     user_pb.UserServiceClient
+	ImageClient    image_pb.ImageServiceClient
+	RatingClient   rating_pb.RatingServiceClient
+	BookingClient  booking_pb.BookingServiceClient
+}
+
+func NewHotelHandler(hotelHandlerImpl *HotelHandlerImpl) *HotelHandler {
 	return &HotelHandler{
-		hotelClient:    hotelClient,
-		roomTypeClient: roomTypeClient,
-		roomClient:     roomClient,
-		userClient:     userClient,
-		imageClient:    imageClient,
-		ratingClient:   ratingClient,
+		hotelClient:    hotelHandlerImpl.HotelClient,
+		roomTypeClient: hotelHandlerImpl.RoomTypeClient,
+		roomClient:     hotelHandlerImpl.RoomClient,
+		userClient:     hotelHandlerImpl.UserClient,
+		imageClient:    hotelHandlerImpl.ImageClient,
+		ratingClient:   hotelHandlerImpl.RatingClient,
+		bookingClient:  hotelHandlerImpl.BookingClient,
 	}
 }
 
@@ -48,12 +54,12 @@ func (hh *HotelHandler) RegisterRoutes(router *gin.RouterGroup) {
 	hotelHandler := router.Group("/hotels")
 
 	hotelHandler.GET("/", hh.GetAll)
-	hotelHandler.GET("/:id", hh.GetHotelById)
 
+	hotelHandler.GET("/:id", hh.GetHotelById)
 	hotelHandler.GET("/:id/room-types", hh.GetRoomTypesByHotelId)
 	hotelHandler.GET("/:id/rooms", hh.GetRoomsByHotelId)
 	hotelHandler.GET("/:id/ratings", hh.GetRatingsByHotelId)
-
+	hotelHandler.GET("/:id/available-room-types", hh.GetAvailableRoomTypes)
 }
 
 func (hh *HotelHandler) GetAll(ctx *gin.Context) {
@@ -298,4 +304,71 @@ func (hh *HotelHandler) GetRoomsByHotelId(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusOK, utils.SuccessApiResponse(roomsResult.Rooms, "Lay danh sach phong thanh cong"))
+}
+func (hh *HotelHandler) GetAvailableRoomTypes(ctx *gin.Context) {
+	hotelId := ctx.Param("id")
+
+	checkIn := ctx.Query("check_in")
+	checkOut := ctx.Query("check_out")
+
+	roomTypesGrpcResult, err := hh.roomTypeClient.GetRoomTypesByHotelId(ctx, &room_type_pb.GetRoomTypesByHotelIdRequest{
+		HotelId: hotelId,
+	})
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, "Loi khong lay duoc danh sach loai phong bang khach san")
+		return
+	}
+
+	roomTypeIds := make([]string, 0, len(roomTypesGrpcResult.GetRoomTypes()))
+	for _, roomType := range roomTypesGrpcResult.RoomTypes {
+		roomTypeIds = append(roomTypeIds, roomType.Id)
+	}
+
+	imagesGrpcResult, err := hh.imageClient.GetImagesByRoomTypeIds(ctx, &image_pb.GetImagesByRoomTypeIdsRequest{RoomTypeIds: roomTypeIds})
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, "Loi khong lay duoc danh sach hinh anh bang loai phong")
+		return
+	}
+
+	imageMap := make(map[string][]api_dto.RoomTypeImage)
+	for _, image := range imagesGrpcResult.GetImages() {
+		imageMap[image.RoomTypeId] = append(imageMap[image.RoomTypeId], api_dto.RoomTypeImage{
+			Id:         image.Id,
+			PublicId:   image.PublicId,
+			Format:     image.Format,
+			RoomTypeId: image.RoomTypeId,
+		})
+	}
+
+	NumberOfOccupiedRoomsResult, err := hh.bookingClient.GetNumberOfOccupiedRooms(ctx, &booking_pb.GetNumberOfOccupiedRoomsRequest{
+		RoomTypeIds: roomTypeIds,
+		CheckIn:     checkIn,
+		CheckOut:    checkOut,
+	})
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, utils.ErrorApiResponse("Loi khong lay duoc so phong da duoc book"))
+		return
+	}
+
+	numberOccupiedMap := make(map[string]int8)
+	for _, result := range NumberOfOccupiedRoomsResult.Results {
+		numberOccupiedMap[result.RoomTypeId] = int8(result.NumberOfOccupiedRooms)
+	}
+
+	roomTypes := make([]*api_dto.GetNumberOfAvailableRoomsDtoResponse, 0, len(roomTypeIds))
+	for _, roomType := range roomTypesGrpcResult.GetRoomTypes() {
+
+		tempRoomType := &api_dto.GetNumberOfAvailableRoomsDtoResponse{
+			Id:                     roomType.Id,
+			Name:                   roomType.Name,
+			Price:                  int(roomType.Price),
+			HotelId:                roomType.HotelId,
+			Images:                 imageMap[roomType.Id],
+			NumberOfAvailableRooms: numberOccupiedMap[roomType.Id],
+		}
+
+		roomTypes = append(roomTypes, tempRoomType)
+	}
+
+	ctx.JSON(http.StatusOK, utils.SuccessApiResponse(roomTypes, "Thanh cong"))
 }

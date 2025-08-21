@@ -1,0 +1,33 @@
+syntax = "proto3";
+
+option go_package = "gen-proto/booking_pb;booking_pb";
+
+service BookingService {
+    rpc GetListOfOccupiedRooms(GetListOfOccupiedRoomsRequest) returns (GetListOfOccupiedRoomsResponse);
+    rpc GetNumberOfOccupiedRooms(GetNumberOfOccupiedRoomsRequest) returns (GetNumberOfOccupiedRoomsResponse);
+}
+
+message GetListOfOccupiedRoomsRequest {
+    repeated string roomIds = 1;
+    string checkIn = 2;
+    string checkOut = 3;
+}
+
+message GetListOfOccupiedRoomsResponse {
+    repeated string occupiedRoomIds = 1;
+}
+
+message GetNumberOfOccupiedRoomsRequest {
+    repeated string roomTypeIds = 1;
+    string checkIn = 2;
+    string checkOut = 3;
+}
+
+message ResultNumberOfOccupiedRooms {
+    string roomTypeId = 1;
+    int32 numberOfOccupiedRooms = 2;
+}
+
+message GetNumberOfOccupiedRoomsResponse {
+    repeated ResultNumberOfOccupiedRooms results = 1;
+}

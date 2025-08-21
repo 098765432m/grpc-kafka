@@ -10,23 +10,23 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-type RoomGrpcHandler struct {
+type RoomHandler struct {
 	roomClient room_pb.RoomServiceClient
 }
 
-func NewRoomGrpchandler(roomClient room_pb.RoomServiceClient) *RoomGrpcHandler {
-	return &RoomGrpcHandler{
+func NewRoomHandler(roomClient room_pb.RoomServiceClient) *RoomHandler {
+	return &RoomHandler{
 		roomClient: roomClient,
 	}
 }
 
-func (rh *RoomGrpcHandler) RegisterRoutes(router *gin.RouterGroup) {
+func (rh *RoomHandler) RegisterRoutes(router *gin.RouterGroup) {
 	roomHandler := router.Group("/rooms")
 
 	roomHandler.GET("/:id", rh.GetRoomById)
 }
 
-func (rh *RoomGrpcHandler) GetRoomById(ctx *gin.Context) {
+func (rh *RoomHandler) GetRoomById(ctx *gin.Context) {
 	id := ctx.Param("id")
 
 	roomGrpcResult, err := rh.roomClient.GetRoomById(ctx, &room_pb.GetRoomByIdRequest{

@@ -55,11 +55,13 @@ func (ns NullBookingStatus) Value() (driver.Value, error) {
 }
 
 type Booking struct {
-	ID        pgtype.UUID      `json:"id"`
-	CheckIn   pgtype.Date      `json:"check_in"`
-	CheckOut  pgtype.Date      `json:"check_out"`
-	Total     int32            `json:"total"`
-	Status    BookingStatus    `json:"status"`
-	CreateAt  pgtype.Timestamp `json:"create_at"`
-	UpdatedAt pgtype.Timestamp `json:"updated_at"`
+	ID         pgtype.UUID      `json:"id"`
+	CheckIn    pgtype.Date      `json:"check_in"`
+	CheckOut   pgtype.Date      `json:"check_out"`
+	Total      int32            `json:"total"`
+	Status     BookingStatus    `json:"status"`
+	RoomTypeID pgtype.UUID      `json:"room_type_id"`
+	RoomID     pgtype.UUID      `json:"room_id"`
+	CreateAt   pgtype.Timestamp `json:"create_at"`
+	UpdatedAt  pgtype.Timestamp `json:"updated_at"`
 }

@@ -48,3 +48,33 @@ func (bs *BookingService) DeleteBooking(ctx context.Context, id pgtype.UUID) err
 
 	return nil
 }
+
+// Return Room Ids that occupied in a range of time
+func (bs *BookingService) GetListOfOccupiedRooms(ctx context.Context, roomIds []pgtype.UUID, checkIn pgtype.Date, checkOut pgtype.Date) ([]pgtype.UUID, error) {
+	occupiedRoomIds, err := bs.repo.GetListOfOccupiedRooms(ctx, booking_repo.GetListOfOccupiedRoomsParams{
+		RoomIds:  roomIds,
+		CheckIn:  checkIn,
+		CheckOut: checkOut,
+	})
+	if err != nil {
+		zap.S().Errorln("Failed to get list of occupied rooms: ", err)
+		return nil, err
+	}
+
+	return occupiedRoomIds, nil
+}
+
+// Return number of Occupied rooms for each Room Type in a range of time
+func (bs *BookingService) GetNumberOfOccupiedRooms(ctx context.Context, roomTypeIds []pgtype.UUID, checkIn pgtype.Date, checkOut pgtype.Date) ([]booking_repo.GetNumberOfOccupiedRoomsRow, error) {
+	result, err := bs.repo.GetNumberOfOccupiedRooms(ctx, booking_repo.GetNumberOfOccupiedRoomsParams{
+		RoomTypeIds: roomTypeIds,
+		CheckIn:     checkIn,
+		CheckOut:    checkOut,
+	})
+	if err != nil {
+		zap.S().Errorln("Failed to get list of occupied rooms: ", err)
+		return nil, err
+	}
+
+	return result, nil
+}

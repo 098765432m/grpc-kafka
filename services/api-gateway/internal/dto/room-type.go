@@ -14,3 +14,12 @@ type RoomTypeResponse struct {
 	HotelId string          `json:"hotel_id"`
 	Images  []RoomTypeImage `json:"images"`
 }
+
+type GetNumberOfAvailableRoomsDtoResponse struct {
+	Id                     string          `json:"id"`
+	Name                   string          `json:"name"`
+	Price                  int             `json:"price"`
+	HotelId                string          `json:"hotel_id"`
+	Images                 []RoomTypeImage `json:"images"`
+	NumberOfAvailableRooms int8            `json:"number_of_available_rooms"`
+}

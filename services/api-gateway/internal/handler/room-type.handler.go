@@ -11,27 +11,27 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-type RoomTypeGrpcHandler struct {
+type RoomTypeHandler struct {
 	roomTypeClient room_type_pb.RoomTypeServiceClient
 	roomClient     room_pb.RoomServiceClient
 }
 
-func NewRoomTypeGrpchandler(roomTypeClient room_type_pb.RoomTypeServiceClient,
-	roomClient room_pb.RoomServiceClient) *RoomTypeGrpcHandler {
-	return &RoomTypeGrpcHandler{
+func NewRoomTypeHandler(roomTypeClient room_type_pb.RoomTypeServiceClient,
+	roomClient room_pb.RoomServiceClient) *RoomTypeHandler {
+	return &RoomTypeHandler{
 		roomTypeClient: roomTypeClient,
 		roomClient:     roomClient,
 	}
 }
 
-func (rth *RoomTypeGrpcHandler) RegisterRoutes(router *gin.RouterGroup) {
+func (rth *RoomTypeHandler) RegisterRoutes(router *gin.RouterGroup) {
 	roomTypeHandler := router.Group("/room-types")
 
 	roomTypeHandler.GET("/:id", rth.GetRoomTypeById)
 	roomTypeHandler.GET("/:id/rooms", rth.GetRoomsByRoomTypeId)
 }
 
-func (rth *RoomTypeGrpcHandler) GetRoomTypeById(ctx *gin.Context) {
+func (rth *RoomTypeHandler) GetRoomTypeById(ctx *gin.Context) {
 	id := ctx.Param("id")
 
 	roomTypeGrpcResult, err := rth.roomTypeClient.GetRoomTypeById(ctx, &room_type_pb.GetRoomTypeByIdRequest{
@@ -54,7 +54,7 @@ func (rth *RoomTypeGrpcHandler) GetRoomTypeById(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, utils.SuccessApiResponse(roomTypeGrpcResult.RoomType, "Lay loai phong thanh cong"))
 }
 
-func (rth *RoomTypeGrpcHandler) GetRoomsByRoomTypeId(ctx *gin.Context) {
+func (rth *RoomTypeHandler) GetRoomsByRoomTypeId(ctx *gin.Context) {
 	roomTypeId := ctx.Param("id")
 
 	roomsResult, err := rth.roomClient.GetRoomsByRoomTypeId(ctx, &room_pb.GetRoomsByRoomTypeIdRequest{
