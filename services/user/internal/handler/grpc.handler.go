@@ -28,7 +28,7 @@ func NewUserGrpcHandler(service *user_service.UserService) *UserGrpcHandler {
 func (ug *UserGrpcHandler) GetUserById(ctx context.Context, req *user_pb.GetUserByIdRequest) (*user_pb.GetUserByIdResponse, error) {
 	var id pgtype.UUID
 	if err := id.Scan(req.Id); err != nil {
-		zap.S().Errorln("Invalid UUID: ", err)
+		zap.S().Infoln("Invalid user UUID: ", err)
 		return nil, status.Errorf(codes.InvalidArgument, "UUID khong hop le")
 	}
 
@@ -100,7 +100,7 @@ func (ug *UserGrpcHandler) CreateUser(ctx context.Context, req *user_pb.CreateUs
 	var hotelId pgtype.UUID
 	if req.HotelId != "" {
 		if err := hotelId.Scan(req.HotelId); err != nil {
-			zap.S().Errorln("Invalid UUID")
+			zap.S().Infoln("Invalid User UUID: ", err)
 			return nil, status.Error(codes.InvalidArgument, "Loi he thong")
 		}
 	}
@@ -131,7 +131,7 @@ func (ug *UserGrpcHandler) UpdateUserById(ctx context.Context, req *user_pb.Upda
 	var id pgtype.UUID
 	if req.GetUser().Id == "" {
 		if err := id.Scan(req.GetUser().Id); err != nil {
-			zap.S().Errorln("Invalid UUID")
+			zap.S().Infoln("Invalid User UUID: ", err)
 			return nil, status.Error(codes.InvalidArgument, "Loi he thong")
 		}
 	}
@@ -139,7 +139,7 @@ func (ug *UserGrpcHandler) UpdateUserById(ctx context.Context, req *user_pb.Upda
 	var hotelId pgtype.UUID
 	if req.GetUser().GetHotelId() == "" {
 		if err := hotelId.Scan(req.GetUser().GetHotelId()); err != nil {
-			zap.S().Errorln("Invalid UUID")
+			zap.S().Infoln("Invalid Hotel UUID: ", err)
 			return nil, status.Error(codes.InvalidArgument, "Loi he thong")
 		}
 	}
@@ -177,7 +177,7 @@ func (ug *UserGrpcHandler) UpdateUserById(ctx context.Context, req *user_pb.Upda
 func (ug *UserGrpcHandler) DeleteUserById(ctx context.Context, req *user_pb.DeleteUserByIdRequest) (*user_pb.DeleteUserByIdResponse, error) {
 	var id pgtype.UUID
 	if err := id.Scan(req.Id); err != nil {
-		zap.S().Errorln("Invalid UUID")
+		zap.S().Infoln("Invalid User UUID: ", err)
 		return nil, status.Error(codes.InvalidArgument, "Loi he thong")
 	}
 	err := ug.service.DeleteUserById(ctx, id)

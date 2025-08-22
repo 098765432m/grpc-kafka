@@ -311,6 +311,8 @@ func (hh *HotelHandler) GetAvailableRoomTypes(ctx *gin.Context) {
 	checkIn := ctx.Query("check_in")
 	checkOut := ctx.Query("check_out")
 
+	zap.L().Info("Get Dates: ", zap.Any("check_in", checkIn), zap.Any("check_out", checkOut))
+
 	roomTypesGrpcResult, err := hh.roomTypeClient.GetRoomTypesByHotelId(ctx, &room_type_pb.GetRoomTypesByHotelIdRequest{
 		HotelId: hotelId,
 	})

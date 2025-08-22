@@ -35,6 +35,28 @@ func NewHotelGrpcHandler(
 	}
 }
 
+func (hg *HotelGrpcHandler) GetAllHotels(ctx context.Context, req *hotel_pb.GetAllHotelsRequest) (*hotel_pb.GetAllHotelsResponse, error) {
+	hotels, err := hg.service.GetAll(ctx)
+	if err != nil {
+		zap.S().Info("Failed to get all hotels: ", err)
+		return nil, status.Error(codes.Internal, "Loi khong lay duoc danh sach khach san")
+	}
+
+	var grpc_hotels []*hotel_pb.Hotel
+	for _, hotel := range hotels {
+		grpc_hotel := &hotel_pb.Hotel{
+			Id:   hotel.ID.String(),
+			Name: hotel.Name,
+		}
+
+		grpc_hotels = append(grpc_hotels, grpc_hotel)
+	}
+
+	return &hotel_pb.GetAllHotelsResponse{
+		Hotels: grpc_hotels,
+	}, nil
+}
+
 func (hg *HotelGrpcHandler) GetHotelById(ctx context.Context, req *hotel_pb.GetHotelByIdRequest) (*hotel_pb.GetHotelByIdResponse, error) {
 
 	var id pgtype.UUID
@@ -72,25 +94,4 @@ func (hg *HotelGrpcHandler) CreateHotel(ctx context.Context, req *hotel_pb.Creat
 		return nil, err
 	}
 	return &hotel_pb.CreateHotelResponse{}, nil
-}
-
-func (hg *HotelGrpcHandler) GetAllHotels(ctx context.Context, req *hotel_pb.GetAllHotelsRequest) (*hotel_pb.GetAllHotelsResponse, error) {
-	hotels, err := hg.service.GetAll(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	var grpc_hotels []*hotel_pb.Hotel
-	for _, hotel := range hotels {
-		grpc_hotel := &hotel_pb.Hotel{
-			Id:   hotel.ID.String(),
-			Name: hotel.Name,
-		}
-
-		grpc_hotels = append(grpc_hotels, grpc_hotel)
-	}
-
-	return &hotel_pb.GetAllHotelsResponse{
-		Hotels: grpc_hotels,
-	}, nil
 }
