@@ -279,7 +279,7 @@ func (hh *HotelHandler) GetRoomTypesByHotelId(ctx *gin.Context) {
 		roomTypeResponse := &api_dto.RoomTypeResponse{
 			Id:    roomType.Id,
 			Name:  roomType.Name,
-			Price: int(roomType.Price),
+			Price: uint(roomType.Price),
 		}
 
 		if image, exists := imageMap[roomType.Id]; exists {
@@ -327,7 +327,6 @@ func (hh *HotelHandler) GetAvailableRoomTypes(ctx *gin.Context) {
 		roomTypeIds = append(roomTypeIds, roomType.Id)
 	}
 
-	// TODO code = Unavailable desc = connection error: desc = "transport: Error while dialing: dial tcp 127.0.0.1:50053: connect: connection refused"
 	imagesGrpcResult, err := hh.imageClient.GetImagesByRoomTypeIds(ctx, &image_pb.GetImagesByRoomTypeIdsRequest{RoomTypeIds: roomTypeIds})
 	if err != nil {
 		zap.S().Info("Failed to get Images by Room Type ids: ", err)
@@ -355,9 +354,9 @@ func (hh *HotelHandler) GetAvailableRoomTypes(ctx *gin.Context) {
 		return
 	}
 
-	numberOccupiedMap := make(map[string]int8)
+	numberOccupiedMap := make(map[string]uint)
 	for _, result := range NumberOfOccupiedRoomsResult.Results {
-		numberOccupiedMap[result.RoomTypeId] = int8(result.NumberOfOccupiedRooms)
+		numberOccupiedMap[result.RoomTypeId] = uint(result.NumberOfOccupiedRooms)
 	}
 
 	roomTypes := make([]*api_dto.GetNumberOfAvailableRoomsDtoResponse, 0, len(roomTypeIds))
@@ -366,10 +365,10 @@ func (hh *HotelHandler) GetAvailableRoomTypes(ctx *gin.Context) {
 		tempRoomType := &api_dto.GetNumberOfAvailableRoomsDtoResponse{
 			Id:                     roomType.Id,
 			Name:                   roomType.Name,
-			Price:                  int(roomType.Price),
+			Price:                  uint(roomType.Price),
 			HotelId:                roomType.HotelId,
 			Images:                 imageMap[roomType.Id],
-			NumberOfAvailableRooms: numberOccupiedMap[roomType.Id],
+			NumberOfAvailableRooms: uint8(roomType.NumberOfRooms) - uint8(numberOccupiedMap[roomType.Id]),
 		}
 
 		roomTypes = append(roomTypes, tempRoomType)

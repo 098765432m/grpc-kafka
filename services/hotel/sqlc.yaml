@@ -4,6 +4,8 @@ sql:
   - engine: "postgresql"
     schema:
       - "internal/database/hotel.schema.sql"
+      - "internal/database/room-type.schema.sql"
+      - "internal/database/room.schema.sql"
     queries:
       - "internal/database/hotel.queries.sql"
     gen:
@@ -17,6 +19,7 @@ sql:
   - engine: "postgresql"
     schema:
       - "internal/database/room-type.schema.sql"
+      - "internal/database/room.schema.sql"
     queries:
       - "internal/database/room-type.queries.sql"
     gen:

@@ -1,7 +1,13 @@
 -- name: GetRoomTypesByHotelId :many
-SELECT *
-FROM room_types rt
-WHERE hotel_id = $1
+SELECT 
+    rt.id,
+    rt.name,
+    rt.price,
+    rt.hotel_id,
+    COUNT(r.id) AS number_of_rooms 
+FROM room_types rt LEFT JOIN rooms r ON rt.id = r.room_type_id
+WHERE rt.hotel_id = $1
+GROUP BY rt.id
 ORDER BY rt.name
 LIMIT 10;
 

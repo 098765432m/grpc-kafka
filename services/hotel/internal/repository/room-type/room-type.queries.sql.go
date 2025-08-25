@@ -66,27 +66,42 @@ func (q *Queries) GetRoomTypeById(ctx context.Context, id pgtype.UUID) (RoomType
 }
 
 const getRoomTypesByHotelId = `-- name: GetRoomTypesByHotelId :many
-SELECT id, name, price, hotel_id
-FROM room_types rt
-WHERE hotel_id = $1
+SELECT 
+    rt.id,
+    rt.name,
+    rt.price,
+    rt.hotel_id,
+    COUNT(r.id) AS number_of_rooms 
+FROM room_types rt LEFT JOIN rooms r ON rt.id = r.room_type_id
+WHERE rt.hotel_id = $1
+GROUP BY rt.id
 ORDER BY rt.name
 LIMIT 10
 `
 
-func (q *Queries) GetRoomTypesByHotelId(ctx context.Context, hotelID pgtype.UUID) ([]RoomType, error) {
+type GetRoomTypesByHotelIdRow struct {
+	ID            pgtype.UUID `json:"id"`
+	Name          string      `json:"name"`
+	Price         int32       `json:"price"`
+	HotelID       pgtype.UUID `json:"hotel_id"`
+	NumberOfRooms int64       `json:"number_of_rooms"`
+}
+
+func (q *Queries) GetRoomTypesByHotelId(ctx context.Context, hotelID pgtype.UUID) ([]GetRoomTypesByHotelIdRow, error) {
 	rows, err := q.db.Query(ctx, getRoomTypesByHotelId, hotelID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []RoomType
+	var items []GetRoomTypesByHotelIdRow
 	for rows.Next() {
-		var i RoomType
+		var i GetRoomTypesByHotelIdRow
 		if err := rows.Scan(
 			&i.ID,
 			&i.Name,
 			&i.Price,
 			&i.HotelID,
+			&i.NumberOfRooms,
 		); err != nil {
 			return nil, err
 		}

@@ -10,7 +10,7 @@ type RoomTypeImage struct {
 type RoomTypeResponse struct {
 	Id      string          `json:"id"`
 	Name    string          `json:"name"`
-	Price   int             `json:"price"`
+	Price   uint            `json:"price"`
 	HotelId string          `json:"hotel_id"`
 	Images  []RoomTypeImage `json:"images"`
 }
@@ -18,8 +18,8 @@ type RoomTypeResponse struct {
 type GetNumberOfAvailableRoomsDtoResponse struct {
 	Id                     string          `json:"id"`
 	Name                   string          `json:"name"`
-	Price                  int             `json:"price"`
+	Price                  uint            `json:"price"`
 	HotelId                string          `json:"hotel_id"`
 	Images                 []RoomTypeImage `json:"images"`
-	NumberOfAvailableRooms int8            `json:"number_of_available_rooms"`
+	NumberOfAvailableRooms uint8           `json:"number_of_available_rooms"`
 }

@@ -35,7 +35,7 @@ func (rtg *RoomTypeGrpcHandler) GetRoomTypeById(ctx context.Context, req *room_t
 		RoomType: &room_type_pb.RoomType{
 			Id:      roomType.ID.String(),
 			Name:    roomType.Name,
-			Price:   roomType.Price,
+			Price:   uint32(roomType.Price),
 			HotelId: roomType.HotelID.String(),
 		},
 	}, nil
@@ -53,13 +53,14 @@ func (rtg *RoomTypeGrpcHandler) GetRoomTypesByHotelId(ctx context.Context, req *
 		return nil, err
 	}
 
-	var grpcRoomTypes []*room_type_pb.RoomType
+	var grpcRoomTypes []*room_type_pb.GetRoomTypesByHotelIdRow
 	for _, roomType := range roomTypes {
-		grpcRoomType := &room_type_pb.RoomType{
-			Id:      roomType.ID.String(),
-			Name:    roomType.Name,
-			Price:   roomType.Price,
-			HotelId: roomType.HotelID.String(),
+		grpcRoomType := &room_type_pb.GetRoomTypesByHotelIdRow{
+			Id:            roomType.ID.String(),
+			Name:          roomType.Name,
+			Price:         uint32(roomType.Price),
+			HotelId:       roomType.HotelID.String(),
+			NumberOfRooms: uint32(roomType.NumberOfRooms),
 		}
 
 		grpcRoomTypes = append(grpcRoomTypes, grpcRoomType)

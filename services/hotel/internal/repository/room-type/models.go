@@ -5,8 +5,62 @@
 package room_type_repo
 
 import (
+	"database/sql/driver"
+	"fmt"
+
 	"github.com/jackc/pgx/v5/pgtype"
 )
+
+type RoomStatus string
+
+const (
+	RoomStatusAVAILABLE  RoomStatus = "AVAILABLE"
+	RoomStatusOCCUPIED   RoomStatus = "OCCUPIED"
+	RoomStatusMAINTAINED RoomStatus = "MAINTAINED"
+)
+
+func (e *RoomStatus) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = RoomStatus(s)
+	case string:
+		*e = RoomStatus(s)
+	default:
+		return fmt.Errorf("unsupported scan type for RoomStatus: %T", src)
+	}
+	return nil
+}
+
+type NullRoomStatus struct {
+	RoomStatus RoomStatus `json:"room_status"`
+	Valid      bool       `json:"valid"` // Valid is true if RoomStatus is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullRoomStatus) Scan(value interface{}) error {
+	if value == nil {
+		ns.RoomStatus, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.RoomStatus.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullRoomStatus) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.RoomStatus), nil
+}
+
+type Room struct {
+	ID         pgtype.UUID    `json:"id"`
+	Name       string         `json:"name"`
+	Status     NullRoomStatus `json:"status"`
+	RoomTypeID pgtype.UUID    `json:"room_type_id"`
+	HotelID    pgtype.UUID    `json:"hotel_id"`
+}
 
 type RoomType struct {
 	ID      pgtype.UUID `json:"id"`

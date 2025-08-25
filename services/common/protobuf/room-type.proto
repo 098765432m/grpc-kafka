@@ -10,7 +10,7 @@ service RoomTypeService {
 message RoomType {
     string id = 1;
     string name = 2;
-    int32 price = 3;
+    uint32 price = 3;
     string hotel_id = 4;
 }
 
@@ -26,6 +26,14 @@ message GetRoomTypesByHotelIdRequest {
     string hotel_id = 1;
 }
 
+message GetRoomTypesByHotelIdRow {
+    string id = 1;
+    string name = 2;
+    uint32 price = 3;
+    string hotel_id = 4;
+    uint32 number_of_rooms = 5;
+}
+
 message GetRoomTypesByHotelIdResponse {
-    repeated RoomType roomTypes = 1;
+    repeated GetRoomTypesByHotelIdRow roomTypes = 1;
 }

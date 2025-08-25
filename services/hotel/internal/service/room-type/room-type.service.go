@@ -28,7 +28,7 @@ func (rts *RoomTypeService) GetRoomTypeById(ctx context.Context, id pgtype.UUID)
 	return &roomType, nil
 }
 
-func (rts *RoomTypeService) GetRoomTypesByHotelId(ctx context.Context, hotelId pgtype.UUID) ([]room_type_repo.RoomType, error) {
+func (rts *RoomTypeService) GetRoomTypesByHotelId(ctx context.Context, hotelId pgtype.UUID) ([]room_type_repo.GetRoomTypesByHotelIdRow, error) {
 	roomTypes, err := rts.repo.GetRoomTypesByHotelId(ctx, hotelId)
 	if err != nil {
 		zap.S().Errorln("Cannot get Room Type By id")
