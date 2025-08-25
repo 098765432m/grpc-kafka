@@ -305,6 +305,7 @@ func (hh *HotelHandler) GetRoomsByHotelId(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusOK, utils.SuccessApiResponse(roomsResult.Rooms, "Lay danh sach phong thanh cong"))
 }
+
 func (hh *HotelHandler) GetAvailableRoomTypes(ctx *gin.Context) {
 	hotelId := ctx.Param("id")
 
@@ -317,7 +318,7 @@ func (hh *HotelHandler) GetAvailableRoomTypes(ctx *gin.Context) {
 		HotelId: hotelId,
 	})
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, "Loi khong lay duoc danh sach loai phong bang khach san")
+		ctx.JSON(http.StatusInternalServerError, utils.ErrorApiResponse("Loi khong lay duoc danh sach loai phong bang khach san"))
 		return
 	}
 
@@ -326,9 +327,11 @@ func (hh *HotelHandler) GetAvailableRoomTypes(ctx *gin.Context) {
 		roomTypeIds = append(roomTypeIds, roomType.Id)
 	}
 
+	// TODO code = Unavailable desc = connection error: desc = "transport: Error while dialing: dial tcp 127.0.0.1:50053: connect: connection refused"
 	imagesGrpcResult, err := hh.imageClient.GetImagesByRoomTypeIds(ctx, &image_pb.GetImagesByRoomTypeIdsRequest{RoomTypeIds: roomTypeIds})
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, "Loi khong lay duoc danh sach hinh anh bang loai phong")
+		zap.S().Info("Failed to get Images by Room Type ids: ", err)
+		ctx.JSON(http.StatusInternalServerError, utils.ErrorApiResponse("Loi khong lay duoc danh sach hinh anh bang loai phong"))
 		return
 	}
 

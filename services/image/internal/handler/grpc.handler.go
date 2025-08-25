@@ -147,7 +147,8 @@ func (ig *ImageGrpcHandler) GetImagesByRoomTypeIds(ctx context.Context, req *ima
 	for _, roomTypeIdReq := range req.RoomTypeIds {
 		var roomTypeId pgtype.UUID
 		if err := roomTypeId.Scan(roomTypeIdReq); err != nil {
-			return nil, err
+			zap.S().Info("Invalid Room Type UUID: ", err)
+			return nil, status.Error(codes.InvalidArgument, "Loi UUID loai phong")
 		}
 
 		roomTypeIds = append(roomTypeIds, roomTypeId)
