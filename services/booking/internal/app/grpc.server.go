@@ -38,7 +38,7 @@ func (bg *BookingGrpcServer) Run() {
 	repo := booking_repo.New(bg.conn)
 
 	// service
-	service := booking_service.NewBookingService(repo)
+	service := booking_service.NewBookingService(bg.conn, repo)
 
 	// handler
 	handler := booking_handler.NewBookingGrpcHandler(service)

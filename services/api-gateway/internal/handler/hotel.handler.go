@@ -132,13 +132,14 @@ func (hh *HotelHandler) GetHotelById(ctx *gin.Context) {
 			}
 		}
 
-		zap.S().Errorln(err)
+		zap.S().Errorln("Loi khong tim duoc khach san", err)
 		ctx.JSON(http.StatusInternalServerError, utils.ErrorApiResponse("Loi he thong khi lay khach san"))
 		return
 	}
 
 	images, err := hh.imageClient.GetImagesByHotelId(ctx, &image_pb.GetImagesByHotelIdRequest{HotelId: hotel.Id})
 	if err != nil {
+		zap.S().Info("Loi ko lay hinh anh khi tim khach san theo ID ", err)
 
 		ctx.JSON(http.StatusInternalServerError, utils.ErrorApiResponse("Loi he thong khi lay hinh anh khach san"))
 		return

@@ -22,47 +22,6 @@ func NewBookingGrpcHandler(service *booking_service.BookingService) *BookingGrpc
 	}
 }
 
-func (bg *BookingGrpcHandler) GetListOfOccupiedRooms(ctx context.Context, req *booking_pb.GetListOfOccupiedRoomsRequest) (*booking_pb.GetListOfOccupiedRoomsResponse, error) {
-	// Check Are room Ids valid
-	roomIds := make([]pgtype.UUID, 0, len(req.RoomIds))
-	for _, roomIdReq := range req.RoomIds {
-		var roomId pgtype.UUID
-		if err := roomId.Scan(roomIdReq); err != nil {
-			zap.S().Info("Invalid Room Id: ", err)
-			return nil, status.Error(codes.InvalidArgument, "Invalid Room Id")
-		}
-
-		roomIds = append(roomIds, roomId)
-	}
-
-	//Check are dates valid
-	var checkInDate pgtype.Date
-	if err := checkInDate.Scan(req.CheckIn); err != nil {
-		zap.S().Info("Invalid date format: ", err)
-		return nil, status.Error(codes.InvalidArgument, "Invalid date format")
-	}
-
-	var checkOutDate pgtype.Date
-	if err := checkOutDate.Scan(req.CheckOut); err != nil {
-		zap.S().Info("Invalid date format: ", err)
-		return nil, status.Error(codes.InvalidArgument, "Invalid date format")
-	}
-
-	occupiedRoomIds, err := bg.service.GetListOfOccupiedRooms(ctx, roomIds, checkInDate, checkOutDate)
-	if err != nil {
-		return nil, status.Error(codes.Internal, "Loi he thong")
-	}
-
-	var occupiedRoomIdsResponse []string
-	for _, occupiedRoomId := range occupiedRoomIds {
-		occupiedRoomIdsResponse = append(occupiedRoomIdsResponse, occupiedRoomId.String())
-	}
-
-	return &booking_pb.GetListOfOccupiedRoomsResponse{
-		OccupiedRoomIds: occupiedRoomIdsResponse,
-	}, nil
-}
-
 // Return {roomTypeId, Number of occupied rooms in that room type}
 func (bg *BookingGrpcHandler) GetNumberOfOccupiedRooms(ctx context.Context, req *booking_pb.GetNumberOfOccupiedRoomsRequest) (*booking_pb.GetNumberOfOccupiedRoomsResponse, error) {
 	// Check Are room type Ids valid
