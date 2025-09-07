@@ -88,6 +88,9 @@ func main() {
 	imageHandler := api_handler.NewImageHandler(imageClient)
 	imageHandler.RegisterRoutes(api)
 
+	bookingHandler := api_handler.NewBookingHandler(bookingClient, roomClient)
+	bookingHandler.RegisterRoutes(api)
+
 	zap.S().Infoln("Running api-gateway on port ", consts.API_GATEWAY_PORT)
 
 	if err := router.Run(fmt.Sprintf(":%d", consts.API_GATEWAY_PORT)); err != nil {

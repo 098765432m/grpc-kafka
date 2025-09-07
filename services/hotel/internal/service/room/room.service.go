@@ -83,3 +83,35 @@ func (rs *RoomService) DeleteRoom(ctx context.Context, id pgtype.UUID) error {
 
 	return nil
 }
+
+// Return List of Available rooms for room type id
+func (rs *RoomService) GetListOfAvailableRoomsByRoomTypeId(ctx context.Context, roomTypeId pgtype.UUID, numberOfRooms int) ([]pgtype.UUID, error) {
+
+	roomIds, err := rs.repo.GetListOfAvailableRoomsByRoomTypeId(ctx, room_repo.GetListOfAvailableRoomsByRoomTypeIdParams{
+		RoomTypeID:    roomTypeId,
+		NumberOfRooms: int32(numberOfRooms),
+	})
+	if err != nil {
+		zap.S().Errorln("Failed to get list of available rooms by room type id")
+		return nil, err
+	}
+
+	return roomIds, nil
+}
+
+// Set Status of rooms
+func (rs *RoomService) ChangeStatusOfRooms(ctx context.Context, roomIds []pgtype.UUID, room_status room_repo.RoomStatus) error {
+
+	// TODO: catch when roomIds is not found
+	err := rs.repo.ChangeStatusRoomsByIds(ctx, room_repo.ChangeStatusRoomsByIdsParams{
+		RoomIds: roomIds,
+		Status:  room_status,
+	})
+	if err != nil {
+		zap.S().Error("Failed to change status of rooms", err)
+		return err
+	}
+
+	return nil
+
+}

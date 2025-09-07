@@ -23,7 +23,7 @@ INSERT INTO bookings (
     total,
     status,
     room_type_id,
-    user_id
+    user_id,
     room_id
 ) VALUES (
     @check_in::date,
@@ -31,9 +31,12 @@ INSERT INTO bookings (
     @total::int,
     @status::BOOKING_STATUS,
     @room_type_id::uuid,
-    @user_id::uuid
+    @user_id::uuid,
     @room_id::uuid
 );
 
 -- name: DeleteBookingById :exec
 DELETE FROM bookings WHERE id = $1;
+
+-- name: DeleteBookingsByIds :exec
+DELETE FROM bookings WHERE ids = ANY(@booking_ids::uuid[]);

@@ -88,10 +88,20 @@ func (bs *BookingService) CreateBookings(ctx context.Context, newBookingParams [
 	return nil
 }
 
-func (bs *BookingService) DeleteBooking(ctx context.Context, id pgtype.UUID) error {
+func (bs *BookingService) DeleteBookingById(ctx context.Context, id pgtype.UUID) error {
 
 	if err := bs.repo.DeleteBookingById(ctx, id); err != nil {
 		zap.S().Errorln("Cannot delete Booking")
+		return err
+	}
+
+	return nil
+}
+
+func (bs *BookingService) DeleteBookingsByIds(ctx context.Context, ids []pgtype.UUID) error {
+
+	if err := bs.repo.DeleteBookingsByIds(ctx, ids); err != nil {
+		zap.S().Errorln("Cannot delete Bookings By Ids")
 		return err
 	}
 

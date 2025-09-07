@@ -18,6 +18,7 @@ INSERT INTO bookings (
     total,
     status,
     room_type_id,
+    user_id,
     room_id
 ) VALUES (
     $1::date,
@@ -25,7 +26,8 @@ INSERT INTO bookings (
     $3::int,
     $4::BOOKING_STATUS,
     $5::uuid,
-    $6::uuid
+    $6::uuid,
+    $7::uuid
 )
 `
 
@@ -35,6 +37,7 @@ type CreateBookingParams struct {
 	Total      int32         `json:"total"`
 	Status     BookingStatus `json:"status"`
 	RoomTypeID pgtype.UUID   `json:"room_type_id"`
+	UserID     pgtype.UUID   `json:"user_id"`
 	RoomID     pgtype.UUID   `json:"room_id"`
 }
 
@@ -45,6 +48,7 @@ func (q *Queries) CreateBooking(ctx context.Context, arg CreateBookingParams) er
 		arg.Total,
 		arg.Status,
 		arg.RoomTypeID,
+		arg.UserID,
 		arg.RoomID,
 	)
 	return err
@@ -59,8 +63,17 @@ func (q *Queries) DeleteBookingById(ctx context.Context, id pgtype.UUID) error {
 	return err
 }
 
+const deleteBookingsByIds = `-- name: DeleteBookingsByIds :exec
+DELETE FROM bookings WHERE ids = ANY($1::uuid[])
+`
+
+func (q *Queries) DeleteBookingsByIds(ctx context.Context, bookingIds []pgtype.UUID) error {
+	_, err := q.db.Exec(ctx, deleteBookingsByIds, bookingIds)
+	return err
+}
+
 const getBookingById = `-- name: GetBookingById :one
-SELECT id, check_in, check_out, total, status, room_type_id, room_id, create_at, updated_at FROM bookings WHERE id = $1
+SELECT id, check_in, check_out, total, status, room_type_id, user_id, room_id, create_at, updated_at FROM bookings WHERE id = $1
 `
 
 func (q *Queries) GetBookingById(ctx context.Context, id pgtype.UUID) (Booking, error) {
@@ -73,6 +86,7 @@ func (q *Queries) GetBookingById(ctx context.Context, id pgtype.UUID) (Booking, 
 		&i.Total,
 		&i.Status,
 		&i.RoomTypeID,
+		&i.UserID,
 		&i.RoomID,
 		&i.CreateAt,
 		&i.UpdatedAt,
@@ -81,7 +95,7 @@ func (q *Queries) GetBookingById(ctx context.Context, id pgtype.UUID) (Booking, 
 }
 
 const getBookingsByRoomId = `-- name: GetBookingsByRoomId :many
-SELECT id, check_in, check_out, total, status, room_type_id, room_id, create_at, updated_at FROM bookings WHERE room_id = $1
+SELECT id, check_in, check_out, total, status, room_type_id, user_id, room_id, create_at, updated_at FROM bookings WHERE room_id = $1
 `
 
 func (q *Queries) GetBookingsByRoomId(ctx context.Context, roomID pgtype.UUID) ([]Booking, error) {
@@ -100,6 +114,7 @@ func (q *Queries) GetBookingsByRoomId(ctx context.Context, roomID pgtype.UUID) (
 			&i.Total,
 			&i.Status,
 			&i.RoomTypeID,
+			&i.UserID,
 			&i.RoomID,
 			&i.CreateAt,
 			&i.UpdatedAt,
@@ -107,43 +122,6 @@ func (q *Queries) GetBookingsByRoomId(ctx context.Context, roomID pgtype.UUID) (
 			return nil, err
 		}
 		items = append(items, i)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
-const getListOfOccupiedRooms = `-- name: GetListOfOccupiedRooms :many
-SELECT 
-    room_id
-FROM bookings 
-WHERE
-    room_id = ANY($1::uuid[])
-    -- AND ( date_trunc('day', @new_check_in::date) < date_trunc('day', check_out) AND date_trunc('day', @new_check_out::date) > date_trunc('day', check_in) );
-    -- AND (@new_check_in::date < check_out::date AND @new_check_out::date > check_in::date)
-    AND daterange(check_in, check_out, '[]') && daterange($2::date, $3::date, '[]')
-`
-
-type GetListOfOccupiedRoomsParams struct {
-	RoomIds  []pgtype.UUID `json:"room_ids"`
-	CheckIn  pgtype.Date   `json:"check_in"`
-	CheckOut pgtype.Date   `json:"check_out"`
-}
-
-func (q *Queries) GetListOfOccupiedRooms(ctx context.Context, arg GetListOfOccupiedRoomsParams) ([]pgtype.UUID, error) {
-	rows, err := q.db.Query(ctx, getListOfOccupiedRooms, arg.RoomIds, arg.CheckIn, arg.CheckOut)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []pgtype.UUID
-	for rows.Next() {
-		var room_id pgtype.UUID
-		if err := rows.Scan(&room_id); err != nil {
-			return nil, err
-		}
-		items = append(items, room_id)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err

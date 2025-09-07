@@ -11,6 +11,22 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const changeStatusRoomsByIds = `-- name: ChangeStatusRoomsByIds :exec
+UPDATE rooms
+SET status = $1::room_status
+WHERE id = ANY($2::uuid[])
+`
+
+type ChangeStatusRoomsByIdsParams struct {
+	Status  RoomStatus    `json:"status"`
+	RoomIds []pgtype.UUID `json:"room_ids"`
+}
+
+func (q *Queries) ChangeStatusRoomsByIds(ctx context.Context, arg ChangeStatusRoomsByIdsParams) error {
+	_, err := q.db.Exec(ctx, changeStatusRoomsByIds, arg.Status, arg.RoomIds)
+	return err
+}
+
 const createRoom = `-- name: CreateRoom :exec
 INSERT INTO rooms
 (
@@ -53,6 +69,40 @@ WHERE id = $1
 func (q *Queries) DeleteRoomById(ctx context.Context, id pgtype.UUID) error {
 	_, err := q.db.Exec(ctx, deleteRoomById, id)
 	return err
+}
+
+const getListOfAvailableRoomsByRoomTypeId = `-- name: GetListOfAvailableRoomsByRoomTypeId :many
+SELECT id
+FROM rooms r
+WHERE r.room_type_id = $1::uuid
+    AND r.status = 'AVAILABLE'
+ORDER BY r.name
+LIMIT $2::int
+`
+
+type GetListOfAvailableRoomsByRoomTypeIdParams struct {
+	RoomTypeID    pgtype.UUID `json:"room_type_id"`
+	NumberOfRooms int32       `json:"number_of_rooms"`
+}
+
+func (q *Queries) GetListOfAvailableRoomsByRoomTypeId(ctx context.Context, arg GetListOfAvailableRoomsByRoomTypeIdParams) ([]pgtype.UUID, error) {
+	rows, err := q.db.Query(ctx, getListOfAvailableRoomsByRoomTypeId, arg.RoomTypeID, arg.NumberOfRooms)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []pgtype.UUID
+	for rows.Next() {
+		var id pgtype.UUID
+		if err := rows.Scan(&id); err != nil {
+			return nil, err
+		}
+		items = append(items, id)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const getRoomsByHotelId = `-- name: GetRoomsByHotelId :many
