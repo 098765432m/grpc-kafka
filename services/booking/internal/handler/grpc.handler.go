@@ -24,6 +24,8 @@ func NewBookingGrpcHandler(service *booking_service.BookingService) *BookingGrpc
 
 func (bg *BookingGrpcHandler) CreateBookings(ctx context.Context, req *booking_pb.NewBookingParam) (*booking_pb.Empty, error) {
 
+	zap.L().Info("Create Bookings", zap.Any("Req", req.NewBookings))
+
 	newBookings := []booking_service.NewBooking{}
 	for _, param := range req.NewBookings {
 		zap.L().Info("New Booking: ", zap.Any("CheckIn", param.CheckIn), zap.Any("CheckOut", param.CheckOut), zap.Any("Total", param.Total), zap.Any("RoomTypeId", param.RoomTypeId), zap.Any("UserId", param.UserId), zap.Any("RoomId", param.RoomId))

@@ -96,6 +96,11 @@ func (rs *RoomService) GetListOfAvailableRoomsByRoomTypeId(ctx context.Context, 
 		return nil, err
 	}
 
+	if len(roomIds) < numberOfRooms {
+		zap.S().Infoln("There is not enough rooms AVAILABLE.")
+		return nil, common_error.ErrNoRows
+	}
+
 	return roomIds, nil
 }
 

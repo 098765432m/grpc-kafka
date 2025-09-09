@@ -72,7 +72,7 @@ func (q *Queries) DeleteRoomById(ctx context.Context, id pgtype.UUID) error {
 }
 
 const getListOfAvailableRoomsByRoomTypeId = `-- name: GetListOfAvailableRoomsByRoomTypeId :many
-SELECT id
+SELECT r.id
 FROM rooms r
 WHERE r.room_type_id = $1::uuid
     AND r.status = 'AVAILABLE'
@@ -108,7 +108,7 @@ func (q *Queries) GetListOfAvailableRoomsByRoomTypeId(ctx context.Context, arg G
 const getRoomsByHotelId = `-- name: GetRoomsByHotelId :many
 SELECT id, name, status, room_type_id, hotel_id
 FROM rooms r
-WHERE hotel_id = $1
+WHERE r.hotel_id = $1
 ORDER BY r.name
 LIMIT 20
 `
@@ -161,7 +161,7 @@ func (q *Queries) GetRoomsById(ctx context.Context, id pgtype.UUID) (Room, error
 const getRoomsByRoomTypeId = `-- name: GetRoomsByRoomTypeId :many
 SELECT id, name, status, room_type_id, hotel_id
 FROM rooms r
-WHERE room_type_id = $1
+WHERE r.room_type_id = $1
 ORDER BY r.name
 LIMIT 20
 `

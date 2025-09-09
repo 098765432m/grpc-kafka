@@ -13,7 +13,7 @@ message Empty {}
 message BookingParam {
     string checkIn = 1;
     string checkOut = 2;
-    int32 total = 3;
+    int32  total = 3;
     string roomTypeId = 4;
     string userId = 5;
     string roomId = 6;

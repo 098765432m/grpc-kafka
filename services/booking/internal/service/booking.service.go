@@ -64,14 +64,14 @@ func (bs *BookingService) CreateBookings(ctx context.Context, newBookingParams [
 	}
 
 	args := []any{}
-	placeholders := make([]string, len(newBookingParams))
+	placeholders := make([]string, 0, len(newBookingParams))
 
 	for index, param := range newBookingParams {
 
 		n := index * 6
 		placeholders = append(placeholders, fmt.Sprintf("($%d, $%d, $%d, $%d, $%d, $%d)", n+1, n+2, n+3, n+4, n+5, n+6))
 
-		args = append(args, param.CheckIn.Time.String(), param.CheckOut.Time.String(), param.Total, param.RoomTypeId.String(), param.UserId.String(), param.RoomId.String())
+		args = append(args, param.CheckIn, param.CheckOut, param.Total, param.RoomTypeId, param.UserId, param.RoomId)
 	}
 
 	stmt += strings.Join(placeholders, ", ")
@@ -81,7 +81,7 @@ func (bs *BookingService) CreateBookings(ctx context.Context, newBookingParams [
 
 	_, err := bs.conn.Exec(ctx, stmt, args...)
 	if err != nil {
-		zap.S().Errorln("Cannot create bookings")
+		zap.S().Errorln("Cannot create bookings: ", err)
 		return err
 	}
 

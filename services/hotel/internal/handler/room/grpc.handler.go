@@ -125,8 +125,15 @@ func (rg *RoomGrpcHandler) GetListOfAvailableRoomsByRoomTypeId(ctx context.Conte
 
 	roomIds, err := rg.service.GetListOfAvailableRoomsByRoomTypeId(ctx, roomTypeId, int(req.GetNumberOfRooms()))
 	if err != nil {
+		switch {
+		case errors.Is(err, common_error.ErrNoRows):
+			return nil, status.Error(codes.NotFound, "Khong du phong trong")
+		}
+
 		return nil, status.Error(codes.Internal, "Khong the lay danh sach phong")
 	}
+
+	zap.S().Infoln("room ids: ", roomIds)
 
 	roomIdsStr := make([]string, 0, len(roomIds))
 	for _, roomId := range roomIds {

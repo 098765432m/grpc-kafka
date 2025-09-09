@@ -1,6 +1,7 @@
 package api_handler
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/098765432m/grpc-kafka/common/gen-proto/booking_pb"
@@ -8,6 +9,8 @@ import (
 	"github.com/098765432m/grpc-kafka/common/utils"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 type BookingHandler struct {
@@ -37,17 +40,25 @@ type BookedRooms struct {
 
 type BookingRoomsRequest struct {
 	BookedRooms  []BookedRooms `json:"booked_rooms"`
-	CheckInDate  string        `json:"check_in_date"`
-	CheckOutDate string        `json:"check_out_date"`
-	Total        int           `json:"total"`
+	CheckInDate  string        `json:"check_in_date" binding:"required"`
+	CheckOutDate string        `json:"check_out_date" binding:"required"`
+	Total        int           `json:"total" binding:"required"`
 	// NumOfGuests int32 `json:"num_of_guests"`
-	UserId string `json:"user_id"`
+	UserId string `json:"user_id" binding:"required"`
 }
 
 // TODO: Check this function can this use with waitGroup
 func (bh *BookingHandler) BookingRooms(ctx *gin.Context) {
 	var bookingReq *BookingRoomsRequest
 	if err := ctx.ShouldBindJSON(&bookingReq); err != nil {
+		zap.S().Info("Invalid Booking request: ", err)
+		ctx.JSON(http.StatusBadRequest, utils.ErrorApiResponse("Loi khong dat duoc phong"))
+		return
+	}
+
+	// Check booked room != 0
+	if len(bookingReq.BookedRooms) == 0 {
+		zap.S().Info("Booked rooms are not found")
 		ctx.JSON(http.StatusBadRequest, utils.ErrorApiResponse("Loi khong dat duoc phong"))
 		return
 	}
@@ -61,20 +72,32 @@ func (bh *BookingHandler) BookingRooms(ctx *gin.Context) {
 	bookedRoomsReq := make([]BookedRoomsReq, 0, len(bookingReq.BookedRooms))
 
 	// Check for available Rooms for Room Type
-	for _, booking := range bookingReq.BookedRooms {
+	for _, bookedRoom := range bookingReq.BookedRooms {
 		listRoomsGrpcResult, err := bh.roomClient.GetListOfAvailableRoomsByRoomTypeId(ctx, &room_pb.GetListOfAvailableRoomsByRoomTypeIdRequest{
-			RoomTypeId:    booking.RoomTypeBookedId,
-			NumberOfRooms: int32(booking.NumberOfRooms),
+			RoomTypeId:    bookedRoom.RoomTypeBookedId,
+			NumberOfRooms: int32(bookedRoom.NumberOfRooms),
 		})
-		// TODO Bat loi Khong co phong AVAILABLE
+		zap.S().Infoln("list room grpc ", listRoomsGrpcResult)
 
 		if err != nil {
+			st, ok := status.FromError(err)
+			if ok {
+				switch st.Code() {
+				case codes.NotFound:
+					// TODO: BAT loi khong co phong AVAILABLE
+					zap.S().Infoln("Loi Khong co phong AVAILABLE")
+					ctx.JSON(http.StatusInternalServerError, utils.ErrorApiResponse("Loi khong co phong trong"))
+					return
+				}
+			}
+
 			zap.S().Info("Cannot get available rooms: ", err)
 			ctx.JSON(http.StatusInternalServerError, utils.ErrorApiResponse("Khong dat duoc phong"))
+			return
 		}
 
 		bookedRoomsReq = append(bookedRoomsReq, BookedRoomsReq{
-			RoomTypeId: booking.RoomTypeBookedId,
+			RoomTypeId: bookedRoom.RoomTypeBookedId,
 			RoomIds:    listRoomsGrpcResult.GetRoomIds(),
 		})
 	}
@@ -82,7 +105,7 @@ func (bh *BookingHandler) BookingRooms(ctx *gin.Context) {
 	// Create booking param for each room
 	var newBookings []*booking_pb.BookingParam
 	for _, bookedRoom := range bookedRoomsReq {
-		for _, roomId := range bookedRoom.RoomIds {
+		for i, roomId := range bookedRoom.RoomIds {
 			newBooking := &booking_pb.BookingParam{
 				CheckIn:    bookingReq.CheckInDate,
 				CheckOut:   bookingReq.CheckOutDate,
@@ -91,17 +114,21 @@ func (bh *BookingHandler) BookingRooms(ctx *gin.Context) {
 				RoomId:     roomId,
 				UserId:     bookingReq.UserId,
 			}
+
+			zap.L().Info("Check booked room", zap.Any(fmt.Sprintf("Booked room %d", i), newBooking))
+
 			newBookings = append(newBookings, newBooking)
 
 		}
 
-		// TODO: Set status rooms to BOOKED
+		// Set status rooms to BOOKED
 		_, err := bh.roomClient.SetOccupiedStatusToRooms(ctx, &room_pb.SetOccupiedStatusToRoomsRequest{
 			RoomIds: bookedRoom.RoomIds,
 		})
 		if err != nil {
 			zap.S().Info("Cannot set status booked to Rooms: ", err)
 			ctx.JSON(http.StatusInternalServerError, utils.ErrorApiResponse("Khong dat duoc phong"))
+			return
 		}
 	}
 
@@ -112,6 +139,7 @@ func (bh *BookingHandler) BookingRooms(ctx *gin.Context) {
 	if err != nil {
 		zap.S().Info("Cannot booking rooms: ", err)
 		ctx.JSON(http.StatusInternalServerError, utils.ErrorApiResponse("Khong dat duoc phong"))
+		return
 	}
 
 	ctx.JSON(http.StatusCreated, utils.SuccessApiResponse(nil, "Dat phong thanh cong"))

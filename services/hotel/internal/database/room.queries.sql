@@ -1,19 +1,19 @@
 -- name: GetRoomsByHotelId :many
 SELECT *
 FROM rooms r
-WHERE hotel_id = $1
+WHERE r.hotel_id = $1
 ORDER BY r.name
 LIMIT 20;
 
 -- name: GetRoomsByRoomTypeId :many
 SELECT *
 FROM rooms r
-WHERE room_type_id = $1
+WHERE r.room_type_id = $1
 ORDER BY r.name
 LIMIT 20;
 
 -- name: GetListOfAvailableRoomsByRoomTypeId :many
-SELECT id
+SELECT r.id
 FROM rooms r
 WHERE r.room_type_id = @room_type_id::uuid
     AND r.status = 'AVAILABLE'
