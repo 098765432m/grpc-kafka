@@ -6,6 +6,7 @@ import (
 
 	common_error "github.com/098765432m/grpc-kafka/common/error"
 	"github.com/098765432m/grpc-kafka/common/gen-proto/room_pb"
+	"github.com/098765432m/grpc-kafka/common/utils"
 	room_repo "github.com/098765432m/grpc-kafka/hotel/internal/repository/room"
 	room_service "github.com/098765432m/grpc-kafka/hotel/internal/service/room"
 	"github.com/jackc/pgx/v5/pgtype"
@@ -140,6 +141,37 @@ func (rg *RoomGrpcHandler) GetListOfAvailableRoomsByRoomTypeId(ctx context.Conte
 		roomIdsStr = append(roomIdsStr, roomId.String())
 	}
 	return &room_pb.GetListOfAvailableRoomsByRoomTypeIdResponse{
+		RoomIds: roomIdsStr,
+	}, nil
+}
+
+// Get List Of Remain Rooms (NOT_BOOKED ROOM)
+func (rs *RoomGrpcHandler) GetListOfRemainRooms(ctx context.Context, req *room_pb.GetListOfRemainRoomsRequest) (*room_pb.GetListOfRemainRoomsResponse, error) {
+
+	// Convert to pgtype.UUID
+	var roomTypeId pgtype.UUID
+	if err := roomTypeId.Scan(req.GetRoomTypeId()); err != nil {
+		zap.S().Info("Invalid UUID format: ", err)
+		return nil, status.Error(codes.InvalidArgument, "")
+	}
+
+	bookedRoomIds, err := utils.ParseUUIDArray(req.GetBookedRoomIds())
+	if err != nil {
+		zap.S().Infoln(err)
+		return nil, status.Error(codes.InvalidArgument, "Loi UUID khong hop le")
+	}
+
+	roomIds, err := rs.service.GetListOfRemainRooms(ctx, roomTypeId, bookedRoomIds, int(req.NumberOfRooms))
+	if err != nil {
+		return nil, status.Error(codes.Internal, "Loi khong the lay danh sach phong trong")
+	}
+
+	roomIdsStr := make([]string, 0, len(roomIds))
+	for _, roomId := range roomIds {
+		roomIdsStr = append(roomIdsStr, roomId.String())
+	}
+
+	return &room_pb.GetListOfRemainRoomsResponse{
 		RoomIds: roomIdsStr,
 	}, nil
 }

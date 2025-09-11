@@ -16,6 +16,13 @@ WHERE
     AND daterange(check_in, check_out, '[]') && daterange(@check_in::date, @check_out::date, '[]')
 GROUP BY room_type_id;
 
+-- name: GetRoomsNotAvailableByRoomTypeId :many
+SELECT room_id
+FROM bookings
+WHERE 
+    room_type_id = @room_type_id::uuid
+    AND daterange(check_in, check_out, '[]') && daterange(@check_in::date, @check_out::date, '[]');
+
 -- name: CreateBooking :exec
 INSERT INTO bookings (
     check_in,

@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/jackc/pgx/v5/pgtype"
@@ -20,4 +21,19 @@ func ParsePgDate(dateStr string) (pgtype.Date, error) {
 	}
 
 	return pgDate, nil
+}
+
+func ParseUUIDArray(uuidsStr []string) ([]pgtype.UUID, error) {
+
+	var uuids []pgtype.UUID
+	for _, uuidStr := range uuidsStr {
+		var uuid pgtype.UUID
+		if err := uuid.Scan(uuidStr); err != nil {
+			return nil, fmt.Errorf("invalid UUID format")
+		}
+
+		uuids = append(uuids, uuid)
+	}
+
+	return uuids, nil
 }

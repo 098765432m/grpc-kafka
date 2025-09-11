@@ -172,3 +172,37 @@ func (q *Queries) GetNumberOfOccupiedRooms(ctx context.Context, arg GetNumberOfO
 	}
 	return items, nil
 }
+
+const getRoomsNotAvailableByRoomTypeId = `-- name: GetRoomsNotAvailableByRoomTypeId :many
+SELECT room_id
+FROM bookings
+WHERE 
+    room_type_id = $1::uuid
+    AND daterange(check_in, check_out, '[]') && daterange($2::date, $3::date, '[]')
+`
+
+type GetRoomsNotAvailableByRoomTypeIdParams struct {
+	RoomTypeID pgtype.UUID `json:"room_type_id"`
+	CheckIn    pgtype.Date `json:"check_in"`
+	CheckOut   pgtype.Date `json:"check_out"`
+}
+
+func (q *Queries) GetRoomsNotAvailableByRoomTypeId(ctx context.Context, arg GetRoomsNotAvailableByRoomTypeIdParams) ([]pgtype.UUID, error) {
+	rows, err := q.db.Query(ctx, getRoomsNotAvailableByRoomTypeId, arg.RoomTypeID, arg.CheckIn, arg.CheckOut)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []pgtype.UUID
+	for rows.Next() {
+		var room_id pgtype.UUID
+		if err := rows.Scan(&room_id); err != nil {
+			return nil, err
+		}
+		items = append(items, room_id)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}

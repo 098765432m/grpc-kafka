@@ -20,6 +20,15 @@ WHERE r.room_type_id = @room_type_id::uuid
 ORDER BY r.name
 LIMIT @number_of_rooms::int;
 
+-- name: GetListOfRemainRooms :many
+SELECT id
+FROM rooms
+WHERE
+    room_type_id = @room_type_id::uuid
+    AND id <> ALL(@booked_room_ids::uuid[])
+ORDER BY name ASC
+LIMIT @number_of_rooms::int;
+
 -- name: GetRoomsById :one
 SELECT *
 FROM rooms

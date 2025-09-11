@@ -104,6 +104,26 @@ func (rs *RoomService) GetListOfAvailableRoomsByRoomTypeId(ctx context.Context, 
 	return roomIds, nil
 }
 
+func (rs *RoomService) GetListOfRemainRooms(ctx context.Context, roomTypeId pgtype.UUID, bookedRoomIds []pgtype.UUID, numberOfRooms int) ([]pgtype.UUID, error) {
+
+	roomIds, err := rs.repo.GetListOfRemainRooms(ctx, room_repo.GetListOfRemainRoomsParams{
+		RoomTypeID:    roomTypeId,
+		BookedRoomIds: bookedRoomIds,
+		NumberOfRooms: int32(numberOfRooms),
+	})
+	if err != nil {
+		zap.S().Errorln("Failed to get list of remain rooms by: ", err)
+		return nil, err
+	}
+
+	if len(roomIds) < numberOfRooms {
+		zap.S().Infoln("There is not enough rooms AVAILABLE.")
+		return nil, common_error.ErrNoRows
+	}
+
+	return roomIds, nil
+}
+
 // Set Status of rooms
 func (rs *RoomService) ChangeStatusOfRooms(ctx context.Context, roomIds []pgtype.UUID, room_status room_repo.RoomStatus) error {
 

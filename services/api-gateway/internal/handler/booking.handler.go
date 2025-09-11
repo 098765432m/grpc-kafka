@@ -71,6 +71,23 @@ func (bh *BookingHandler) BookingRooms(ctx *gin.Context) {
 	// Save room Type id and room ids that assign to booking
 	bookedRoomsReq := make([]BookedRoomsReq, 0, len(bookingReq.BookedRooms))
 
+	/*
+		1) Goal: Tra ve danh sach phong co the booking
+		||
+		vv
+		2) Query bookings TABLE trong khung thoi gian do
+		||
+		vv
+		3) Lay danh sach ten phong (vd: 101, 102,...) da duoc booking trong thoi gian do
+		||
+		vv
+		4) Query toi Rooms TABLE lay nhung phong con lai
+		||
+		vv
+		5) Tien hanh create bookings
+	*/
+
+	// This Cannot Check Many booking already made
 	// Check for available Rooms for Room Type
 	for _, bookedRoom := range bookingReq.BookedRooms {
 		listRoomsGrpcResult, err := bh.roomClient.GetListOfAvailableRoomsByRoomTypeId(ctx, &room_pb.GetListOfAvailableRoomsByRoomTypeIdRequest{

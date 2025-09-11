@@ -105,6 +105,42 @@ func (q *Queries) GetListOfAvailableRoomsByRoomTypeId(ctx context.Context, arg G
 	return items, nil
 }
 
+const getListOfRemainRooms = `-- name: GetListOfRemainRooms :many
+SELECT id
+FROM rooms
+WHERE
+    room_type_id = $1::uuid
+    AND id <> ALL($2::uuid[])
+ORDER BY name ASC
+LIMIT $3::int
+`
+
+type GetListOfRemainRoomsParams struct {
+	RoomTypeID    pgtype.UUID   `json:"room_type_id"`
+	BookedRoomIds []pgtype.UUID `json:"booked_room_ids"`
+	NumberOfRooms int32         `json:"number_of_rooms"`
+}
+
+func (q *Queries) GetListOfRemainRooms(ctx context.Context, arg GetListOfRemainRoomsParams) ([]pgtype.UUID, error) {
+	rows, err := q.db.Query(ctx, getListOfRemainRooms, arg.RoomTypeID, arg.BookedRoomIds, arg.NumberOfRooms)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []pgtype.UUID
+	for rows.Next() {
+		var id pgtype.UUID
+		if err := rows.Scan(&id); err != nil {
+			return nil, err
+		}
+		items = append(items, id)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getRoomsByHotelId = `-- name: GetRoomsByHotelId :many
 SELECT id, name, status, room_type_id, hotel_id
 FROM rooms r
