@@ -2,6 +2,7 @@ package booking_handler
 
 import (
 	"context"
+	"time"
 
 	booking_service "github.com/098765432m/grpc-kafka/booking/internal/service"
 	"github.com/098765432m/grpc-kafka/common/gen-proto/booking_pb"
@@ -155,4 +156,52 @@ func (bg *BookingGrpcHandler) GetNumberOfOccupiedRooms(ctx context.Context, req 
 	return &booking_pb.GetNumberOfOccupiedRoomsResponse{
 		Results: numberOccpiedRoomsResponse,
 	}, nil
+}
+
+func (bg *BookingGrpcHandler) GetUnavailableRoomsByRoomTypeId(ctx context.Context, req *booking_pb.GetUnavailableRoomsByRoomTypeIdRequest) (*booking_pb.GetUnavailableRoomsByRoomTypeIdResponse, error) {
+
+	var roomTypeId pgtype.UUID
+	if err := roomTypeId.Scan(req.RoomTypeId); err != nil {
+		zap.S().Info("Invalid Room UUID: ", err)
+		return nil, status.Error(codes.InvalidArgument, "Invalid Room Id")
+	}
+
+	//Check dates valid
+	var checkInDate pgtype.Date
+	if err := checkInDate.Scan(req.CheckIn); err != nil {
+		zap.S().Info("Invalid date format: ", err)
+		return nil, status.Error(codes.InvalidArgument, "Invalid date format")
+	}
+
+	var checkOutDate pgtype.Date
+	if err := checkOutDate.Scan(req.CheckOut); err != nil {
+		zap.S().Info("Invalid date format: ", err)
+		return nil, status.Error(codes.InvalidArgument, "Invalid date format")
+	}
+
+	if checkInDate.Time.After(checkOutDate.Time) {
+		zap.S().Info("Invalid date - Check In is After Check out: ")
+		return nil, status.Error(codes.InvalidArgument, "Invalid check in check out")
+	}
+
+	if time.Now().After(checkInDate.Time) {
+		zap.S().Info("Invalid date - Check In is oudated: ")
+		return nil, status.Error(codes.InvalidArgument, "Invalid check in check out")
+	}
+
+	roomIds, err := bg.service.GetUnavailableRoomsByRoomTypeId(ctx, roomTypeId, checkInDate, checkOutDate)
+	if err != nil {
+		zap.S().Errorln("Failed to Get UNAVAILABLE Rooms by Room Type Id: ", err)
+		return nil, status.Error(codes.Internal, "Loi khong the danh sach phong da duoc dat truoc")
+	}
+
+	roomIdsStr := make([]string, 0, len(roomIds))
+	for _, roomId := range roomIds {
+		roomIdsStr = append(roomIdsStr, roomId.String())
+	}
+
+	return &booking_pb.GetUnavailableRoomsByRoomTypeIdResponse{
+		RoomIds: roomIdsStr,
+	}, nil
+
 }

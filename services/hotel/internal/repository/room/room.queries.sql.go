@@ -110,7 +110,10 @@ SELECT id
 FROM rooms
 WHERE
     room_type_id = $1::uuid
-    AND id <> ALL($2::uuid[])
+    AND (
+        $2::uuid[] IS NULL
+        OR id <> ALL($2::uuid[])
+    )
 ORDER BY name ASC
 LIMIT $3::int
 `

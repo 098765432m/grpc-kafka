@@ -122,3 +122,19 @@ func (bs *BookingService) GetNumberOfOccupiedRooms(ctx context.Context, roomType
 
 	return result, nil
 }
+
+// Return all rooms that booked or UNAVAILABLE in range of time
+func (bs *BookingService) GetUnavailableRoomsByRoomTypeId(ctx context.Context, roomTypeId pgtype.UUID, checkIn pgtype.Date, checkOut pgtype.Date) ([]pgtype.UUID, error) {
+
+	roomIds, err := bs.repo.GetUnavailableRoomsByRoomTypeId(ctx, booking_repo.GetUnavailableRoomsByRoomTypeIdParams{
+		RoomTypeID: roomTypeId,
+		CheckIn:    checkIn,
+		CheckOut:   checkOut,
+	})
+	if err != nil {
+		zap.S().Errorln("Failed to get UNAVAILABLE Rooms by Room Type Id", err)
+		return nil, err
+	}
+
+	return roomIds, nil
+}

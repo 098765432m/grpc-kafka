@@ -25,7 +25,10 @@ SELECT id
 FROM rooms
 WHERE
     room_type_id = @room_type_id::uuid
-    AND id <> ALL(@booked_room_ids::uuid[])
+    AND (
+        @booked_room_ids::uuid[] IS NULL
+        OR id <> ALL(@booked_room_ids::uuid[])
+    )
 ORDER BY name ASC
 LIMIT @number_of_rooms::int;
 

@@ -16,7 +16,7 @@ WHERE
     AND daterange(check_in, check_out, '[]') && daterange(@check_in::date, @check_out::date, '[]')
 GROUP BY room_type_id;
 
--- name: GetRoomsNotAvailableByRoomTypeId :many
+-- name: GetUnavailableRoomsByRoomTypeId :many
 SELECT room_id
 FROM bookings
 WHERE 

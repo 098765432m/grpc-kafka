@@ -173,7 +173,7 @@ func (q *Queries) GetNumberOfOccupiedRooms(ctx context.Context, arg GetNumberOfO
 	return items, nil
 }
 
-const getRoomsNotAvailableByRoomTypeId = `-- name: GetRoomsNotAvailableByRoomTypeId :many
+const getUnavailableRoomsByRoomTypeId = `-- name: GetUnavailableRoomsByRoomTypeId :many
 SELECT room_id
 FROM bookings
 WHERE 
@@ -181,14 +181,14 @@ WHERE
     AND daterange(check_in, check_out, '[]') && daterange($2::date, $3::date, '[]')
 `
 
-type GetRoomsNotAvailableByRoomTypeIdParams struct {
+type GetUnavailableRoomsByRoomTypeIdParams struct {
 	RoomTypeID pgtype.UUID `json:"room_type_id"`
 	CheckIn    pgtype.Date `json:"check_in"`
 	CheckOut   pgtype.Date `json:"check_out"`
 }
 
-func (q *Queries) GetRoomsNotAvailableByRoomTypeId(ctx context.Context, arg GetRoomsNotAvailableByRoomTypeIdParams) ([]pgtype.UUID, error) {
-	rows, err := q.db.Query(ctx, getRoomsNotAvailableByRoomTypeId, arg.RoomTypeID, arg.CheckIn, arg.CheckOut)
+func (q *Queries) GetUnavailableRoomsByRoomTypeId(ctx context.Context, arg GetUnavailableRoomsByRoomTypeIdParams) ([]pgtype.UUID, error) {
+	rows, err := q.db.Query(ctx, getUnavailableRoomsByRoomTypeId, arg.RoomTypeID, arg.CheckIn, arg.CheckOut)
 	if err != nil {
 		return nil, err
 	}
