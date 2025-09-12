@@ -23,7 +23,7 @@ func ParsePgDate(dateStr string) (pgtype.Date, error) {
 	return pgDate, nil
 }
 
-func ParseUUIDArray(uuidsStr []string) ([]pgtype.UUID, error) {
+func ParsePgUuidArray(uuidsStr []string) ([]pgtype.UUID, error) {
 
 	var uuids []pgtype.UUID
 	for _, uuidStr := range uuidsStr {
@@ -36,4 +36,14 @@ func ParseUUIDArray(uuidsStr []string) ([]pgtype.UUID, error) {
 	}
 
 	return uuids, nil
+}
+
+func ToPgUuidString(uuids []pgtype.UUID) []string {
+	uuidsStr := make([]string, 0, len(uuids))
+
+	for _, uuid := range uuids {
+		uuidsStr = append(uuidsStr, uuid.String())
+	}
+
+	return uuidsStr
 }

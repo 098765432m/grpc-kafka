@@ -155,7 +155,7 @@ func (rs *RoomGrpcHandler) GetListOfRemainRooms(ctx context.Context, req *room_p
 		return nil, status.Error(codes.InvalidArgument, "")
 	}
 
-	bookedRoomIds, err := utils.ParseUUIDArray(req.GetBookedRoomIds())
+	bookedRoomIds, err := utils.ParsePgUuidArray(req.GetBookedRoomIds())
 	if err != nil {
 		zap.S().Infoln(err)
 		return nil, status.Error(codes.InvalidArgument, "Loi UUID khong hop le")
@@ -166,10 +166,8 @@ func (rs *RoomGrpcHandler) GetListOfRemainRooms(ctx context.Context, req *room_p
 		return nil, status.Error(codes.Internal, "Loi khong the lay danh sach phong trong")
 	}
 
-	roomIdsStr := make([]string, 0, len(roomIds))
-	for _, roomId := range roomIds {
-		roomIdsStr = append(roomIdsStr, roomId.String())
-	}
+	// To UUIDs string
+	roomIdsStr := utils.ToPgUuidString(roomIds)
 
 	return &room_pb.GetListOfRemainRoomsResponse{
 		RoomIds: roomIdsStr,
@@ -180,19 +178,18 @@ func (rs *RoomGrpcHandler) GetListOfRemainRooms(ctx context.Context, req *room_p
 func (rg *RoomGrpcHandler) SetOccupiedStatusToRooms(ctx context.Context, req *room_pb.SetOccupiedStatusToRoomsRequest) (*room_pb.SetOccupiedStatusToRoomsResponse, error) {
 
 	// Convert []string to []pgtype.UUID
-	roomIds := make([]pgtype.UUID, 0, len(req.GetRoomIds()))
-	for _, roomId := range req.GetRoomIds() {
-		var id pgtype.UUID
-		if err := id.Scan(roomId); err != nil {
-			zap.S().Info("Invalid Room UUID")
-			return nil, status.Error(codes.InvalidArgument, "Khong the doi trang thai phong")
-		}
-
-		roomIds = append(roomIds, id)
+	roomIds, err := utils.ParsePgUuidArray(req.GetRoomIds())
+	if err != nil {
+		zap.S().Infoln("Invalid Rooms UUID")
+		return nil, status.Error(codes.InvalidArgument, "UUIDs khong hop le")
 	}
 
-	err := rg.service.ChangeStatusOfRooms(ctx, roomIds, room_repo.RoomStatusOCCUPIED)
+	err = rg.service.ChangeStatusOfRooms(ctx, roomIds, room_repo.RoomStatusOCCUPIED)
 	if err != nil {
+		switch {
+		case errors.Is(err, common_error.ErrNoRows):
+			return nil, status.Error(codes.NotFound, "Khong tim thay phong")
+		}
 		return nil, status.Error(codes.Internal, "Khong the doi trang thai phong")
 	}
 

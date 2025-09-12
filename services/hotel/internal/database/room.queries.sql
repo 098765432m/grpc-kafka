@@ -57,7 +57,7 @@ VALUES
 DELETE FROM rooms
 WHERE id = $1;
 
--- name: ChangeStatusRoomsByIds :exec
+-- name: ChangeStatusRoomsByIds :execrows
 UPDATE rooms
 SET status = @status::room_status
 WHERE id = ANY(@room_ids::uuid[]);

@@ -131,14 +131,19 @@ func (rs *RoomService) GetListOfRemainRooms(ctx context.Context, roomTypeId pgty
 // Set Status of rooms
 func (rs *RoomService) ChangeStatusOfRooms(ctx context.Context, roomIds []pgtype.UUID, room_status room_repo.RoomStatus) error {
 
-	// TODO: catch when roomIds is not found
-	err := rs.repo.ChangeStatusRoomsByIds(ctx, room_repo.ChangeStatusRoomsByIdsParams{
+	rows, err := rs.repo.ChangeStatusRoomsByIds(ctx, room_repo.ChangeStatusRoomsByIdsParams{
 		RoomIds: roomIds,
 		Status:  room_status,
 	})
 	if err != nil {
 		zap.S().Error("Failed to change status of rooms", err)
 		return err
+	}
+
+	// Catch when no rooms found
+	if rows == 0 {
+		zap.S().Infoln("No Rooms found with given ids")
+		return common_error.ErrNoRows
 	}
 
 	return nil

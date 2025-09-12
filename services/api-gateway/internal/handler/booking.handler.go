@@ -45,7 +45,12 @@ type BookingRoomsRequest struct {
 	UserId string `json:"user_id" binding:"required"`
 }
 
-// TODO: Check this function can this use with waitGroup
+// Param struct for Create Bookings
+type BookedRoomsReq struct {
+	RoomTypeId string
+	RoomIds    []string
+}
+
 func (bh *BookingHandler) BookingRooms(ctx *gin.Context) {
 	var bookingReq *BookingRoomsRequest
 	if err := ctx.ShouldBindJSON(&bookingReq); err != nil {
@@ -60,32 +65,9 @@ func (bh *BookingHandler) BookingRooms(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, utils.ErrorApiResponse("Loi khong dat duoc phong"))
 		return
 	}
-
-	type BookedRoomsReq struct {
-		RoomTypeId string
-		RoomIds    []string
-	}
-
 	// Save room Type id and room ids that assign to booking
 	bookedRoomsReq := make([]BookedRoomsReq, 0, len(bookingReq.BookedRooms))
 
-	/*
-		1) Goal: Tra ve danh sach phong co the booking
-		||
-		vv
-		2) Query bookings TABLE trong khung thoi gian do
-		||
-		vv
-		3) Lay danh sach ten phong (vd: 101, 102,...) da duoc booking trong thoi gian do
-		||
-		vv
-		4) Query toi Rooms TABLE lay nhung phong con lai
-		||
-		vv
-		5) Tien hanh create bookings
-	*/
-
-	// This Cannot Check Many booking already made
 	// Check for available Rooms for Room Type
 	for _, bookedRoom := range bookingReq.BookedRooms {
 
@@ -118,34 +100,6 @@ func (bh *BookingHandler) BookingRooms(ctx *gin.Context) {
 			RoomTypeId: bookedRoom.RoomTypeBookedId,
 			RoomIds:    roomIds.GetRoomIds(),
 		})
-
-		// 	listRoomsGrpcResult, err := bh.roomClient.GetListOfAvailableRoomsByRoomTypeId(ctx, &room_pb.GetListOfAvailableRoomsByRoomTypeIdRequest{
-		// 		RoomTypeId:    bookedRoom.RoomTypeBookedId,
-		// 		NumberOfRooms: int32(bookedRoom.NumberOfRooms),
-		// 	})
-		// 	zap.S().Infoln("list room grpc ", listRoomsGrpcResult)
-
-		// 	if err != nil {
-		// 		st, ok := status.FromError(err)
-		// 		if ok {
-		// 			switch st.Code() {
-		// 			case codes.NotFound:
-		// 				// TODO: BAT loi khong co phong AVAILABLE
-		// 				zap.S().Infoln("Loi Khong co phong AVAILABLE")
-		// 				ctx.JSON(http.StatusInternalServerError, utils.ErrorApiResponse("Loi khong co phong trong"))
-		// 				return
-		// 			}
-		// 		}
-
-		// 		zap.S().Info("Cannot get available rooms: ", err)
-		// 		ctx.JSON(http.StatusInternalServerError, utils.ErrorApiResponse("Khong dat duoc phong"))
-		// 		return
-		// 	}
-
-		// 	bookedRoomsReq = append(bookedRoomsReq, BookedRoomsReq{
-		// 		RoomTypeId: bookedRoom.RoomTypeBookedId,
-		// 		RoomIds:    listRoomsGrpcResult.GetRoomIds(),
-		// 	})
 	}
 
 	// Create booking param for each room
@@ -180,6 +134,47 @@ func (bh *BookingHandler) BookingRooms(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusCreated, utils.SuccessApiResponse(nil, "Dat phong thanh cong"))
 }
+
+// TODO: Worker Pool to utilize waitGroup for performance
+// Worker Pool to process AVAILABLE Rooms
+// func (bh *BookingHandler) processBookedRooms(ctx context.Context, bookingReq *BookingRoomsRequest) ([]BookedRoomsReq, error) {
+// 	// Save room Type id and room ids that assign to booking
+// 	bookedRoomsReq := make([]BookedRoomsReq, 0, len(bookingReq.BookedRooms))
+
+// 	// Check for available Rooms for Room Type
+// 	for _, bookedRoom := range bookingReq.BookedRooms {
+
+// 		// Get already booked Rooms in range of time
+// 		roomsGrpcResult, err := bh.bookingClient.GetUnavailableRoomsByRoomTypeId(ctx, &booking_pb.GetUnavailableRoomsByRoomTypeIdRequest{
+// 			RoomTypeId: bookedRoom.RoomTypeBookedId,
+// 			CheckIn:    bookingReq.CheckInDate,
+// 			CheckOut:   bookingReq.CheckOutDate,
+// 		})
+// 		if err != nil {
+// 			zap.S().Infoln("Failed to get UNAVAILABLE Rooms: ", err)
+// 			ctx.JSON(http.StatusBadRequest, utils.ErrorApiResponse("Loi khong dat duoc phong"))
+// 			return
+// 		}
+
+// 		unavailableRooms := roomsGrpcResult.GetRoomIds()
+
+// 		roomIds, err := bh.roomClient.GetListOfRemainRooms(ctx, &room_pb.GetListOfRemainRoomsRequest{
+// 			RoomTypeId:    bookedRoom.RoomTypeBookedId,
+// 			BookedRoomIds: unavailableRooms,
+// 			NumberOfRooms: int32(bookedRoom.NumberOfRooms),
+// 		})
+// 		if err != nil {
+// 			zap.S().Infoln("Failed to get AVAILABLE Rooms: ", err)
+// 			ctx.JSON(http.StatusBadRequest, utils.ErrorApiResponse("Loi khong con phong trong"))
+// 			return
+// 		}
+
+// 		bookedRoomsReq = append(bookedRoomsReq, BookedRoomsReq{
+// 			RoomTypeId: bookedRoom.RoomTypeBookedId,
+// 			RoomIds:    roomIds.GetRoomIds(),
+// 		})
+// 	}
+// }
 
 type DeleteBookingsRequest struct {
 	BookingIds []string `json:"booking_ids"`

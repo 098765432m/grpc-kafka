@@ -11,7 +11,7 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-const changeStatusRoomsByIds = `-- name: ChangeStatusRoomsByIds :exec
+const changeStatusRoomsByIds = `-- name: ChangeStatusRoomsByIds :execrows
 UPDATE rooms
 SET status = $1::room_status
 WHERE id = ANY($2::uuid[])
@@ -22,9 +22,12 @@ type ChangeStatusRoomsByIdsParams struct {
 	RoomIds []pgtype.UUID `json:"room_ids"`
 }
 
-func (q *Queries) ChangeStatusRoomsByIds(ctx context.Context, arg ChangeStatusRoomsByIdsParams) error {
-	_, err := q.db.Exec(ctx, changeStatusRoomsByIds, arg.Status, arg.RoomIds)
-	return err
+func (q *Queries) ChangeStatusRoomsByIds(ctx context.Context, arg ChangeStatusRoomsByIdsParams) (int64, error) {
+	result, err := q.db.Exec(ctx, changeStatusRoomsByIds, arg.Status, arg.RoomIds)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
 }
 
 const createRoom = `-- name: CreateRoom :exec
