@@ -16,6 +16,19 @@ WHERE
     AND daterange(check_in, check_out, '[]') && daterange(@check_in::date, @check_out::date, '[]')
 GROUP BY room_type_id;
 
+-- name: GetNumberOfOccupiedRoomsByHotelIds :many
+SELECT 
+    hotel_id,
+    room_type_id,
+    COUNT(DISTINCT room_id) AS number_of_occupied_rooms
+FROM bookings 
+WHERE
+    hotel_id = ANY(@hotel_ids::uuid[])
+    -- AND ( date_trunc('day', @new_check_in::date) < date_trunc('day', check_out) AND date_trunc('day', @new_check_out::date) > date_trunc('day', check_in) );
+    -- AND (@new_check_in::date < check_out::date AND @new_check_out::date > check_in::date)
+    AND daterange(check_in, check_out, '[]') && daterange(@check_in::date, @check_out::date, '[]')
+GROUP BY hotel_id;
+
 -- name: GetUnavailableRoomsByRoomTypeId :many
 SELECT room_id
 FROM bookings

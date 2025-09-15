@@ -60,6 +60,7 @@ type Booking struct {
 	CheckOut   pgtype.Date      `json:"check_out"`
 	Total      int32            `json:"total"`
 	Status     BookingStatus    `json:"status"`
+	HotelID    pgtype.UUID      `json:"hotel_id"`
 	RoomTypeID pgtype.UUID      `json:"room_type_id"`
 	UserID     pgtype.UUID      `json:"user_id"`
 	RoomID     pgtype.UUID      `json:"room_id"`

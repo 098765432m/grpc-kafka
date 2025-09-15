@@ -123,6 +123,21 @@ func (bs *BookingService) GetNumberOfOccupiedRooms(ctx context.Context, roomType
 	return result, nil
 }
 
+// Return number of Occupied rooms for each Room Type By Hotel in a range of time
+func (bs *BookingService) GetNumberOfOccupiedRoomsByHotelIds(ctx context.Context, hotelIds []pgtype.UUID, checkIn pgtype.Date, checkOut pgtype.Date) ([]booking_repo.GetNumberOfOccupiedRoomsByHotelIdsRow, error) {
+	result, err := bs.repo.GetNumberOfOccupiedRoomsByHotelIds(ctx, booking_repo.GetNumberOfOccupiedRoomsByHotelIdsParams{
+		HotelIds: hotelIds,
+		CheckIn:  checkIn,
+		CheckOut: checkOut,
+	})
+	if err != nil {
+		zap.S().Errorln("Failed to get list of occupied rooms: ", err)
+		return nil, err
+	}
+
+	return result, nil
+}
+
 // Return all rooms that booked or UNAVAILABLE in range of time
 func (bs *BookingService) GetUnavailableRoomsByRoomTypeId(ctx context.Context, roomTypeId pgtype.UUID, checkIn pgtype.Date, checkOut pgtype.Date) ([]pgtype.UUID, error) {
 

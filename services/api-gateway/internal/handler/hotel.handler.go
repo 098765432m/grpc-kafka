@@ -377,3 +377,23 @@ func (hh *HotelHandler) GetAvailableRoomTypes(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusOK, utils.SuccessApiResponse(roomTypes, "Thanh cong"))
 }
+
+/*
+Goal: Tra ve Hotel co phong AVAILABLE trong khung thoi gian CheckIn va CheckOut
+Address, va Ten Hotel, trong khung Price
+
+# Tra ve thong tin khach san va gia phong dau tien
+
+1. Tim kiem cac khach san trong khu vuc
+-> Return hotelIds (LIMIT 20) /^
+
+2. Su dung cac hotel ids do tra ve cac phong da duoc booking trong khoang thoi gian check in check out
+-> Return [roomTypeId, count (so luong phong da dat)] /^
+
+3. Su dung roomTypeIds de xac dinh khach san con phong nao con trong
+-> Return [hotelId, minPrice] (tra ve gia min cua nhung phong trong)
+*/
+
+func (hh *HotelHandler) FilterHotels() {
+
+}

@@ -6,6 +6,7 @@ import (
 
 	common_error "github.com/098765432m/grpc-kafka/common/error"
 	"github.com/098765432m/grpc-kafka/common/gen-proto/hotel_pb"
+	"github.com/098765432m/grpc-kafka/common/utils"
 	hotel_repo "github.com/098765432m/grpc-kafka/hotel/internal/repository/hotel"
 	hotel_service "github.com/098765432m/grpc-kafka/hotel/internal/service/hotel"
 	room_service "github.com/098765432m/grpc-kafka/hotel/internal/service/room"
@@ -57,6 +58,38 @@ func (hg *HotelGrpcHandler) GetAllHotels(ctx context.Context, req *hotel_pb.GetA
 	}, nil
 }
 
+func (hg *HotelGrpcHandler) GetHotelByAddress(ctx context.Context, req *hotel_pb.GetHotelsByAddressRequest) (*hotel_pb.GetHotelsByAddressResponse, error) {
+	address, err := utils.ParsePgText(req.GetAddress())
+	if err != nil {
+		zap.S().Infoln("Address is an invalid format")
+		return nil, status.Error(codes.InvalidArgument, "Dia chi khong hop le")
+	}
+
+	hotelName, err := utils.ParsePgText(req.GetHotelName())
+	if err != nil {
+		zap.S().Infoln("Hotel Name is an invalid format")
+		return nil, status.Error(codes.InvalidArgument, "Ten khach san khong hop le")
+	}
+
+	hotels, err := hg.service.GetHotelsByAddress(ctx, address, hotelName)
+	if err != nil {
+		return nil, status.Error(codes.Internal, "Loi khong lay duoc danh sach khach san")
+	}
+
+	hotelRes := make([]*hotel_pb.Hotel, 0, len(hotels))
+	for _, hotel := range hotels {
+		hotelRes = append(hotelRes, &hotel_pb.Hotel{
+			Id:      hotel.ID.String(),
+			Name:    hotel.Name,
+			Address: hotel.Address.String,
+		})
+	}
+
+	return &hotel_pb.GetHotelsByAddressResponse{
+		Hotels: hotelRes,
+	}, nil
+}
+
 func (hg *HotelGrpcHandler) GetHotelById(ctx context.Context, req *hotel_pb.GetHotelByIdRequest) (*hotel_pb.GetHotelByIdResponse, error) {
 
 	var id pgtype.UUID
@@ -80,15 +113,27 @@ func (hg *HotelGrpcHandler) GetHotelById(ctx context.Context, req *hotel_pb.GetH
 		Hotel: &hotel_pb.Hotel{
 			Id:      hotel.ID.String(),
 			Name:    hotel.Name,
-			Address: hotel.Address,
+			Address: hotel.Address.String,
 		},
 	}, nil
 }
 
 func (hg *HotelGrpcHandler) CreateHotel(ctx context.Context, req *hotel_pb.CreateHotelRequest) (*hotel_pb.CreateHotelResponse, error) {
-	err := hg.service.CreateHotel(ctx, &hotel_repo.CreateHotelParams{
-		Name:    req.Name,
-		Address: req.Address,
+	address, err := utils.ParsePgText(req.GetAddress())
+	if err != nil {
+		zap.S().Infoln("Address is an invalid format")
+		return nil, status.Error(codes.InvalidArgument, "Dia chi khong hop le")
+	}
+
+	hotelName, err := utils.ParsePgText(req.GetName())
+	if err != nil {
+		zap.S().Infoln("Hotel Name is an invalid format")
+		return nil, status.Error(codes.InvalidArgument, "Ten khach san khong hop le")
+	}
+
+	err = hg.service.CreateHotel(ctx, &hotel_repo.CreateHotelParams{
+		Name:    hotelName,
+		Address: address,
 	})
 	if err != nil {
 		return nil, err

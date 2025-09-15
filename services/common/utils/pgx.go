@@ -23,6 +23,34 @@ func ParsePgDate(dateStr string) (pgtype.Date, error) {
 	return pgDate, nil
 }
 
+func ParsePgText(str string) (pgtype.Text, error) {
+	var tempStr pgtype.Text
+	if str == "" {
+		tempStr = pgtype.Text{
+			Valid: false,
+		}
+	} else {
+		if err := tempStr.Scan(str); err != nil {
+			return pgtype.Text{
+				Valid: false,
+			}, err
+		}
+	}
+
+	return tempStr, nil
+}
+
+func ToPgInt4(number int) pgtype.Int4 {
+	var tempNumber pgtype.Int4
+	if err := tempNumber.Scan(number); err != nil {
+		return pgtype.Int4{
+			Valid: false,
+		}
+	}
+
+	return tempNumber
+}
+
 func ParsePgUuidArray(uuidsStr []string) ([]pgtype.UUID, error) {
 
 	var uuids []pgtype.UUID

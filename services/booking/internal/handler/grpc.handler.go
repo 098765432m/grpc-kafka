@@ -6,6 +6,7 @@ import (
 
 	booking_service "github.com/098765432m/grpc-kafka/booking/internal/service"
 	"github.com/098765432m/grpc-kafka/common/gen-proto/booking_pb"
+	"github.com/098765432m/grpc-kafka/common/utils"
 	"github.com/jackc/pgx/v5/pgtype"
 	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
@@ -110,15 +111,20 @@ func (bg *BookingGrpcHandler) DeleteBookingsByIds(ctx context.Context, req *book
 // Return {roomTypeId, Number of occupied rooms in that room type}
 func (bg *BookingGrpcHandler) GetNumberOfOccupiedRooms(ctx context.Context, req *booking_pb.GetNumberOfOccupiedRoomsRequest) (*booking_pb.GetNumberOfOccupiedRoomsResponse, error) {
 	// Check Are room type Ids valid
-	roomTypeIds := make([]pgtype.UUID, 0, len(req.GetRoomTypeIds()))
-	for _, roomTypeIdReq := range req.GetRoomTypeIds() {
-		var roomTypeId pgtype.UUID
-		if err := roomTypeId.Scan(roomTypeIdReq); err != nil {
-			zap.S().Info("Invalid Room Id: ", err)
-			return nil, status.Error(codes.InvalidArgument, "Invalid Room Id")
-		}
+	// roomTypeIds := make([]pgtype.UUID, 0, len(req.GetRoomTypeIds()))
+	// for _, roomTypeIdReq := range req.GetRoomTypeIds() {
+	// 	var roomTypeId pgtype.UUID
+	// 	if err := roomTypeId.Scan(roomTypeIdReq); err != nil {
+	// 		zap.S().Info("Invalid Room Id: ", err)
+	// 		return nil, status.Error(codes.InvalidArgument, "Invalid Room Id")
+	// 	}
 
-		roomTypeIds = append(roomTypeIds, roomTypeId)
+	// 	roomTypeIds = append(roomTypeIds, roomTypeId)
+	// }
+	roomTypeIds, err := utils.ParsePgUuidArray(req.GetRoomTypeIds())
+	if err != nil {
+		zap.S().Infoln("Invalid Room Type UUID")
+		return nil, status.Error(codes.InvalidArgument, "Room Type ID khong hop le")
 	}
 
 	//Check are dates valid
@@ -155,6 +161,53 @@ func (bg *BookingGrpcHandler) GetNumberOfOccupiedRooms(ctx context.Context, req 
 
 	return &booking_pb.GetNumberOfOccupiedRoomsResponse{
 		Results: numberOccpiedRoomsResponse,
+	}, nil
+}
+
+// Return {hotelId, roomTypeId, Number of occupied rooms in that room type}
+func (bg *BookingGrpcHandler) GetNumberOfOccupiedRoomsByHotelIds(ctx context.Context, req *booking_pb.GetNumberOfOccupiedRoomsByHotelIdsRequest) (*booking_pb.GetNumberOfOccupiedRoomsByHotelIdsResponse, error) {
+	// Check Are Hotel Ids valid
+	hotelIds, err := utils.ParsePgUuidArray(req.GetHotelIds())
+	if err != nil {
+		zap.S().Infoln("Invalid Hotel UUID")
+		return nil, status.Error(codes.InvalidArgument, "Hotel ID khong hop le")
+	}
+
+	//Check are dates valid
+	var checkInDate pgtype.Date
+	if err := checkInDate.Scan(req.CheckIn); err != nil {
+		zap.S().Info("Invalid date format: ", err)
+		return nil, status.Error(codes.InvalidArgument, "Invalid date format")
+	}
+
+	if checkInDateValue, err := checkInDate.DateValue(); err == nil {
+		zap.L().Info("CheckIn: ", zap.Any("Day", checkInDateValue.Time.Day()), zap.Any("Month", checkInDateValue.Time.Month()), zap.Any("Year", checkInDateValue.Time.Year()))
+	}
+	var checkOutDate pgtype.Date
+	if err := checkOutDate.Scan(req.CheckOut); err != nil {
+		zap.S().Info("Invalid date format: ", err)
+		return nil, status.Error(codes.InvalidArgument, "Invalid date format")
+	}
+	if checkOutDateValue, err := checkOutDate.DateValue(); err == nil {
+		zap.L().Info("CheckIn: ", zap.Any("Day", checkOutDateValue.Time.Day()), zap.Any("Month", checkOutDateValue.Time.Month()), zap.Any("Year", checkOutDateValue.Time.Year()))
+	}
+	results, err := bg.service.GetNumberOfOccupiedRoomsByHotelIds(ctx, hotelIds, checkInDate, checkOutDate)
+	if err != nil {
+		return nil, status.Error(codes.Internal, "Loi khong the tra ve danh sach phong booked")
+	}
+
+	numberOccpiedRoomsHotelIdsResponse := make([]*booking_pb.ResultNumberOfOccupiedRoomsByHotelIds, 0, len(results))
+	for _, result := range results {
+		tempResult := &booking_pb.ResultNumberOfOccupiedRoomsByHotelIds{
+			HotelId:               result.HotelID.String(),
+			RoomTypeId:            result.RoomTypeID.String(),
+			NumberOfOccupiedRooms: int32(result.NumberOfOccupiedRooms),
+		}
+		numberOccpiedRoomsHotelIdsResponse = append(numberOccpiedRoomsHotelIdsResponse, tempResult)
+	}
+
+	return &booking_pb.GetNumberOfOccupiedRoomsByHotelIdsResponse{
+		Results: numberOccpiedRoomsHotelIdsResponse,
 	}, nil
 }
 

@@ -57,7 +57,7 @@ func (ns NullRoomStatus) Value() (driver.Value, error) {
 type Hotel struct {
 	ID      pgtype.UUID `json:"id"`
 	Name    string      `json:"name"`
-	Address string      `json:"address"`
+	Address pgtype.Text `json:"address"`
 }
 
 type Room struct {

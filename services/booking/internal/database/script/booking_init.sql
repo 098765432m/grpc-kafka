@@ -6,6 +6,7 @@ CREATE TABLE bookings (
     check_out DATE NOT NULL,
     total INT NOT NULL,
     status BOOKING_STATUS NOT NULL DEFAULT 'BOOKED',
+    hotel_id UUID NOT NULL,
     room_type_id UUID NOT NULL,
     user_id UUID NOT NULL,
     room_id UUID NOT NULL,

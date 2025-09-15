@@ -6,6 +6,7 @@ service HotelService {
     rpc GetHotelById(GetHotelByIdRequest) returns (GetHotelByIdResponse);
     rpc CreateHotel(CreateHotelRequest) returns (CreateHotelResponse);
     rpc GetAllHotels(GetAllHotelsRequest) returns (GetAllHotelsResponse);
+    rpc GetHotelsByAddress(GetHotelsByAddressRequest) returns (GetHotelsByAddressResponse);
 }
 
 message Hotel {
@@ -34,5 +35,14 @@ message GetAllHotelsRequest {
 }
 
 message GetAllHotelsResponse {
+    repeated Hotel hotels = 1;
+}
+
+message GetHotelsByAddressRequest{
+    string address = 1;
+    string hotel_name = 2;
+}
+
+message GetHotelsByAddressResponse{
     repeated Hotel hotels = 1;
 }

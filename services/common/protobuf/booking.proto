@@ -6,6 +6,7 @@ service BookingService {
     rpc CreateBookings(NewBookingParam) returns (Empty);
     rpc DeleteBookingsByIds (DeleteBookingRequest) returns (Empty);
     rpc GetNumberOfOccupiedRooms(GetNumberOfOccupiedRoomsRequest) returns (GetNumberOfOccupiedRoomsResponse);
+    rpc GetNumberOfOccupiedRoomsByHotelIds(GetNumberOfOccupiedRoomsByHotelIdsRequest) returns (GetNumberOfOccupiedRoomsByHotelIdsResponse);
     rpc GetUnavailableRoomsByRoomTypeId(GetUnavailableRoomsByRoomTypeIdRequest) returns (GetUnavailableRoomsByRoomTypeIdResponse);
 }
 
@@ -41,6 +42,22 @@ message ResultNumberOfOccupiedRooms {
 
 message GetNumberOfOccupiedRoomsResponse {
     repeated ResultNumberOfOccupiedRooms results = 1;
+}
+
+message GetNumberOfOccupiedRoomsByHotelIdsRequest {
+    repeated string hotelIds = 1;
+    string checkIn = 2;
+    string checkOut = 3;
+}
+
+message ResultNumberOfOccupiedRoomsByHotelIds {
+    string hotelId = 1;
+    string roomTypeId = 2;
+    int32 numberOfOccupiedRooms = 3;
+}
+
+message GetNumberOfOccupiedRoomsByHotelIdsResponse {
+    repeated ResultNumberOfOccupiedRoomsByHotelIds results = 1;
 }
 
 message GetUnavailableRoomsByRoomTypeIdRequest{
