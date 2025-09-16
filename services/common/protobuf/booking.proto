@@ -4,7 +4,8 @@ option go_package = "gen-proto/booking_pb;booking_pb";
 
 service BookingService {
     rpc CreateBookings(NewBookingParam) returns (Empty);
-    rpc DeleteBookingsByIds (DeleteBookingRequest) returns (Empty);
+    rpc DeleteBookingsById (DeleteBookingByIdRequest) returns (Empty);
+    rpc DeleteBookingsByIds (DeleteBookingByIdsRequest) returns (Empty);
     rpc GetNumberOfOccupiedRooms(GetNumberOfOccupiedRoomsRequest) returns (GetNumberOfOccupiedRoomsResponse);
     rpc GetNumberOfOccupiedRoomsByHotelIds(GetNumberOfOccupiedRoomsByHotelIdsRequest) returns (GetNumberOfOccupiedRoomsByHotelIdsResponse);
     rpc GetUnavailableRoomsByRoomTypeId(GetUnavailableRoomsByRoomTypeIdRequest) returns (GetUnavailableRoomsByRoomTypeIdResponse);
@@ -25,7 +26,11 @@ message NewBookingParam {
     repeated BookingParam newBookings = 1;
 }
 
-message DeleteBookingRequest {
+message DeleteBookingByIdRequest {
+    string bookingId = 1;
+}
+
+message DeleteBookingByIdsRequest {
     repeated string bookingIds = 1;
 }
 

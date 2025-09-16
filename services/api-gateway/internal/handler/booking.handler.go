@@ -8,6 +8,7 @@ import (
 	"github.com/098765432m/grpc-kafka/common/gen-proto/room_pb"
 	"github.com/098765432m/grpc-kafka/common/utils"
 	"github.com/gin-gonic/gin"
+	"github.com/jackc/pgx/v5/pgtype"
 	"go.uber.org/zap"
 )
 
@@ -176,6 +177,24 @@ func (bh *BookingHandler) BookingRooms(ctx *gin.Context) {
 // 	}
 // }
 
+func (bh *BookingHandler) DeleteBookingsById(ctx *gin.Context) {
+	var id pgtype.UUID
+	if err := id.Scan(ctx.Param("id")); err != nil {
+		zap.S().Infoln("Invalid UUID: ", err)
+		ctx.JSON(http.StatusBadRequest, utils.ErrorApiResponse("Loi he thong"))
+	}
+
+	_, err := bh.bookingClient.DeleteBookingsById(ctx, &booking_pb.DeleteBookingByIdRequest{
+		BookingId: id.String(),
+	})
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, utils.ErrorApiResponse("Khong xoa duoc booking"))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, utils.SuccessApiResponse(nil, "Xoa thanh cong"))
+}
+
 type DeleteBookingsRequest struct {
 	BookingIds []string `json:"booking_ids"`
 }
@@ -187,7 +206,7 @@ func (bh *BookingHandler) DeleteBookingsByIds(ctx *gin.Context) {
 		return
 	}
 
-	_, err := bh.bookingClient.DeleteBookingsByIds(ctx, &booking_pb.DeleteBookingRequest{
+	_, err := bh.bookingClient.DeleteBookingsByIds(ctx, &booking_pb.DeleteBookingByIdsRequest{
 		BookingIds: req.BookingIds,
 	})
 	if err != nil {

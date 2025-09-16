@@ -87,20 +87,31 @@ func (bg *BookingGrpcHandler) CreateBookings(ctx context.Context, req *booking_p
 	return &booking_pb.Empty{}, nil
 }
 
-func (bg *BookingGrpcHandler) DeleteBookingsByIds(ctx context.Context, req *booking_pb.DeleteBookingRequest) (*booking_pb.Empty, error) {
+func (bg *BookingGrpcHandler) DeleteBookingById(ctx context.Context, req *booking_pb.DeleteBookingByIdRequest) (*booking_pb.Empty, error) {
 
-	ids := make([]pgtype.UUID, 0, len(req.GetBookingIds()))
-
-	for _, idReq := range req.GetBookingIds() {
-		var id pgtype.UUID
-		if err := id.Scan(idReq); err != nil {
-			zap.S().Info("Invalid Booking Id: ", err)
-			return nil, status.Error(codes.InvalidArgument, "Invalid Booking Id")
-		}
-		ids = append(ids, id)
+	var id pgtype.UUID
+	if err := id.Scan(req.GetBookingId()); err != nil {
+		zap.S().Infoln("Invalud Booking UUID")
+		return nil, status.Error(codes.InvalidArgument, "Booking UUID khong hop le")
 	}
 
-	err := bg.service.DeleteBookingsByIds(ctx, ids)
+	err := bg.service.DeleteBookingById(ctx, id)
+	if err != nil {
+		return nil, status.Error(codes.Internal, "Loi khong xoa duoc booking")
+	}
+
+	return &booking_pb.Empty{}, nil
+}
+
+func (bg *BookingGrpcHandler) DeleteBookingsByIds(ctx context.Context, req *booking_pb.DeleteBookingByIdsRequest) (*booking_pb.Empty, error) {
+
+	ids, err := utils.ToPgUuidArray(req.GetBookingIds())
+	if err != nil {
+		zap.S().Infoln("Invalid Booking UUID")
+		return nil, status.Error(codes.InvalidArgument, "Booking UUID khong hop le")
+	}
+
+	err = bg.service.DeleteBookingsByIds(ctx, ids)
 	if err != nil {
 		return nil, status.Error(codes.Internal, "Loi khong xoa duoc booking")
 	}
@@ -111,16 +122,6 @@ func (bg *BookingGrpcHandler) DeleteBookingsByIds(ctx context.Context, req *book
 // Return {roomTypeId, Number of occupied rooms in that room type}
 func (bg *BookingGrpcHandler) GetNumberOfOccupiedRooms(ctx context.Context, req *booking_pb.GetNumberOfOccupiedRoomsRequest) (*booking_pb.GetNumberOfOccupiedRoomsResponse, error) {
 	// Check Are room type Ids valid
-	// roomTypeIds := make([]pgtype.UUID, 0, len(req.GetRoomTypeIds()))
-	// for _, roomTypeIdReq := range req.GetRoomTypeIds() {
-	// 	var roomTypeId pgtype.UUID
-	// 	if err := roomTypeId.Scan(roomTypeIdReq); err != nil {
-	// 		zap.S().Info("Invalid Room Id: ", err)
-	// 		return nil, status.Error(codes.InvalidArgument, "Invalid Room Id")
-	// 	}
-
-	// 	roomTypeIds = append(roomTypeIds, roomTypeId)
-	// }
 	roomTypeIds, err := utils.ToPgUuidArray(req.GetRoomTypeIds())
 	if err != nil {
 		zap.S().Infoln("Invalid Room Type UUID")
