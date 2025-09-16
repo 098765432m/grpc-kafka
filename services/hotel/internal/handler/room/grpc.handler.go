@@ -116,6 +116,37 @@ func (rg *RoomGrpcHandler) GetRoomsByHotelId(ctx context.Context, req *room_pb.G
 	}, nil
 }
 
+// Get Number of rooms per RoomType by Hotel Ids
+// -> return [room_type_id, number_of_rooms]
+func (rg *RoomGrpcHandler) GetNumberOfRoomsPerRoomTypeByHotelIds(ctx context.Context, req *room_pb.GetNumberOfRoomsPerRoomTypeByHotelIdsRequest) (*room_pb.GetNumberOfRoomsPerRoomTypeByHotelIdsResponse, error) {
+
+	// convert to UUIDs
+	hotelIds, err := utils.ToPgUuidArray(req.GetHotelIds())
+	if err != nil {
+		zap.S().Infoln("Invalid Hotel UUID")
+		return nil, status.Error(codes.InvalidArgument, "Hotel Id khong hop le")
+	}
+
+	rows, err := rg.service.GetNumberOfRoomsPerRoomTypeByHotelIds(ctx, hotelIds)
+	if err != nil {
+		return nil, status.Error(codes.Internal, "Loi khong lay duoc danh sach so luong phong")
+	}
+
+	results := make([]*room_pb.GetNumberOfRoomsPerRoomTypeByHotelIdsRow, 0, len(rows))
+	for _, row := range rows {
+		result := &room_pb.GetNumberOfRoomsPerRoomTypeByHotelIdsRow{
+			RoomTypeId:    row.RoomTypeID.String(),
+			NumberOfRooms: int32(row.TotalRooms),
+		}
+
+		results = append(results, result)
+	}
+
+	return &room_pb.GetNumberOfRoomsPerRoomTypeByHotelIdsResponse{
+		Results: results,
+	}, nil
+}
+
 func (rg *RoomGrpcHandler) GetListOfAvailableRoomsByRoomTypeId(ctx context.Context, req *room_pb.GetListOfAvailableRoomsByRoomTypeIdRequest) (*room_pb.GetListOfAvailableRoomsByRoomTypeIdResponse, error) {
 
 	var roomTypeId pgtype.UUID
@@ -155,7 +186,7 @@ func (rs *RoomGrpcHandler) GetListOfRemainRooms(ctx context.Context, req *room_p
 		return nil, status.Error(codes.InvalidArgument, "")
 	}
 
-	bookedRoomIds, err := utils.ParsePgUuidArray(req.GetBookedRoomIds())
+	bookedRoomIds, err := utils.ToPgUuidArray(req.GetBookedRoomIds())
 	if err != nil {
 		zap.S().Infoln(err)
 		return nil, status.Error(codes.InvalidArgument, "Loi UUID khong hop le")
@@ -174,17 +205,17 @@ func (rs *RoomGrpcHandler) GetListOfRemainRooms(ctx context.Context, req *room_p
 	}, nil
 }
 
-// set status = OCCUPIED to rooms
-func (rg *RoomGrpcHandler) SetOccupiedStatusToRooms(ctx context.Context, req *room_pb.SetOccupiedStatusToRoomsRequest) (*room_pb.SetOccupiedStatusToRoomsResponse, error) {
+// set status = MAINTAINED to rooms
+func (rg *RoomGrpcHandler) SetMaintainedStatusToRooms(ctx context.Context, req *room_pb.SetOccupiedStatusToRoomsRequest) (*room_pb.SetOccupiedStatusToRoomsResponse, error) {
 
 	// Convert []string to []pgtype.UUID
-	roomIds, err := utils.ParsePgUuidArray(req.GetRoomIds())
+	roomIds, err := utils.ToPgUuidArray(req.GetRoomIds())
 	if err != nil {
 		zap.S().Infoln("Invalid Rooms UUID")
 		return nil, status.Error(codes.InvalidArgument, "UUIDs khong hop le")
 	}
 
-	err = rg.service.ChangeStatusOfRooms(ctx, roomIds, room_repo.RoomStatusOCCUPIED)
+	err = rg.service.ChangeStatusOfRooms(ctx, roomIds, room_repo.RoomStatusMAINTAINED)
 	if err != nil {
 		switch {
 		case errors.Is(err, common_error.ErrNoRows):

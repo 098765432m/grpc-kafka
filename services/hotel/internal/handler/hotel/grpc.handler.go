@@ -71,22 +71,15 @@ func (hg *HotelGrpcHandler) GetHotelByAddress(ctx context.Context, req *hotel_pb
 		return nil, status.Error(codes.InvalidArgument, "Ten khach san khong hop le")
 	}
 
-	hotels, err := hg.service.GetHotelsByAddress(ctx, address, hotelName)
+	hotelIds, err := hg.service.GetHotelsByAddress(ctx, address, hotelName)
 	if err != nil {
 		return nil, status.Error(codes.Internal, "Loi khong lay duoc danh sach khach san")
 	}
 
-	hotelRes := make([]*hotel_pb.Hotel, 0, len(hotels))
-	for _, hotel := range hotels {
-		hotelRes = append(hotelRes, &hotel_pb.Hotel{
-			Id:      hotel.ID.String(),
-			Name:    hotel.Name,
-			Address: hotel.Address.String,
-		})
-	}
+	hotelIdsStr := utils.ToPgUuidString(hotelIds)
 
 	return &hotel_pb.GetHotelsByAddressResponse{
-		Hotels: hotelRes,
+		HotelIds: hotelIdsStr,
 	}, nil
 }
 
@@ -139,4 +132,34 @@ func (hg *HotelGrpcHandler) CreateHotel(ctx context.Context, req *hotel_pb.Creat
 		return nil, err
 	}
 	return &hotel_pb.CreateHotelResponse{}, nil
+}
+
+func (hg *HotelGrpcHandler) FilterHotels(ctx context.Context, req *hotel_pb.FilterHotelsRequest) (*hotel_pb.FilterHotelsResponse, error) {
+
+	roomTypeIds, err := utils.ToPgUuidArray(req.GetRoomTypeIds())
+	if err != nil {
+		zap.S().Infoln("Invalid Room Type UUIDs")
+		return nil, status.Error(codes.InvalidArgument, "uuid room type khong hop le")
+	}
+
+	minPrice := utils.ToPgInt4(int(req.GetMinPrice()))
+	maxPrice := utils.ToPgInt4(int(req.GetMaxPrice()))
+
+	rows, err := hg.service.FilterHotels(ctx, roomTypeIds, minPrice, maxPrice)
+	if err != nil {
+		return nil, status.Error(codes.Internal, "Loi khong filter duoc Hotels")
+	}
+
+	results := make([]*hotel_pb.FilterHotelRow, 0, len(rows))
+	for _, row := range results {
+		results = append(results, &hotel_pb.FilterHotelRow{
+			HotelId:  row.GetHotelId(),
+			MinPrice: row.GetMinPrice(),
+		})
+	}
+
+	return &hotel_pb.FilterHotelsResponse{
+		FilterHotelRows: results,
+	}, nil
+
 }

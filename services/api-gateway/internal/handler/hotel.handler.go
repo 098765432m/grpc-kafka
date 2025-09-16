@@ -387,13 +387,97 @@ Address, va Ten Hotel, trong khung Price
 1. Tim kiem cac khach san trong khu vuc
 -> Return hotelIds (LIMIT 20) /^
 
-2. Su dung cac hotel ids do tra ve cac phong da duoc booking trong khoang thoi gian check in check out
+2. Tra ve so luong phong per roomType bang HotelIds
+-> Return [roomTypeId, So luong phong] /^
+
+3. Su dung cac hotel ids do tra ve cac phong da duoc booking trong khoang thoi gian check in check out
 -> Return [roomTypeId, count (so luong phong da dat)] /^
 
-3. Su dung roomTypeIds de xac dinh khach san con phong nao con trong
+4. O Application, xem neu <so phong da dat> < <so phong> -> AVAILABLE
+
+5. Su dung roomTypeIds de xac dinh khach san con phong nao con trong
 -> Return [hotelId, minPrice] (tra ve gia min cua nhung phong trong)
 */
 
-func (hh *HotelHandler) FilterHotels() {
+type FilterHotelsParams struct {
+	HotelName string `json:"hotel_name,omitempty"`
+	Address   string `json:"address,omitempty"`
+	CheckIn   string `json:"check_in"`
+	CheckOut  string `json:"check_out"`
+	MinPrice  int    `json:"min_price,omitempty"`
+	MaxPrice  int    `json:"max_price,omitempty"`
+}
 
+func (hh *HotelHandler) FilterHotels(ctx *gin.Context) {
+	req := &FilterHotelsParams{}
+	if err := ctx.ShouldBindJSON(req); err != nil {
+		zap.S().Infoln("Invalid Format Request Body: ", err)
+		ctx.JSON(http.StatusBadRequest, utils.ErrorApiResponse("Loi he thong"))
+		return
+	}
+
+	// Get hotels by address
+	resultHotelsByAddress, err := hh.hotelClient.GetHotelsByAddress(ctx, &hotel_pb.GetHotelsByAddressRequest{
+		HotelName: req.HotelName,
+		Address:   req.Address,
+	})
+	if err != nil {
+		zap.S().Infoln("Failed to get Hotels by Address: ", err)
+		ctx.JSON(http.StatusBadRequest, utils.ErrorApiResponse("Loi he thong"))
+		return
+	}
+
+	// GetNumber Of rooms to determine which rooms will be AVAILABLE
+	resultNumberOfRooms, err := hh.roomClient.GetNumberOfRoomsPerRoomTypeByHotelIds(ctx, &room_pb.GetNumberOfRoomsPerRoomTypeByHotelIdsRequest{
+		HotelIds: resultHotelsByAddress.GetHotelIds(),
+	})
+	if err != nil {
+		zap.S().Infoln("Failed to get Number of Rooms Per RoomType By HotelIds: ", err)
+		ctx.JSON(http.StatusInternalServerError, utils.ErrorApiResponse("Loi he thong"))
+		return
+	}
+
+	numberOfRoomsInRoomTypesMap := make(map[string]int)
+	for _, result := range resultNumberOfRooms.Results {
+		numberOfRoomsInRoomTypesMap[result.RoomTypeId] = int(result.NumberOfRooms)
+	}
+
+	// extract room type ids
+	allRoomTypeIds := make([]string, 0, len(resultNumberOfRooms.Results))
+	for _, result := range resultNumberOfRooms.Results {
+		allRoomTypeIds = append(allRoomTypeIds, result.GetRoomTypeId())
+	}
+
+	// Get Number of rooms Occupied in booked time
+	resultNumberOfOccupiedRooms, err := hh.bookingClient.GetNumberOfOccupiedRooms(ctx, &booking_pb.GetNumberOfOccupiedRoomsRequest{
+		RoomTypeIds: allRoomTypeIds,
+	})
+	if err != nil {
+		zap.S().Infoln("Failed to get Number of Occupied Rooms: ", err)
+		ctx.JSON(http.StatusInternalServerError, utils.ErrorApiResponse("Loi he thong"))
+		return
+	}
+
+	// Determine which roomtype is available
+	// If occupied < total_rooms is AVAILABLE
+	availableRoomTypeIds := make([]string, 0, len(resultNumberOfOccupiedRooms.Results))
+	for _, result := range resultNumberOfOccupiedRooms.Results {
+		if result.NumberOfOccupiedRooms < int32(numberOfRoomsInRoomTypesMap[result.RoomTypeId]) {
+			availableRoomTypeIds = append(availableRoomTypeIds, result.RoomTypeId)
+		}
+	}
+
+	// Get Hotel and Min Price through AVAILABLE Room Type
+	hotelRows, err := hh.hotelClient.FilterHotels(ctx, &hotel_pb.FilterHotelsRequest{
+		RoomTypeIds: availableRoomTypeIds,
+		MinPrice:    int32(req.MinPrice),
+		MaxPrice:    int32(req.MaxPrice),
+	})
+	if err != nil {
+		zap.S().Infoln("Failed to FilterHotels: ", err)
+		ctx.JSON(http.StatusInternalServerError, utils.ErrorApiResponse("Loi he thong"))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, utils.SuccessApiResponse(hotelRows, "Thanh cong"))
 }

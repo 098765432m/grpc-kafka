@@ -15,7 +15,6 @@ type RoomStatus string
 
 const (
 	RoomStatusAVAILABLE  RoomStatus = "AVAILABLE"
-	RoomStatusOCCUPIED   RoomStatus = "OCCUPIED"
 	RoomStatusMAINTAINED RoomStatus = "MAINTAINED"
 )
 

@@ -121,7 +121,7 @@ func (bg *BookingGrpcHandler) GetNumberOfOccupiedRooms(ctx context.Context, req 
 
 	// 	roomTypeIds = append(roomTypeIds, roomTypeId)
 	// }
-	roomTypeIds, err := utils.ParsePgUuidArray(req.GetRoomTypeIds())
+	roomTypeIds, err := utils.ToPgUuidArray(req.GetRoomTypeIds())
 	if err != nil {
 		zap.S().Infoln("Invalid Room Type UUID")
 		return nil, status.Error(codes.InvalidArgument, "Room Type ID khong hop le")
@@ -167,7 +167,7 @@ func (bg *BookingGrpcHandler) GetNumberOfOccupiedRooms(ctx context.Context, req 
 // Return {hotelId, roomTypeId, Number of occupied rooms in that room type}
 func (bg *BookingGrpcHandler) GetNumberOfOccupiedRoomsByHotelIds(ctx context.Context, req *booking_pb.GetNumberOfOccupiedRoomsByHotelIdsRequest) (*booking_pb.GetNumberOfOccupiedRoomsByHotelIdsResponse, error) {
 	// Check Are Hotel Ids valid
-	hotelIds, err := utils.ParsePgUuidArray(req.GetHotelIds())
+	hotelIds, err := utils.ToPgUuidArray(req.GetHotelIds())
 	if err != nil {
 		zap.S().Infoln("Invalid Hotel UUID")
 		return nil, status.Error(codes.InvalidArgument, "Hotel ID khong hop le")
@@ -199,7 +199,6 @@ func (bg *BookingGrpcHandler) GetNumberOfOccupiedRoomsByHotelIds(ctx context.Con
 	numberOccpiedRoomsHotelIdsResponse := make([]*booking_pb.ResultNumberOfOccupiedRoomsByHotelIds, 0, len(results))
 	for _, result := range results {
 		tempResult := &booking_pb.ResultNumberOfOccupiedRoomsByHotelIds{
-			HotelId:               result.HotelID.String(),
 			RoomTypeId:            result.RoomTypeID.String(),
 			NumberOfOccupiedRooms: int32(result.NumberOfOccupiedRooms),
 		}

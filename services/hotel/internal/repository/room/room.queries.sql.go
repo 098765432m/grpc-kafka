@@ -147,6 +147,42 @@ func (q *Queries) GetListOfRemainRooms(ctx context.Context, arg GetListOfRemainR
 	return items, nil
 }
 
+const getNumberOfRoomsPerRoomTypeByHotelIds = `-- name: GetNumberOfRoomsPerRoomTypeByHotelIds :many
+SELECT 
+    r.room_type_id,
+    COUNT(r.id) AS total_rooms
+FROM rooms r
+WHERE 
+    r.hotel_id = ANY($1::uuid[])
+    AND r.status != 'MAINTAINED'
+GROUP BY r.room_type_id
+`
+
+type GetNumberOfRoomsPerRoomTypeByHotelIdsRow struct {
+	RoomTypeID pgtype.UUID `json:"room_type_id"`
+	TotalRooms int64       `json:"total_rooms"`
+}
+
+func (q *Queries) GetNumberOfRoomsPerRoomTypeByHotelIds(ctx context.Context, hotelIds []pgtype.UUID) ([]GetNumberOfRoomsPerRoomTypeByHotelIdsRow, error) {
+	rows, err := q.db.Query(ctx, getNumberOfRoomsPerRoomTypeByHotelIds, hotelIds)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetNumberOfRoomsPerRoomTypeByHotelIdsRow
+	for rows.Next() {
+		var i GetNumberOfRoomsPerRoomTypeByHotelIdsRow
+		if err := rows.Scan(&i.RoomTypeID, &i.TotalRooms); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getRoomsByHotelId = `-- name: GetRoomsByHotelId :many
 SELECT id, name, status, room_type_id, hotel_id
 FROM rooms r

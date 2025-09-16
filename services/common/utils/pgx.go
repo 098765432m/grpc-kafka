@@ -51,7 +51,7 @@ func ToPgInt4(number int) pgtype.Int4 {
 	return tempNumber
 }
 
-func ParsePgUuidArray(uuidsStr []string) ([]pgtype.UUID, error) {
+func ToPgUuidArray(uuidsStr []string) ([]pgtype.UUID, error) {
 
 	var uuids []pgtype.UUID
 	for _, uuidStr := range uuidsStr {

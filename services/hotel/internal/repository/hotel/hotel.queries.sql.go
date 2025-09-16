@@ -37,43 +37,36 @@ func (q *Queries) DeleteHotelById(ctx context.Context, id pgtype.UUID) error {
 const filterHotels = `-- name: FilterHotels :many
 SELECT 
     h.id,
-    MIN(rt.price)
+    h.name,
+    h.address,
+    MIN(rt.price) AS min_price
 FROM hotels h LEFT JOIN room_types rt ON h.id = rt.hotel_id
 WHERE 
     rt.id = ANY($1::uuid[])
-    AND $2::int < 
-    (
-        SELECT COUNT(rt.id)
-        FROM room_types rt LEFT JOIN rooms r ON rt.id = r.room_type_id
-    )
     AND
     (
-        $3::int IS NULL
-        OR $4::int IS NULL
-        OR rt.price BETWEEN $3 AND $4
+        $2::int IS NULL
+        OR $3::int IS NULL
+        OR rt.price BETWEEN $2 AND $3
     )
 GROUP BY h.id
 `
 
 type FilterHotelsParams struct {
-	RoomTypeIds           []pgtype.UUID `json:"room_type_ids"`
-	NumberOfOccupiedRooms int32         `json:"number_of_occupied_rooms"`
-	MinPrice              pgtype.Int4   `json:"min_price"`
-	MaxPrice              pgtype.Int4   `json:"max_price"`
+	RoomTypeIds []pgtype.UUID `json:"room_type_ids"`
+	MinPrice    pgtype.Int4   `json:"min_price"`
+	MaxPrice    pgtype.Int4   `json:"max_price"`
 }
 
 type FilterHotelsRow struct {
-	ID  pgtype.UUID `json:"id"`
-	Min interface{} `json:"min"`
+	ID       pgtype.UUID `json:"id"`
+	Name     string      `json:"name"`
+	Address  pgtype.Text `json:"address"`
+	MinPrice interface{} `json:"min_price"`
 }
 
 func (q *Queries) FilterHotels(ctx context.Context, arg FilterHotelsParams) ([]FilterHotelsRow, error) {
-	rows, err := q.db.Query(ctx, filterHotels,
-		arg.RoomTypeIds,
-		arg.NumberOfOccupiedRooms,
-		arg.MinPrice,
-		arg.MaxPrice,
-	)
+	rows, err := q.db.Query(ctx, filterHotels, arg.RoomTypeIds, arg.MinPrice, arg.MaxPrice)
 	if err != nil {
 		return nil, err
 	}
@@ -81,7 +74,12 @@ func (q *Queries) FilterHotels(ctx context.Context, arg FilterHotelsParams) ([]F
 	var items []FilterHotelsRow
 	for rows.Next() {
 		var i FilterHotelsRow
-		if err := rows.Scan(&i.ID, &i.Min); err != nil {
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Address,
+			&i.MinPrice,
+		); err != nil {
 			return nil, err
 		}
 		items = append(items, i)
@@ -132,7 +130,7 @@ func (q *Queries) GetHotelById(ctx context.Context, id pgtype.UUID) (Hotel, erro
 }
 
 const getHotelsByAddress = `-- name: GetHotelsByAddress :many
-SELECT id, name, address
+SELECT h.id
 FROM hotels h
 WHERE 
     (
@@ -152,19 +150,19 @@ type GetHotelsByAddressParams struct {
 	HotelName pgtype.Text `json:"hotel_name"`
 }
 
-func (q *Queries) GetHotelsByAddress(ctx context.Context, arg GetHotelsByAddressParams) ([]Hotel, error) {
+func (q *Queries) GetHotelsByAddress(ctx context.Context, arg GetHotelsByAddressParams) ([]pgtype.UUID, error) {
 	rows, err := q.db.Query(ctx, getHotelsByAddress, arg.Address, arg.HotelName)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []Hotel
+	var items []pgtype.UUID
 	for rows.Next() {
-		var i Hotel
-		if err := rows.Scan(&i.ID, &i.Name, &i.Address); err != nil {
+		var id pgtype.UUID
+		if err := rows.Scan(&id); err != nil {
 			return nil, err
 		}
-		items = append(items, i)
+		items = append(items, id)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err

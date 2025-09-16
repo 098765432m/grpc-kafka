@@ -176,8 +176,7 @@ func (q *Queries) GetNumberOfOccupiedRooms(ctx context.Context, arg GetNumberOfO
 }
 
 const getNumberOfOccupiedRoomsByHotelIds = `-- name: GetNumberOfOccupiedRoomsByHotelIds :many
-SELECT 
-    hotel_id,
+SELECT
     room_type_id,
     COUNT(DISTINCT room_id) AS number_of_occupied_rooms
 FROM bookings 
@@ -186,7 +185,7 @@ WHERE
     -- AND ( date_trunc('day', @new_check_in::date) < date_trunc('day', check_out) AND date_trunc('day', @new_check_out::date) > date_trunc('day', check_in) );
     -- AND (@new_check_in::date < check_out::date AND @new_check_out::date > check_in::date)
     AND daterange(check_in, check_out, '[]') && daterange($2::date, $3::date, '[]')
-GROUP BY hotel_id
+GROUP BY room_type_id
 `
 
 type GetNumberOfOccupiedRoomsByHotelIdsParams struct {
@@ -196,7 +195,6 @@ type GetNumberOfOccupiedRoomsByHotelIdsParams struct {
 }
 
 type GetNumberOfOccupiedRoomsByHotelIdsRow struct {
-	HotelID               pgtype.UUID `json:"hotel_id"`
 	RoomTypeID            pgtype.UUID `json:"room_type_id"`
 	NumberOfOccupiedRooms int64       `json:"number_of_occupied_rooms"`
 }
@@ -210,7 +208,7 @@ func (q *Queries) GetNumberOfOccupiedRoomsByHotelIds(ctx context.Context, arg Ge
 	var items []GetNumberOfOccupiedRoomsByHotelIdsRow
 	for rows.Next() {
 		var i GetNumberOfOccupiedRoomsByHotelIdsRow
-		if err := rows.Scan(&i.HotelID, &i.RoomTypeID, &i.NumberOfOccupiedRooms); err != nil {
+		if err := rows.Scan(&i.RoomTypeID, &i.NumberOfOccupiedRooms); err != nil {
 			return nil, err
 		}
 		items = append(items, i)

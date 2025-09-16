@@ -1,4 +1,4 @@
-CREATE TYPE room_status AS ENUM ('AVAILABLE', 'OCCUPIED', 'MAINTAINED');
+CREATE TYPE room_status AS ENUM ('AVAILABLE', 'MAINTAINED');
 
 CREATE TABLE rooms (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

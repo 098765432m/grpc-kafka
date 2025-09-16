@@ -12,7 +12,7 @@ FROM hotels
 LIMIT 20;
 
 -- name: GetHotelsByAddress :many
-SELECT *
+SELECT h.id
 FROM hotels h
 WHERE 
     (
@@ -29,15 +29,12 @@ LIMIT 20;
 -- name: FilterHotels :many
 SELECT 
     h.id,
-    MIN(rt.price)
+    h.name,
+    h.address,
+    MIN(rt.price) AS min_price
 FROM hotels h LEFT JOIN room_types rt ON h.id = rt.hotel_id
 WHERE 
     rt.id = ANY(@room_type_ids::uuid[])
-    AND @number_of_occupied_rooms::int < 
-    (
-        SELECT COUNT(rt.id)
-        FROM room_types rt LEFT JOIN rooms r ON rt.id = r.room_type_id
-    )
     AND
     (
         sqlc.narg('min_price')::int IS NULL

@@ -26,7 +26,7 @@ INSERT INTO room_types (id, name, price, hotel_id) VALUES
 ('ba5f1d28-f156-493a-bb16-7a5c212728b2', 'Phong don', '65000', 'a312ff75-0695-4a50-bdea-4049972e99b8'),
 ('75a56031-674c-461d-9b3c-1fce1ad8dec2', 'Phong doi', '115000', 'a312ff75-0695-4a50-bdea-4049972e99b8');
 
-CREATE TYPE room_status AS ENUM ('AVAILABLE', 'OCCUPIED', 'MAINTAINED');
+CREATE TYPE room_status AS ENUM ('AVAILABLE', 'MAINTAINED');
 
 CREATE TABLE rooms (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

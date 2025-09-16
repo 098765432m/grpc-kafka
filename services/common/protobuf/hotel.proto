@@ -7,6 +7,7 @@ service HotelService {
     rpc CreateHotel(CreateHotelRequest) returns (CreateHotelResponse);
     rpc GetAllHotels(GetAllHotelsRequest) returns (GetAllHotelsResponse);
     rpc GetHotelsByAddress(GetHotelsByAddressRequest) returns (GetHotelsByAddressResponse);
+    rpc FilterHotels(FilterHotelsRequest) returns (FilterHotelsResponse);
 }
 
 message Hotel {
@@ -44,5 +45,20 @@ message GetHotelsByAddressRequest{
 }
 
 message GetHotelsByAddressResponse{
-    repeated Hotel hotels = 1;
+    repeated string hotel_ids = 1;
+}
+
+message FilterHotelsRequest {
+    repeated string room_type_ids = 1;
+    int32 min_price = 2;
+    int32 max_price = 3;
+}
+
+message FilterHotelRow {
+    string hotel_id = 1;
+    string min_price = 2;
+}
+
+message FilterHotelsResponse {
+    repeated FilterHotelRow filter_hotel_rows = 1;
 }

@@ -84,6 +84,17 @@ func (rs *RoomService) DeleteRoom(ctx context.Context, id pgtype.UUID) error {
 	return nil
 }
 
+func (rs *RoomService) GetNumberOfRoomsPerRoomTypeByHotelIds(ctx context.Context, hotelIds []pgtype.UUID) ([]room_repo.GetNumberOfRoomsPerRoomTypeByHotelIdsRow, error) {
+
+	rows, err := rs.repo.GetNumberOfRoomsPerRoomTypeByHotelIds(ctx, hotelIds)
+	if err != nil {
+		zap.S().Errorln("Failed to get number of Rooms per Room Type by HotelIDs")
+		return nil, err
+	}
+
+	return rows, nil
+}
+
 // Return List of Available rooms for room type id
 func (rs *RoomService) GetListOfAvailableRoomsByRoomTypeId(ctx context.Context, roomTypeId pgtype.UUID, numberOfRooms int) ([]pgtype.UUID, error) {
 

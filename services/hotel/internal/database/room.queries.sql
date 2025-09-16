@@ -12,6 +12,16 @@ WHERE r.room_type_id = $1
 ORDER BY r.name
 LIMIT 20;
 
+-- name: GetNumberOfRoomsPerRoomTypeByHotelIds :many
+SELECT 
+    r.room_type_id,
+    COUNT(r.id) AS total_rooms
+FROM rooms r
+WHERE 
+    r.hotel_id = ANY(@hotel_ids::uuid[])
+    AND r.status != 'MAINTAINED'
+GROUP BY r.room_type_id;
+
 -- name: GetListOfAvailableRoomsByRoomTypeId :many
 SELECT r.id
 FROM rooms r

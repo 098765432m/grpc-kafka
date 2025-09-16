@@ -51,9 +51,8 @@ message GetNumberOfOccupiedRoomsByHotelIdsRequest {
 }
 
 message ResultNumberOfOccupiedRoomsByHotelIds {
-    string hotelId = 1;
-    string roomTypeId = 2;
-    int32 numberOfOccupiedRooms = 3;
+    string roomTypeId = 1;
+    int32 numberOfOccupiedRooms = 2;
 }
 
 message GetNumberOfOccupiedRoomsByHotelIdsResponse {

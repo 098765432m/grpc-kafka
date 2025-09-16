@@ -61,8 +61,8 @@ func (hs *HotelService) GetAll(ctx context.Context) ([]hotel_repo.Hotel, error) 
 	return hotels, nil
 }
 
-func (hs *HotelService) GetHotelsByAddress(ctx context.Context, address pgtype.Text, hotelName pgtype.Text) ([]hotel_repo.Hotel, error) {
-	hotels, err := hs.repo.GetHotelsByAddress(ctx, hotel_repo.GetHotelsByAddressParams{
+func (hs *HotelService) GetHotelsByAddress(ctx context.Context, address pgtype.Text, hotelName pgtype.Text) ([]pgtype.UUID, error) {
+	hotelIds, err := hs.repo.GetHotelsByAddress(ctx, hotel_repo.GetHotelsByAddressParams{
 		Address:   address,
 		HotelName: hotelName,
 	})
@@ -71,15 +71,14 @@ func (hs *HotelService) GetHotelsByAddress(ctx context.Context, address pgtype.T
 		return nil, err
 	}
 
-	return hotels, nil
+	return hotelIds, nil
 }
 
-func (hs *HotelService) FilterHotels(ctx context.Context, roomTypeIds []pgtype.UUID, minPrice pgtype.Int4, maxPrice pgtype.Int4, numberOfOccupiedRooms int) ([]hotel_repo.FilterHotelsRow, error) {
+func (hs *HotelService) FilterHotels(ctx context.Context, roomTypeIds []pgtype.UUID, minPrice pgtype.Int4, maxPrice pgtype.Int4) ([]hotel_repo.FilterHotelsRow, error) {
 	result, err := hs.repo.FilterHotels(ctx, hotel_repo.FilterHotelsParams{
-		RoomTypeIds:           roomTypeIds,
-		MinPrice:              minPrice,
-		MaxPrice:              maxPrice,
-		NumberOfOccupiedRooms: int32(numberOfOccupiedRooms),
+		RoomTypeIds: roomTypeIds,
+		MinPrice:    minPrice,
+		MaxPrice:    maxPrice,
 	})
 	if err != nil {
 		zap.S().Errorln("Failed to Filter Hotels: ", err)
