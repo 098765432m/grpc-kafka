@@ -6,6 +6,7 @@ service BookingService {
     rpc CreateBookings(NewBookingParam) returns (Empty);
     rpc DeleteBookingsById (DeleteBookingByIdRequest) returns (Empty);
     rpc DeleteBookingsByIds (DeleteBookingByIdsRequest) returns (Empty);
+    rpc GetBookingsByUserId (GetBookingsByUserIdRequest) returns (GetBookingsByUserIdResponse);
     rpc GetNumberOfOccupiedRooms(GetNumberOfOccupiedRoomsRequest) returns (GetNumberOfOccupiedRoomsResponse);
     rpc GetNumberOfOccupiedRoomsByHotelIds(GetNumberOfOccupiedRoomsByHotelIdsRequest) returns (GetNumberOfOccupiedRoomsByHotelIdsResponse);
     rpc GetUnavailableRoomsByRoomTypeId(GetUnavailableRoomsByRoomTypeIdRequest) returns (GetUnavailableRoomsByRoomTypeIdResponse);
@@ -13,36 +14,60 @@ service BookingService {
 
 message Empty {}
 
+message Booking {
+    string id = 1;
+    string check_in = 2;
+    string check_out = 3;
+    int32 total = 4;
+    string status = 5;
+    string hotel_id = 6;
+    string user_id = 7;
+    string room_type_id = 8;
+    string room_id = 9;
+}
+
 message BookingParam {
-    string checkIn = 1;
-    string checkOut = 2;
+    string check_in = 1;
+    string check_out = 2;
     int32  total = 3;
-    string roomTypeId = 4;
-    string userId = 5;
-    string roomId = 6;
+    string room_type_id = 4;
+    string user_id = 5;
+    string room_id = 6;
 }
 
 message NewBookingParam {
-    repeated BookingParam newBookings = 1;
+    repeated BookingParam new_bookings = 1;
 }
 
 message DeleteBookingByIdRequest {
-    string bookingId = 1;
+    string booking_id = 1;
 }
 
 message DeleteBookingByIdsRequest {
-    repeated string bookingIds = 1;
+    repeated string booking_ids = 1;
+}
+
+message GetBookingsByUserIdRequest {
+    string user_id = 1;
+    string check_date_start = 2;
+    string check_date_end = 3;
+    int32 size = 4;
+    int32 offset = 5;
+}
+
+message GetBookingsByUserIdResponse{
+    repeated Booking bookings = 1;
 }
 
 message GetNumberOfOccupiedRoomsRequest {
-    repeated string roomTypeIds = 1;
-    string checkIn = 2;
-    string checkOut = 3;
+    repeated string room_type_ids = 1;
+    string check_in = 2;
+    string check_out = 3;
 }
 
 message ResultNumberOfOccupiedRooms {
-    string roomTypeId = 1;
-    int32 numberOfOccupiedRooms = 2;
+    string room_type_id = 1;
+    int32 number_of_occupied_rooms = 2;
 }
 
 message GetNumberOfOccupiedRoomsResponse {
@@ -50,14 +75,14 @@ message GetNumberOfOccupiedRoomsResponse {
 }
 
 message GetNumberOfOccupiedRoomsByHotelIdsRequest {
-    repeated string hotelIds = 1;
-    string checkIn = 2;
-    string checkOut = 3;
+    repeated string hotel_ids = 1;
+    string check_in = 2;
+    string check_out = 3;
 }
 
 message ResultNumberOfOccupiedRoomsByHotelIds {
-    string roomTypeId = 1;
-    int32 numberOfOccupiedRooms = 2;
+    string room_type_id = 1;
+    int32 number_of_occupied_rooms = 2;
 }
 
 message GetNumberOfOccupiedRoomsByHotelIdsResponse {

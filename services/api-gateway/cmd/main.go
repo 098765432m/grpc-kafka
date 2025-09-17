@@ -65,7 +65,7 @@ func main() {
 	ratingClient := rating_pb.NewRatingServiceClient(ratingConn)
 	bookingClient := booking_pb.NewBookingServiceClient(bookingConn)
 
-	userHandler := api_handler.NewUserHandler(userClient, imageClient)
+	userHandler := api_handler.NewUserHandler(userClient, imageClient, bookingClient)
 	userHandler.RegisterRoutes(api)
 
 	hotelHandler := api_handler.NewHotelHandler(&api_handler.HotelHandlerImpl{

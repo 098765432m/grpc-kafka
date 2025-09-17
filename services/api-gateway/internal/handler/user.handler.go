@@ -2,8 +2,10 @@ package api_handler
 
 import (
 	"net/http"
+	"strconv"
 
 	api_dto "github.com/098765432m/grpc-kafka/api-gateway/internal/dto"
+	"github.com/098765432m/grpc-kafka/common/gen-proto/booking_pb"
 	"github.com/098765432m/grpc-kafka/common/gen-proto/image_pb"
 	"github.com/098765432m/grpc-kafka/common/gen-proto/user_pb"
 	"github.com/098765432m/grpc-kafka/common/model"
@@ -15,17 +17,20 @@ import (
 )
 
 type UserHandler struct {
-	userClient  user_pb.UserServiceClient
-	imageClient image_pb.ImageServiceClient
+	userClient    user_pb.UserServiceClient
+	imageClient   image_pb.ImageServiceClient
+	bookingClient booking_pb.BookingServiceClient
 }
 
 func NewUserHandler(
 	userClient user_pb.UserServiceClient,
 	imageClient image_pb.ImageServiceClient,
+	bookingClient booking_pb.BookingServiceClient,
 ) *UserHandler {
 	return &UserHandler{
-		userClient:  userClient,
-		imageClient: imageClient,
+		userClient:    userClient,
+		imageClient:   imageClient,
+		bookingClient: bookingClient,
 	}
 }
 
@@ -36,6 +41,8 @@ func (uh *UserHandler) RegisterRoutes(router *gin.RouterGroup) {
 
 	userHandler.GET("/:id", uh.GetUserById)
 	userHandler.PUT("/:id", uh.UpdateUserById)
+
+	userHandler.GET("/:id/bookings", uh.GetBookingsByUserId)
 
 	userHandler.POST("/sign-in", uh.SignIn)
 	userHandler.POST("/sign-up", uh.SignUp)
@@ -161,6 +168,44 @@ func (uh *UserHandler) UpdateUserById(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusOK, utils.SuccessApiResponse(nil, "Cap nhat tai khoan thanh cong"))
+}
+
+// Return Bookings By UserId
+func (uh *UserHandler) GetBookingsByUserId(ctx *gin.Context) {
+	// Lay Request Param
+	userId := ctx.Param("id")
+	checkDateStart := ctx.Query("check_date_start")
+	checkDateEnd := ctx.Query("check_date_end")
+	size, err := strconv.Atoi(ctx.Query("size"))
+	if err != nil {
+		zap.S().Infoln("Failed to convert int of Size")
+		ctx.JSON(http.StatusBadRequest, utils.ErrorApiResponse("Loi xay ra"))
+		return
+	}
+	offset, err := strconv.Atoi(ctx.Query("offset"))
+	if err != nil {
+		zap.S().Infoln("Failed to convert int of Offset")
+		ctx.JSON(http.StatusBadRequest, utils.ErrorApiResponse("Loi xay ra"))
+		return
+	}
+
+	zap.L().Info("Check Request of get bookings by userId", zap.Any("userId", userId), zap.Any("check Date Start", checkDateStart), zap.Any("Check Date End", checkDateEnd), zap.Any("Size", size), zap.Any("Offset", offset))
+
+	// Lay danh sach Bookings
+	resultBookingsByUserId, err := uh.bookingClient.GetBookingsByUserId(ctx, &booking_pb.GetBookingsByUserIdRequest{
+		UserId:         userId,
+		CheckDateStart: checkDateStart,
+		CheckDateEnd:   checkDateEnd,
+		Size:           int32(size),
+		Offset:         int32(offset),
+	})
+	if err != nil {
+		zap.S().Infoln("Failed to get list of Bookings by User ID: ", err)
+		ctx.JSON(http.StatusInternalServerError, utils.ErrorApiResponse("Loi khong lay duoc danh sach dat phong"))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, utils.SuccessApiResponse(resultBookingsByUserId.Bookings, "Thanh cong"))
 }
 
 func (uh *UserHandler) DeleteUserById(ctx *gin.Context) {

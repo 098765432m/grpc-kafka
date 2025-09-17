@@ -29,6 +29,7 @@ func (bh *BookingHandler) RegisterRoutes(router *gin.RouterGroup) {
 	bookingHandler := router.Group("/bookings")
 
 	bookingHandler.POST("/", bh.BookingRooms)
+	bookingHandler.DELETE("/", bh.DeleteBookingsById)
 	bookingHandler.POST("/delete", bh.DeleteBookingsByIds)
 }
 

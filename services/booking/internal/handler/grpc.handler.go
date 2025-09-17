@@ -119,6 +119,52 @@ func (bg *BookingGrpcHandler) DeleteBookingsByIds(ctx context.Context, req *book
 	return &booking_pb.Empty{}, nil
 }
 
+// Get Bookings List By UserId in range of booked date
+func (bg *BookingGrpcHandler) GetBookingsByUserId(ctx context.Context, req *booking_pb.GetBookingsByUserIdRequest) (*booking_pb.GetBookingsByUserIdResponse, error) {
+	var userId pgtype.UUID
+	if err := userId.Scan(req.GetUserId()); err != nil {
+		zap.S().Infoln("Invalid UUID")
+		return nil, status.Error(codes.InvalidArgument, "UUID khong hop le")
+	}
+
+	checkInDate, checkOutDate, err := utils.ToPgDateRange(req.CheckDateStart, req.CheckDateEnd)
+	if err != nil {
+		zap.S().Infoln("Invalid Date Range: ", err)
+		return nil, status.Error(codes.InvalidArgument, "Date Range khong hop le")
+	}
+
+	bookings, err := bg.service.GetBookingsByUserId(ctx, &booking_service.GetBookingsByUserIdParams{
+		UserId:         userId,
+		CheckDateStart: checkInDate,
+		CheckDateEnd:   checkOutDate,
+		Size:           int(req.GetSize()),
+		Offset:         int(req.GetOffset()),
+	})
+	if err != nil {
+		return nil, status.Error(codes.Internal, "Loi khong lay duoc danh sach dat phong")
+	}
+
+	results := make([]*booking_pb.Booking, 0, len(bookings))
+	for _, booking := range bookings {
+		results = append(results, &booking_pb.Booking{
+			Id:         booking.ID.String(),
+			UserId:     booking.UserID.String(),
+			CheckIn:    booking.CheckIn.Time.Format("2006-01-02"),
+			CheckOut:   booking.CheckOut.Time.Format("2006-01-02"),
+			Total:      booking.Total,
+			HotelId:    booking.HotelID.String(),
+			RoomTypeId: booking.RoomTypeID.String(),
+			RoomId:     booking.RoomID.String(),
+			Status:     string(booking.Status),
+		})
+	}
+
+	return &booking_pb.GetBookingsByUserIdResponse{
+		Bookings: results,
+	}, nil
+
+}
+
 // Return {roomTypeId, Number of occupied rooms in that room type}
 func (bg *BookingGrpcHandler) GetNumberOfOccupiedRooms(ctx context.Context, req *booking_pb.GetNumberOfOccupiedRoomsRequest) (*booking_pb.GetNumberOfOccupiedRoomsResponse, error) {
 	// Check Are room type Ids valid

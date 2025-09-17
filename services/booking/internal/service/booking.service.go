@@ -36,6 +36,31 @@ func (bs *BookingService) GetBookingById(ctx context.Context, id pgtype.UUID) (*
 	return &booking, nil
 }
 
+type GetBookingsByUserIdParams struct {
+	UserId         pgtype.UUID
+	CheckDateStart pgtype.Date
+	CheckDateEnd   pgtype.Date
+	Size           int
+	Offset         int
+}
+
+func (bs *BookingService) GetBookingsByUserId(ctx context.Context, params *GetBookingsByUserIdParams) ([]booking_repo.Booking, error) {
+
+	bookings, err := bs.repo.GetBookingsByUserId(ctx, booking_repo.GetBookingsByUserIdParams{
+		UserID:         params.UserId,
+		CheckDateStart: params.CheckDateStart,
+		CheckDateEnd:   params.CheckDateEnd,
+		Size:           int32(params.Size),
+		NumberOfOffset: int32(params.Offset),
+	})
+	if err != nil {
+		zap.S().Errorln("Failed to Get Bookings by User Id: ", err)
+		return nil, err
+	}
+
+	return bookings, nil
+}
+
 func (bs *BookingService) CreateBooking(ctx context.Context, bookingParams *booking_repo.CreateBookingParams) error {
 	if err := bs.repo.CreateBooking(ctx, *bookingParams); err != nil {
 		zap.S().Errorln("Cannot create booking")

@@ -4,6 +4,22 @@ SELECT * FROM bookings WHERE id = $1;
 -- name: GetBookingsByRoomId :many
 SELECT * FROM bookings WHERE room_id = $1;
 
+-- name: GetBookingsByUserId :many
+SELECT 
+    * 
+FROM bookings b
+WHERE 
+    b.user_id = @user_id::uuid
+    AND 
+    (
+        @check_date_start::date IS NULL
+        OR @check_date_end::date IS NULL
+        OR b.check_in BETWEEN @check_date_start AND @check_date_start
+    )
+ORDER BY b.check_in
+LIMIT @size::int
+OFFSET @number_of_offset::int;
+
 -- name: GetNumberOfOccupiedRooms :many
 SELECT 
     room_type_id,

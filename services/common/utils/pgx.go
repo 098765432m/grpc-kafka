@@ -23,6 +23,41 @@ func ParsePgDate(dateStr string) (pgtype.Date, error) {
 	return pgDate, nil
 }
 
+func ToPgDateRange(dateStartStr string, dateEndStr string) (pgtype.Date, pgtype.Date, error) {
+	InvalidDate := pgtype.Date{
+		Valid: false,
+	}
+
+	tempTime, err := time.Parse("01-02-2006", dateStartStr)
+	if err != nil {
+		return InvalidDate, InvalidDate, err
+	}
+
+	var pgDateStart pgtype.Date
+	err = pgDateStart.Scan(tempTime)
+	if err != nil {
+		return InvalidDate, InvalidDate, err
+	}
+
+	tempTime, err = time.Parse("01-02-2006", dateEndStr)
+	if err != nil {
+		return InvalidDate, InvalidDate, err
+	}
+
+	var pgDateEnd pgtype.Date
+	err = pgDateEnd.Scan(tempTime)
+	if err != nil {
+		return InvalidDate, InvalidDate, err
+	}
+
+	if pgDateStart.Time.After(pgDateEnd.Time) {
+		return InvalidDate, InvalidDate, fmt.Errorf("time Start is after time End")
+	}
+
+	return pgDateStart, pgDateEnd, nil
+
+}
+
 func ParsePgText(str string) (pgtype.Text, error) {
 	var tempStr pgtype.Text
 	if str == "" {

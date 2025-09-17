@@ -131,6 +131,69 @@ func (q *Queries) GetBookingsByRoomId(ctx context.Context, roomID pgtype.UUID) (
 	return items, nil
 }
 
+const getBookingsByUserId = `-- name: GetBookingsByUserId :many
+SELECT 
+    id, check_in, check_out, total, status, hotel_id, room_type_id, user_id, room_id, create_at, updated_at 
+FROM bookings b
+WHERE 
+    b.user_id = $1::uuid
+    AND 
+    (
+        $2::date IS NULL
+        OR $3::date IS NULL
+        OR b.check_in BETWEEN $2 AND $2
+    )
+ORDER BY b.check_in
+LIMIT $5::int
+OFFSET $4::int
+`
+
+type GetBookingsByUserIdParams struct {
+	UserID         pgtype.UUID `json:"user_id"`
+	CheckDateStart pgtype.Date `json:"check_date_start"`
+	CheckDateEnd   pgtype.Date `json:"check_date_end"`
+	NumberOfOffset int32       `json:"number_of_offset"`
+	Size           int32       `json:"size"`
+}
+
+func (q *Queries) GetBookingsByUserId(ctx context.Context, arg GetBookingsByUserIdParams) ([]Booking, error) {
+	rows, err := q.db.Query(ctx, getBookingsByUserId,
+		arg.UserID,
+		arg.CheckDateStart,
+		arg.CheckDateEnd,
+		arg.NumberOfOffset,
+		arg.Size,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Booking
+	for rows.Next() {
+		var i Booking
+		if err := rows.Scan(
+			&i.ID,
+			&i.CheckIn,
+			&i.CheckOut,
+			&i.Total,
+			&i.Status,
+			&i.HotelID,
+			&i.RoomTypeID,
+			&i.UserID,
+			&i.RoomID,
+			&i.CreateAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getNumberOfOccupiedRooms = `-- name: GetNumberOfOccupiedRooms :many
 SELECT 
     room_type_id,
