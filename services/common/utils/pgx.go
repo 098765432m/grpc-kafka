@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/098765432m/grpc-kafka/common/consts"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
@@ -28,7 +29,7 @@ func ToPgDateRange(dateStartStr string, dateEndStr string) (pgtype.Date, pgtype.
 		Valid: false,
 	}
 
-	tempTime, err := time.Parse("01-02-2006", dateStartStr)
+	tempTime, err := time.Parse(consts.DATE_FORMAT, dateStartStr)
 	if err != nil {
 		return InvalidDate, InvalidDate, err
 	}
@@ -39,7 +40,7 @@ func ToPgDateRange(dateStartStr string, dateEndStr string) (pgtype.Date, pgtype.
 		return InvalidDate, InvalidDate, err
 	}
 
-	tempTime, err = time.Parse("01-02-2006", dateEndStr)
+	tempTime, err = time.Parse(consts.DATE_FORMAT, dateEndStr)
 	if err != nil {
 		return InvalidDate, InvalidDate, err
 	}

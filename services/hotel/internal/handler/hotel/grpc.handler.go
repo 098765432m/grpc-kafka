@@ -3,6 +3,7 @@ package hotel_handler
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	common_error "github.com/098765432m/grpc-kafka/common/error"
 	"github.com/098765432m/grpc-kafka/common/gen-proto/hotel_pb"
@@ -58,7 +59,7 @@ func (hg *HotelGrpcHandler) GetAllHotels(ctx context.Context, req *hotel_pb.GetA
 	}, nil
 }
 
-func (hg *HotelGrpcHandler) GetHotelByAddress(ctx context.Context, req *hotel_pb.GetHotelsByAddressRequest) (*hotel_pb.GetHotelsByAddressResponse, error) {
+func (hg *HotelGrpcHandler) GetHotelsByAddress(ctx context.Context, req *hotel_pb.GetHotelsByAddressRequest) (*hotel_pb.GetHotelsByAddressResponse, error) {
 	address, err := utils.ParsePgText(req.GetAddress())
 	if err != nil {
 		zap.S().Infoln("Address is an invalid format")
@@ -151,10 +152,12 @@ func (hg *HotelGrpcHandler) FilterHotels(ctx context.Context, req *hotel_pb.Filt
 	}
 
 	results := make([]*hotel_pb.FilterHotelRow, 0, len(rows))
-	for _, row := range results {
+	for _, row := range rows {
 		results = append(results, &hotel_pb.FilterHotelRow{
-			HotelId:  row.GetHotelId(),
-			MinPrice: row.GetMinPrice(),
+			HotelId:      row.ID.String(),
+			HotelName:    row.Name,
+			HotelAddress: row.Address.String,
+			MinPrice:     fmt.Sprint(row.MinPrice.(int32)), // assertion interface{} to int32 then convert to string
 		})
 	}
 

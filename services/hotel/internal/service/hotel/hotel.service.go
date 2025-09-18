@@ -80,6 +80,8 @@ func (hs *HotelService) FilterHotels(ctx context.Context, roomTypeIds []pgtype.U
 		MinPrice:    minPrice,
 		MaxPrice:    maxPrice,
 	})
+	zap.S().Infoln("Filter service")
+	zap.S().Infoln(result)
 	if err != nil {
 		zap.S().Errorln("Failed to Filter Hotels: ", err)
 		return nil, err

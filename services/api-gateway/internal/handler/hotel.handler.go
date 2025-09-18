@@ -2,6 +2,7 @@ package api_handler
 
 import (
 	"net/http"
+	"strconv"
 
 	api_dto "github.com/098765432m/grpc-kafka/api-gateway/internal/dto"
 	"github.com/098765432m/grpc-kafka/common/gen-proto/booking_pb"
@@ -60,6 +61,8 @@ func (hh *HotelHandler) RegisterRoutes(router *gin.RouterGroup) {
 	hotelHandler.GET("/:id/rooms", hh.GetRoomsByHotelId)
 	hotelHandler.GET("/:id/ratings", hh.GetRatingsByHotelId)
 	hotelHandler.GET("/:id/available-room-types", hh.GetAvailableRoomTypes)
+
+	hotelHandler.GET("/filter", hh.FilterHotels)
 }
 
 func (hh *HotelHandler) GetAll(ctx *gin.Context) {
@@ -399,27 +402,30 @@ Address, va Ten Hotel, trong khung Price
 -> Return [hotelId, minPrice] (tra ve gia min cua nhung phong trong)
 */
 
-type FilterHotelsParams struct {
-	HotelName string `json:"hotel_name,omitempty"`
-	Address   string `json:"address,omitempty"`
-	CheckIn   string `json:"check_in"`
-	CheckOut  string `json:"check_out"`
-	MinPrice  int    `json:"min_price,omitempty"`
-	MaxPrice  int    `json:"max_price,omitempty"`
-}
-
 func (hh *HotelHandler) FilterHotels(ctx *gin.Context) {
-	req := &FilterHotelsParams{}
-	if err := ctx.ShouldBindJSON(req); err != nil {
-		zap.S().Infoln("Invalid Format Request Body: ", err)
-		ctx.JSON(http.StatusBadRequest, utils.ErrorApiResponse("Loi he thong"))
+	// Get Request Params
+	hotelName := ctx.Query("hotel_name")
+	address := ctx.Query("address")
+	checkIn := ctx.Query("check_in")
+	checkOut := ctx.Query("check_out")
+	minPrice, err := strconv.Atoi(ctx.Query("min_price"))
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, utils.ErrorApiResponse("Gia khong hop le"))
 		return
 	}
 
+	maxPrice, err := strconv.Atoi(ctx.Query("max_price"))
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, utils.ErrorApiResponse("Gia khong hop le"))
+		return
+	}
+
+	zap.L().Info("Check Request of Filter Hotels", zap.Any("hotelName", hotelName), zap.Any("check In", checkIn), zap.Any("Check Out", checkOut), zap.Any("Min Price", minPrice), zap.Any("Max Price", maxPrice))
+
 	// Get hotels by address
 	resultHotelsByAddress, err := hh.hotelClient.GetHotelsByAddress(ctx, &hotel_pb.GetHotelsByAddressRequest{
-		HotelName: req.HotelName,
-		Address:   req.Address,
+		HotelName: hotelName,
+		Address:   address,
 	})
 	if err != nil {
 		zap.S().Infoln("Failed to get Hotels by Address: ", err)
@@ -427,6 +433,7 @@ func (hh *HotelHandler) FilterHotels(ctx *gin.Context) {
 		return
 	}
 
+	zap.L().Info("Filter Hotel By Address ", zap.Any("hotel", resultHotelsByAddress.HotelIds))
 	// GetNumber Of rooms to determine which rooms will be AVAILABLE
 	resultNumberOfRooms, err := hh.roomClient.GetNumberOfRoomsPerRoomTypeByHotelIds(ctx, &room_pb.GetNumberOfRoomsPerRoomTypeByHotelIdsRequest{
 		HotelIds: resultHotelsByAddress.GetHotelIds(),
@@ -437,20 +444,22 @@ func (hh *HotelHandler) FilterHotels(ctx *gin.Context) {
 		return
 	}
 
-	numberOfRoomsInRoomTypesMap := make(map[string]int)
-	for _, result := range resultNumberOfRooms.Results {
-		numberOfRoomsInRoomTypesMap[result.RoomTypeId] = int(result.NumberOfRooms)
-	}
-
-	// extract room type ids
 	allRoomTypeIds := make([]string, 0, len(resultNumberOfRooms.Results))
+
+	// numberOfRoomsInRoomTypesMap := make(map[string]int)
 	for _, result := range resultNumberOfRooms.Results {
 		allRoomTypeIds = append(allRoomTypeIds, result.GetRoomTypeId())
+		// numberOfRoomsInRoomTypesMap[result.RoomTypeId] = int(result.NumberOfRooms)
 	}
+
+	zap.S().Infoln("All Room TypeIds")
+	zap.S().Infoln(allRoomTypeIds)
 
 	// Get Number of rooms Occupied in booked time
 	resultNumberOfOccupiedRooms, err := hh.bookingClient.GetNumberOfOccupiedRooms(ctx, &booking_pb.GetNumberOfOccupiedRoomsRequest{
 		RoomTypeIds: allRoomTypeIds,
+		CheckIn:     checkIn,
+		CheckOut:    checkOut,
 	})
 	if err != nil {
 		zap.S().Infoln("Failed to get Number of Occupied Rooms: ", err)
@@ -458,26 +467,41 @@ func (hh *HotelHandler) FilterHotels(ctx *gin.Context) {
 		return
 	}
 
+	numberOfOccupiedRoomsInRoomTypesMap := make(map[string]int)
+	for _, result := range resultNumberOfOccupiedRooms.Results {
+		numberOfOccupiedRoomsInRoomTypesMap[result.RoomTypeId] = int(result.NumberOfOccupiedRooms)
+	}
+
+	zap.L().Info("Nunber of Occupied Rooms", zap.Any("result", resultNumberOfOccupiedRooms))
+
 	// Determine which roomtype is available
 	// If occupied < total_rooms is AVAILABLE
-	availableRoomTypeIds := make([]string, 0, len(resultNumberOfOccupiedRooms.Results))
-	for _, result := range resultNumberOfOccupiedRooms.Results {
-		if result.NumberOfOccupiedRooms < int32(numberOfRoomsInRoomTypesMap[result.RoomTypeId]) {
+	availableRoomTypeIds := make([]string, 0, len(allRoomTypeIds))
+
+	for _, result := range resultNumberOfRooms.Results {
+		if int32(numberOfOccupiedRoomsInRoomTypesMap[result.RoomTypeId]) < result.NumberOfRooms {
 			availableRoomTypeIds = append(availableRoomTypeIds, result.RoomTypeId)
 		}
 	}
 
+	zap.S().Infoln("Available Room Type Ids")
+	zap.S().Infoln(availableRoomTypeIds)
+
+	zap.L().Info("Check Before filter: ", zap.Any("RoomType IDs", availableRoomTypeIds), zap.Any("Min Price", minPrice), zap.Any("Max Price", maxPrice))
+
 	// Get Hotel and Min Price through AVAILABLE Room Type
 	hotelRows, err := hh.hotelClient.FilterHotels(ctx, &hotel_pb.FilterHotelsRequest{
 		RoomTypeIds: availableRoomTypeIds,
-		MinPrice:    int32(req.MinPrice),
-		MaxPrice:    int32(req.MaxPrice),
+		MinPrice:    int32(minPrice),
+		MaxPrice:    int32(maxPrice),
 	})
 	if err != nil {
 		zap.S().Infoln("Failed to FilterHotels: ", err)
 		ctx.JSON(http.StatusInternalServerError, utils.ErrorApiResponse("Loi he thong"))
 		return
 	}
+
+	zap.S().Infoln(hotelRows)
 
 	ctx.JSON(http.StatusOK, utils.SuccessApiResponse(hotelRows, "Thanh cong"))
 }

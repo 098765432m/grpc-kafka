@@ -17,12 +17,12 @@ FROM hotels h
 WHERE 
     (
         @address::text IS NULL
-        OR unaccent(h.address) ILIKE unaccent(@address::text)
+        OR unaccent(h.address) ILIKE unaccent('%' || @address::text || '%')
     ) 
     AND 
     (
         @hotel_name::text IS NULL
-        OR h.name ILIKE @hotel_name::text
+        OR unaccent(h.name) ILIKE unaccent( '%' || @hotel_name::text || '%')
     )
 LIMIT 20;
 
@@ -32,16 +32,16 @@ SELECT
     h.name,
     h.address,
     MIN(rt.price) AS min_price
-FROM hotels h LEFT JOIN room_types rt ON h.id = rt.hotel_id
-WHERE 
+FROM hotels h LEFT JOIN room_types rt ON h.id = rt.hotel_id AND 
     rt.id = ANY(@room_type_ids::uuid[])
-    AND
+WHERE 
     (
         sqlc.narg('min_price')::int IS NULL
         OR sqlc.narg('max_price')::int IS NULL
         OR rt.price BETWEEN @min_price AND @max_price
     )
-GROUP BY h.id;
+GROUP BY h.id
+HAVING MIN(rt.price) > 0;
 
 -- name: UpdateHotelById :exec
 UPDATE hotels

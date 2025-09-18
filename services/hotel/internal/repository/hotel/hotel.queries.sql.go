@@ -40,16 +40,16 @@ SELECT
     h.name,
     h.address,
     MIN(rt.price) AS min_price
-FROM hotels h LEFT JOIN room_types rt ON h.id = rt.hotel_id
-WHERE 
+FROM hotels h LEFT JOIN room_types rt ON h.id = rt.hotel_id AND 
     rt.id = ANY($1::uuid[])
-    AND
+WHERE 
     (
         $2::int IS NULL
         OR $3::int IS NULL
         OR rt.price BETWEEN $2 AND $3
     )
 GROUP BY h.id
+HAVING MIN(rt.price) > 0
 `
 
 type FilterHotelsParams struct {
@@ -135,12 +135,12 @@ FROM hotels h
 WHERE 
     (
         $1::text IS NULL
-        OR unaccent(h.address) ILIKE unaccent($1::text)
+        OR unaccent(h.address) ILIKE unaccent('%' || $1::text || '%')
     ) 
     AND 
     (
         $2::text IS NULL
-        OR h.name ILIKE $2::text
+        OR unaccent(h.name) ILIKE unaccent( '%' || $2::text || '%')
     )
 LIMIT 20
 `
