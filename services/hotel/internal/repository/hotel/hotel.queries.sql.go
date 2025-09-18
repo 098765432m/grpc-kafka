@@ -40,9 +40,10 @@ SELECT
     h.name,
     h.address,
     MIN(rt.price) AS min_price
-FROM hotels h LEFT JOIN room_types rt ON h.id = rt.hotel_id AND 
-    rt.id = ANY($1::uuid[])
+FROM hotels h LEFT JOIN room_types rt ON h.id = rt.hotel_id
 WHERE 
+    rt.id = ANY($1::uuid[])
+    AND 
     (
         $2::int IS NULL
         OR $3::int IS NULL

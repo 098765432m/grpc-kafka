@@ -32,9 +32,10 @@ SELECT
     h.name,
     h.address,
     MIN(rt.price) AS min_price
-FROM hotels h LEFT JOIN room_types rt ON h.id = rt.hotel_id AND 
-    rt.id = ANY(@room_type_ids::uuid[])
+FROM hotels h LEFT JOIN room_types rt ON h.id = rt.hotel_id
 WHERE 
+    rt.id = ANY(@room_type_ids::uuid[])
+    AND 
     (
         sqlc.narg('min_price')::int IS NULL
         OR sqlc.narg('max_price')::int IS NULL
