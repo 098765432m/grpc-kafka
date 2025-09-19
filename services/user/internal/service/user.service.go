@@ -46,7 +46,7 @@ func (us *UserService) GetUserById(ctx context.Context, id pgtype.UUID) (*user_r
 			return nil, common_error.ErrNoRows
 		}
 
-		zap.S().Error("Failed to get Hotel by id: ", err)
+		zap.S().Error("Failed to get User by id: ", err)
 		return nil, err
 	}
 

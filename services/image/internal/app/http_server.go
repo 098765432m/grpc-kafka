@@ -7,15 +7,15 @@ import (
 	image_repo "github.com/098765432m/grpc-kafka/image/internal/repository/image"
 	image_service "github.com/098765432m/grpc-kafka/image/internal/service"
 	"github.com/gin-gonic/gin"
-	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type HttpServer struct {
 	addr int
-	conn *pgx.Conn
+	conn *pgxpool.Pool
 }
 
-func NewHttpServer(addr int, conn *pgx.Conn) *HttpServer {
+func NewHttpServer(addr int, conn *pgxpool.Pool) *HttpServer {
 	return &HttpServer{addr: addr, conn: conn}
 }
 

@@ -9,17 +9,17 @@ import (
 	booking_repo "github.com/098765432m/grpc-kafka/booking/internal/repository/booking"
 	booking_service "github.com/098765432m/grpc-kafka/booking/internal/service"
 	"github.com/098765432m/grpc-kafka/common/gen-proto/booking_pb"
-	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 )
 
 type BookingGrpcServer struct {
 	addr int
-	conn *pgx.Conn
+	conn *pgxpool.Pool
 }
 
-func NewBookingGrpcServer(addr int, conn *pgx.Conn) *BookingGrpcServer {
+func NewBookingGrpcServer(addr int, conn *pgxpool.Pool) *BookingGrpcServer {
 	return &BookingGrpcServer{
 		addr: addr,
 		conn: conn,

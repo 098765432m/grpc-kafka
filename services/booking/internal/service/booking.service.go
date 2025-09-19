@@ -7,17 +7,17 @@ import (
 
 	booking_repo "github.com/098765432m/grpc-kafka/booking/internal/repository/booking"
 	common_error "github.com/098765432m/grpc-kafka/common/error"
-	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"go.uber.org/zap"
 )
 
 type BookingService struct {
-	conn *pgx.Conn
+	conn *pgxpool.Pool
 	repo *booking_repo.Queries
 }
 
-func NewBookingService(conn *pgx.Conn, repo *booking_repo.Queries) *BookingService {
+func NewBookingService(conn *pgxpool.Pool, repo *booking_repo.Queries) *BookingService {
 	return &BookingService{
 		conn: conn,
 		repo: repo,

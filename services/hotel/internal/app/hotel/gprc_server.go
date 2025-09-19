@@ -16,17 +16,17 @@ import (
 	hotel_service "github.com/098765432m/grpc-kafka/hotel/internal/service/hotel"
 	room_service "github.com/098765432m/grpc-kafka/hotel/internal/service/room"
 	room_type_service "github.com/098765432m/grpc-kafka/hotel/internal/service/room-type"
-	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"google.golang.org/grpc"
 )
 
 type GrpcServer struct {
 	addr int
-	conn *pgx.Conn
+	conn *pgxpool.Pool
 }
 
 func NewGrpcServer(addr int,
-	conn *pgx.Conn) *GrpcServer {
+	conn *pgxpool.Pool) *GrpcServer {
 	return &GrpcServer{addr: addr, conn: conn}
 }
 

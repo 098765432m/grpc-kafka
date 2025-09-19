@@ -8,17 +8,17 @@ import (
 	rating_handler "github.com/098765432m/grpc-kafka/rating/internal/handler"
 	rating_repo "github.com/098765432m/grpc-kafka/rating/internal/repository/rating"
 	rating_service "github.com/098765432m/grpc-kafka/rating/internal/service"
-	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 )
 
 type GrpcServer struct {
 	addr int
-	conn *pgx.Conn
+	conn *pgxpool.Pool
 }
 
-func NewGrpcServer(addr int, conn *pgx.Conn) *GrpcServer {
+func NewGrpcServer(addr int, conn *pgxpool.Pool) *GrpcServer {
 	return &GrpcServer{addr: addr, conn: conn}
 }
 

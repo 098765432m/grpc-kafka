@@ -7,16 +7,16 @@ import (
 	rating_repo "github.com/098765432m/grpc-kafka/rating/internal/repository/rating"
 	rating_service "github.com/098765432m/grpc-kafka/rating/internal/service"
 	"github.com/gin-gonic/gin"
-	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"go.uber.org/zap"
 )
 
 type HttpServer struct {
 	addr int
-	conn *pgx.Conn
+	conn *pgxpool.Pool
 }
 
-func NewHttpServer(addr int, conn *pgx.Conn) *HttpServer {
+func NewHttpServer(addr int, conn *pgxpool.Pool) *HttpServer {
 	return &HttpServer{
 		addr: addr,
 		conn: conn,
