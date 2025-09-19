@@ -3,7 +3,6 @@ package hotel_handler
 import (
 	"context"
 	"errors"
-	"fmt"
 
 	common_error "github.com/098765432m/grpc-kafka/common/error"
 	"github.com/098765432m/grpc-kafka/common/gen-proto/hotel_pb"
@@ -143,8 +142,14 @@ func (hg *HotelGrpcHandler) FilterHotels(ctx context.Context, req *hotel_pb.Filt
 		return nil, status.Error(codes.InvalidArgument, "uuid room type khong hop le")
 	}
 
+	zap.S().Infoln("Min Price REQ: ", req.GetMinPrice())
+	zap.S().Infoln("Max Price REQ: ", req.GetMaxPrice())
+
 	minPrice := utils.ToPgInt4(int(req.GetMinPrice()))
 	maxPrice := utils.ToPgInt4(int(req.GetMaxPrice()))
+
+	zap.S().Infoln("Min Price: ", minPrice)
+	zap.S().Infoln("Max Price: ", maxPrice)
 
 	rows, err := hg.service.FilterHotels(ctx, roomTypeIds, minPrice, maxPrice)
 	if err != nil {
@@ -157,7 +162,7 @@ func (hg *HotelGrpcHandler) FilterHotels(ctx context.Context, req *hotel_pb.Filt
 			HotelId:      row.ID.String(),
 			HotelName:    row.Name,
 			HotelAddress: row.Address.String,
-			MinPrice:     fmt.Sprint(row.MinPrice.(int32)), // assertion interface{} to int32 then convert to string
+			MinPrice:     row.MinPrice.(int32), // assertion interface{} to int32
 		})
 	}
 

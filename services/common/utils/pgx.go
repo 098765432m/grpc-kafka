@@ -78,7 +78,8 @@ func ParsePgText(str string) (pgtype.Text, error) {
 
 func ToPgInt4(number int) pgtype.Int4 {
 	var tempNumber pgtype.Int4
-	if err := tempNumber.Scan(number); err != nil {
+	// Int4 scan only take int64 number, otherwise it return error
+	if err := tempNumber.Scan(int64(number)); err != nil {
 		return pgtype.Int4{
 			Valid: false,
 		}

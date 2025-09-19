@@ -174,25 +174,6 @@ func (bg *BookingGrpcHandler) GetNumberOfOccupiedRooms(ctx context.Context, req 
 		return nil, status.Error(codes.InvalidArgument, "Room Type ID khong hop le")
 	}
 
-	//Check are dates valid
-	// var checkInDate pgtype.Date
-	// if err := checkInDate.Scan(req.CheckIn); err != nil {
-	// 	zap.S().Info("Invalid date format: ", err)
-	// 	return nil, status.Error(codes.InvalidArgument, "Invalid date format")
-	// }
-
-	// if checkInDateValue, err := checkInDate.DateValue(); err == nil {
-	// 	zap.L().Info("CheckIn: ", zap.Any("Day", checkInDateValue.Time.Day()), zap.Any("Month", checkInDateValue.Time.Month()), zap.Any("Year", checkInDateValue.Time.Year()))
-	// }
-	// var checkOutDate pgtype.Date
-	// if err := checkOutDate.Scan(req.CheckOut); err != nil {
-	// 	zap.S().Info("Invalid date format: ", err)
-	// 	return nil, status.Error(codes.InvalidArgument, "Invalid date format")
-	// }
-	// if checkOutDateValue, err := checkOutDate.DateValue(); err == nil {
-	// 	zap.L().Info("CheckIn: ", zap.Any("Day", checkOutDateValue.Time.Day()), zap.Any("Month", checkOutDateValue.Time.Month()), zap.Any("Year", checkOutDateValue.Time.Year()))
-	// }
-
 	checkInDate, checkOutDate, err := utils.ToPgDateRange(req.GetCheckIn(), req.GetCheckOut())
 	if err != nil {
 		zap.S().Infoln("Invalid Date Range: ", err)

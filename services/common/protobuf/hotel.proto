@@ -58,7 +58,7 @@ message FilterHotelRow {
     string hotel_id = 1;
     string hotel_name = 2;
     string hotel_address = 3;
-    string min_price = 4;
+    int32 min_price = 4;
 }
 
 message FilterHotelsResponse {

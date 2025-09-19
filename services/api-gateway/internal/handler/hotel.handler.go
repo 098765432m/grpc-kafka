@@ -408,16 +408,26 @@ func (hh *HotelHandler) FilterHotels(ctx *gin.Context) {
 	address := ctx.Query("address")
 	checkIn := ctx.Query("check_in")
 	checkOut := ctx.Query("check_out")
-	minPrice, err := strconv.Atoi(ctx.Query("min_price"))
+	minPrice := ctx.Query("min_price")
+	maxPrice := ctx.Query("max_price")
+	minPriceInt, err := strconv.Atoi(ctx.Query("min_price"))
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, utils.ErrorApiResponse("Gia khong hop le"))
-		return
+		if minPrice == "" {
+			minPriceInt = -1
+		} else {
+			ctx.JSON(http.StatusBadRequest, utils.ErrorApiResponse("Gia khong hop le"))
+			return
+		}
 	}
 
-	maxPrice, err := strconv.Atoi(ctx.Query("max_price"))
+	maxPriceInt, err := strconv.Atoi(ctx.Query("max_price"))
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, utils.ErrorApiResponse("Gia khong hop le"))
-		return
+		if maxPrice == "" {
+			maxPriceInt = -1
+		} else {
+			ctx.JSON(http.StatusBadRequest, utils.ErrorApiResponse("Gia khong hop le"))
+			return
+		}
 	}
 
 	zap.L().Info("Check Request of Filter Hotels", zap.Any("hotelName", hotelName), zap.Any("check In", checkIn), zap.Any("Check Out", checkOut), zap.Any("Min Price", minPrice), zap.Any("Max Price", maxPrice))
@@ -492,8 +502,8 @@ func (hh *HotelHandler) FilterHotels(ctx *gin.Context) {
 	// Get Hotel and Min Price through AVAILABLE Room Type
 	hotelRows, err := hh.hotelClient.FilterHotels(ctx, &hotel_pb.FilterHotelsRequest{
 		RoomTypeIds: availableRoomTypeIds,
-		MinPrice:    int32(minPrice),
-		MaxPrice:    int32(maxPrice),
+		MinPrice:    int32(minPriceInt),
+		MaxPrice:    int32(maxPriceInt),
 	})
 	if err != nil {
 		zap.S().Infoln("Failed to FilterHotels: ", err)
@@ -501,7 +511,9 @@ func (hh *HotelHandler) FilterHotels(ctx *gin.Context) {
 		return
 	}
 
-	zap.S().Infoln(hotelRows)
+	response := hotelRows.FilterHotelRows
 
-	ctx.JSON(http.StatusOK, utils.SuccessApiResponse(hotelRows, "Thanh cong"))
+	zap.S().Infoln(response)
+
+	ctx.JSON(http.StatusOK, utils.SuccessApiResponse(response, "Thanh cong"))
 }
