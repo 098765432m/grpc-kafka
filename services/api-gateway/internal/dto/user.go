@@ -7,12 +7,12 @@ type UserImage struct {
 }
 
 type UserResponse struct {
-	Id          string    `json:"id"`
-	Username    string    `json:"username"`
-	Email       string    `json:"email"`
-	PhoneNumber string    `json:"phone_number"`
-	FullName    string    `json:"full_name"`
-	Role        string    `json:"role,omitempty"`
-	HotelId     string    `json:"hotelId,omitempty"`
-	Image       UserImage `json:"image,omitempty"`
+	Id          string     `json:"id"`
+	Username    string     `json:"username"`
+	Email       string     `json:"email"`
+	PhoneNumber string     `json:"phone_number"`
+	FullName    string     `json:"full_name"`
+	Role        string     `json:"role,omitempty"`
+	HotelId     string     `json:"hotelId,omitempty"`
+	Image       *UserImage `json:"image,omitempty"`
 }

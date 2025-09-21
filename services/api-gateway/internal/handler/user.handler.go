@@ -98,6 +98,8 @@ func (uh *UserHandler) GetUserById(ctx *gin.Context) {
 
 	}
 
+	zap.S().Infoln("IMage: ", image)
+
 	resp := api_dto.UserResponse{
 		Id:          user.GetId(),
 		Username:    user.GetUsername(),
@@ -105,13 +107,29 @@ func (uh *UserHandler) GetUserById(ctx *gin.Context) {
 		PhoneNumber: user.GetPhoneNumber(),
 		FullName:    user.GetFullName(),
 		Role:        user.GetRole(),
-		HotelId:     user.GetHotelId(),
-		Image: api_dto.UserImage{
+		// HotelId:     user.GetHotelId(),
+		// Image: api_dto.UserImage{
+		// 	Id:       image.GetId(),
+		// 	PublicId: image.GetPublicId(),
+		// 	Format:   image.GetFormat(),
+		// },
+	}
+
+	// if image exist add image
+	if image != nil {
+		resp.Image = &api_dto.UserImage{
 			Id:       image.GetId(),
 			PublicId: image.GetPublicId(),
 			Format:   image.GetFormat(),
-		},
+		}
 	}
+
+	// if hotel ID exists, add hotel Id
+	if user.GetHotelId() != "" {
+		resp.HotelId = user.HotelId
+	}
+
+	zap.S().Infoln("User: ", resp)
 
 	ctx.JSON(http.StatusOK, utils.SuccessApiResponse(resp, "Thanh cong"))
 }
