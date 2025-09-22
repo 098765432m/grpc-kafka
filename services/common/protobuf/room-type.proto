@@ -6,6 +6,7 @@ service RoomTypeService {
     rpc GetRoomTypeById(GetRoomTypeByIdRequest) returns (GetRoomTypeByIdResponse);
     rpc GetRoomTypesByHotelId(GetRoomTypesByHotelIdRequest) returns (GetRoomTypesByHotelIdResponse);
     rpc CreateRoomType(CreateRoomTypeRequest) returns (CreateRoomTypeResponse);
+    rpc DeleteRoomTypeById(DeleteRoomTypeByIdRequest) returns (DeleteRoomTypeByIdResponse);
 }
 
 message RoomType {
@@ -46,5 +47,13 @@ message CreateRoomTypeRequest{
 }
 
 message CreateRoomTypeResponse{
+    
+}
+
+message DeleteRoomTypeByIdRequest{
+    string id = 1;
+}
+
+message DeleteRoomTypeByIdResponse{
     
 }

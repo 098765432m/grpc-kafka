@@ -99,3 +99,14 @@ func (rth *RoomTypeHandler) CreateRoomType(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusCreated, utils.SuccessApiResponse(nil, "Tao thanh cong"))
 }
+
+func (rth *RoomTypeHandler) DeleteRoomTypeById(ctx *gin.Context) {
+	id := ctx.Param("id")
+	_, err := rth.roomTypeClient.DeleteRoomTypeById(ctx, &room_type_pb.DeleteRoomTypeByIdRequest{
+		Id: id,
+	})
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, utils.ErrorApiResponse("Loi khong xoa duoc loai phong"))
+		return
+	}
+}

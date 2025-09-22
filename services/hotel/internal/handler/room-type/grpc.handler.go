@@ -94,3 +94,21 @@ func (rtg *RoomTypeGrpcHandler) CreateRoomType(ctx context.Context, req *room_ty
 
 	return &room_type_pb.CreateRoomTypeResponse{}, nil
 }
+
+// Delete Room By Id
+func (rtg *RoomTypeGrpcHandler) DeleteRoomTypeById(ctx context.Context, req *room_type_pb.DeleteRoomTypeByIdRequest) (*room_type_pb.DeleteRoomTypeByIdResponse, error) {
+
+	var id pgtype.UUID
+	if err := id.Scan(req.Id); err != nil {
+		zap.S().Info("Invalid Room Type UUID")
+		return nil, status.Error(codes.InvalidArgument, "Loi Room Type UUID")
+	}
+
+	err := rtg.service.DeleteRoomTypeById(ctx, id)
+	if err != nil {
+		zap.S().Info("Cannot delete Room by id: ", err)
+		return nil, status.Error(codes.Internal, "Khong the xoa Room bang id")
+	}
+
+	return &room_type_pb.DeleteRoomTypeByIdResponse{}, nil
+}

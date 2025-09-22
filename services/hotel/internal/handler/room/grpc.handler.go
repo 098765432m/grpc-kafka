@@ -239,6 +239,28 @@ func (rg *RoomGrpcHandler) CreateRoom(ctx context.Context, req *room_pb.CreateRo
 	return &room_pb.CreateRoomResponse{}, nil
 }
 
+// Delete Room By Id
+func (rg *RoomGrpcHandler) DeleteRoomById(ctx context.Context, req *room_pb.DeleteRoomByIdRequest) (*room_pb.DeleteRoomByIdResponse, error) {
+
+	var id pgtype.UUID
+	if err := id.Scan(req.Id); err != nil {
+		zap.S().Info("Invalid Room UUID")
+		return nil, status.Error(codes.InvalidArgument, "Loi Room UUID")
+	}
+
+	err := rg.service.DeleteRoomById(ctx, id)
+	if err != nil {
+		switch {
+		case errors.Is(err, common_error.ErrNoRows):
+			return nil, status.Error(codes.NotFound, "Phong khong ton tai")
+		}
+
+		return nil, status.Error(codes.Internal, "Khong the xoa Room bang id")
+	}
+
+	return &room_pb.DeleteRoomByIdResponse{}, nil
+}
+
 // set status = MAINTAINED to rooms
 func (rg *RoomGrpcHandler) SetMaintainedStatusToRooms(ctx context.Context, req *room_pb.SetOccupiedStatusToRoomsRequest) (*room_pb.SetOccupiedStatusToRoomsResponse, error) {
 

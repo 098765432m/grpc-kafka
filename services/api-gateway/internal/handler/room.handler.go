@@ -80,3 +80,14 @@ func (rh *RoomHandler) CreateRoom(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusCreated, utils.SuccessApiResponse(nil, "Tao thanh cong"))
 }
+
+func (rh *RoomHandler) DeleteRoomById(ctx *gin.Context) {
+	id := ctx.Param("id")
+	_, err := rh.roomClient.DeleteRoomById(ctx, &room_pb.DeleteRoomByIdRequest{
+		Id: id,
+	})
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, utils.ErrorApiResponse("Loi khong xoa duoc phong"))
+		return
+	}
+}

@@ -72,7 +72,7 @@ func (rs *RoomService) CreateRoom(ctx context.Context, newRoom *room_repo.Create
 	return nil
 }
 
-func (rs *RoomService) DeleteRoom(ctx context.Context, id pgtype.UUID) error {
+func (rs *RoomService) DeleteRoomById(ctx context.Context, id pgtype.UUID) error {
 
 	err := rs.repo.DeleteRoomById(ctx, id)
 	if err != nil {
