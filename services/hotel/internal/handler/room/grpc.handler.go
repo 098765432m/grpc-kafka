@@ -205,6 +205,40 @@ func (rs *RoomGrpcHandler) GetListOfRemainRooms(ctx context.Context, req *room_p
 	}, nil
 }
 
+// Create Room
+func (rg *RoomGrpcHandler) CreateRoom(ctx context.Context, req *room_pb.CreateRoomRequest) (*room_pb.CreateRoomResponse, error) {
+
+	var roomTypeId pgtype.UUID
+	if err := roomTypeId.Scan(req.RoomTypeId); err != nil {
+		zap.S().Info("Invalid UUID format: ", err)
+		return nil, status.Error(codes.InvalidArgument, "")
+	}
+
+	var hotelId pgtype.UUID
+	if err := hotelId.Scan(req.HotelId); err != nil {
+		zap.S().Info("Invalid UUID format: ", err)
+		return nil, status.Error(codes.InvalidArgument, "")
+	}
+
+	var roomStatus room_repo.NullRoomStatus
+	if err := roomStatus.Scan(req.GetStatus()); err != nil {
+		zap.S().Info("Invalid Room Status: ", err)
+		return nil, status.Error(codes.InvalidArgument, "")
+	}
+
+	err := rg.service.CreateRoom(ctx, &room_repo.CreateRoomParams{
+		Name:       req.Name,
+		Status:     string(roomStatus.RoomStatus),
+		RoomTypeID: roomTypeId,
+		HotelID:    hotelId,
+	})
+	if err != nil {
+		return nil, status.Error(codes.Internal, "Loi khong tao duoc phong")
+	}
+
+	return &room_pb.CreateRoomResponse{}, nil
+}
+
 // set status = MAINTAINED to rooms
 func (rg *RoomGrpcHandler) SetMaintainedStatusToRooms(ctx context.Context, req *room_pb.SetOccupiedStatusToRoomsRequest) (*room_pb.SetOccupiedStatusToRoomsResponse, error) {
 

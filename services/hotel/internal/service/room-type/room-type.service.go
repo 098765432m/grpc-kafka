@@ -42,7 +42,7 @@ func (rts *RoomTypeService) CreateRoomType(ctx context.Context, newRoomType *roo
 
 	err := rts.repo.CreateRoomType(ctx, *newRoomType)
 	if err != nil {
-		zap.S().Errorln("Failed to create Room Type")
+		zap.S().Errorln("Failed to create Room Type: ", err)
 		return err
 	}
 

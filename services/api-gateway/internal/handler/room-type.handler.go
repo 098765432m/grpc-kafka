@@ -7,6 +7,7 @@ import (
 	"github.com/098765432m/grpc-kafka/common/gen-proto/room_type_pb"
 	"github.com/098765432m/grpc-kafka/common/utils"
 	"github.com/gin-gonic/gin"
+	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -26,6 +27,8 @@ func NewRoomTypeHandler(roomTypeClient room_type_pb.RoomTypeServiceClient,
 
 func (rth *RoomTypeHandler) RegisterRoutes(router *gin.RouterGroup) {
 	roomTypeHandler := router.Group("/room-types")
+
+	roomTypeHandler.POST("/", rth.CreateRoomType)
 
 	roomTypeHandler.GET("/:id", rth.GetRoomTypeById)
 	roomTypeHandler.GET("/:id/rooms", rth.GetRoomsByRoomTypeId)
@@ -66,4 +69,33 @@ func (rth *RoomTypeHandler) GetRoomsByRoomTypeId(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusOK, utils.SuccessApiResponse(roomsResult.Rooms, "Lay danh sach phong thanh cong"))
+}
+
+// Create Room Type
+type CreateRoomTypeBody struct {
+	RoomTypeName string `json:"room_type_name"`
+	Price        int    `json:"price"`
+	HotelId      string `json:"hotel_id"`
+}
+
+func (rth *RoomTypeHandler) CreateRoomType(ctx *gin.Context) {
+
+	var reqBody CreateRoomTypeBody
+	if err := ctx.ShouldBindJSON(reqBody); err != nil {
+		zap.S().Infoln("Failed to get request body: ", err)
+		ctx.JSON(http.StatusBadRequest, utils.ErrorApiResponse("Loi khong tao duoc loai phong"))
+		return
+	}
+
+	_, err := rth.roomTypeClient.CreateRoomType(ctx, &room_type_pb.CreateRoomTypeRequest{
+		Name:    reqBody.RoomTypeName,
+		Price:   int32(reqBody.Price),
+		HotelId: reqBody.HotelId,
+	})
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, utils.ErrorApiResponse("Loi khong tao duoc danh sach phong"))
+		return
+	}
+
+	ctx.JSON(http.StatusCreated, utils.SuccessApiResponse(nil, "Tao thanh cong"))
 }

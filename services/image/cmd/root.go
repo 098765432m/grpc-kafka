@@ -15,6 +15,14 @@ var rootCmd = &cobra.Command{
 	Short: "Image service for hotel management system",
 	Run: func(cmd *cobra.Command, args []string) {
 
+		// Cloudinary SDK
+		// cld, err := cloudinary.New()
+		// if err != nil {
+		// 	zap.S().Infoln("Failed to initialize Cloudinary client: ", err)
+		// }
+
+		// img, err := cld.Image()
+
 		conn, err := image_database.Connect()
 		if err != nil {
 			zap.S().Fatal("Failed to connected to database")

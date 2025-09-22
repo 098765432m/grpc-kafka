@@ -107,12 +107,6 @@ func (uh *UserHandler) GetUserById(ctx *gin.Context) {
 		PhoneNumber: user.GetPhoneNumber(),
 		FullName:    user.GetFullName(),
 		Role:        user.GetRole(),
-		// HotelId:     user.GetHotelId(),
-		// Image: api_dto.UserImage{
-		// 	Id:       image.GetId(),
-		// 	PublicId: image.GetPublicId(),
-		// 	Format:   image.GetFormat(),
-		// },
 	}
 
 	// if image exist add image

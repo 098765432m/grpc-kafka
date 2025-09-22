@@ -5,6 +5,7 @@ option go_package = "gen-proto/room_type_pb;room_type_pb";
 service RoomTypeService {
     rpc GetRoomTypeById(GetRoomTypeByIdRequest) returns (GetRoomTypeByIdResponse);
     rpc GetRoomTypesByHotelId(GetRoomTypesByHotelIdRequest) returns (GetRoomTypesByHotelIdResponse);
+    rpc CreateRoomType(CreateRoomTypeRequest) returns (CreateRoomTypeResponse);
 }
 
 message RoomType {
@@ -36,4 +37,14 @@ message GetRoomTypesByHotelIdRow {
 
 message GetRoomTypesByHotelIdResponse {
     repeated GetRoomTypesByHotelIdRow roomTypes = 1;
+}
+
+message CreateRoomTypeRequest{
+    string name = 1;
+    int32 price = 2;
+    string hotel_id = 3;
+}
+
+message CreateRoomTypeResponse{
+    
 }

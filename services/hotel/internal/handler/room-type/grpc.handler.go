@@ -4,8 +4,12 @@ import (
 	"context"
 
 	"github.com/098765432m/grpc-kafka/common/gen-proto/room_type_pb"
+	room_type_repo "github.com/098765432m/grpc-kafka/hotel/internal/repository/room-type"
 	room_type_service "github.com/098765432m/grpc-kafka/hotel/internal/service/room-type"
 	"github.com/jackc/pgx/v5/pgtype"
+	"go.uber.org/zap"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 type RoomTypeGrpcHandler struct {
@@ -69,4 +73,24 @@ func (rtg *RoomTypeGrpcHandler) GetRoomTypesByHotelId(ctx context.Context, req *
 	return &room_type_pb.GetRoomTypesByHotelIdResponse{
 		RoomTypes: grpcRoomTypes,
 	}, nil
+}
+
+func (rtg *RoomTypeGrpcHandler) CreateRoomType(ctx context.Context, req *room_type_pb.CreateRoomTypeRequest) (*room_type_pb.CreateRoomTypeResponse, error) {
+
+	var hotelId pgtype.UUID
+	if err := hotelId.Scan(req.HotelId); err != nil {
+		zap.S().Infoln("Invalid Hotel UUID: ", err)
+		return nil, status.Error(codes.InvalidArgument, "Hotel UUID khong hop le")
+	}
+
+	err := rtg.service.CreateRoomType(ctx, &room_type_repo.CreateRoomTypeParams{
+		Name:    req.Name,
+		Price:   req.Price,
+		HotelID: hotelId,
+	})
+	if err != nil {
+		return nil, status.Error(codes.Internal, "Khong tao duoc loai phong")
+	}
+
+	return &room_type_pb.CreateRoomTypeResponse{}, nil
 }

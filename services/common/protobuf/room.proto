@@ -9,6 +9,7 @@ service RoomService {
     rpc GetNumberOfRoomsPerRoomTypeByHotelIds(GetNumberOfRoomsPerRoomTypeByHotelIdsRequest) returns (GetNumberOfRoomsPerRoomTypeByHotelIdsResponse);
     rpc GetListOfAvailableRoomsByRoomTypeId(GetListOfAvailableRoomsByRoomTypeIdRequest) returns (GetListOfAvailableRoomsByRoomTypeIdResponse);
     rpc GetListOfRemainRooms(GetListOfRemainRoomsRequest) returns (GetListOfRemainRoomsResponse);
+    rpc CreateRoom(CreateRoomRequest) returns (CreateRoomResponse);
     rpc SetOccupiedStatusToRooms(SetOccupiedStatusToRoomsRequest) returns (SetOccupiedStatusToRoomsResponse);
 }
 
@@ -77,6 +78,15 @@ message GetListOfRemainRoomsRequest{
 message GetListOfRemainRoomsResponse{
     repeated string room_ids = 1;
 }
+
+message CreateRoomRequest{
+    string name = 1;
+    string status = 2;
+    string room_type_id = 3;
+    string hotel_id = 4;
+}
+
+message CreateRoomResponse{}
 
 message SetOccupiedStatusToRoomsRequest {
     repeated string room_ids = 1;
