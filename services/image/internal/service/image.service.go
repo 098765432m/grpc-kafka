@@ -3,10 +3,12 @@ package image_service
 import (
 	"context"
 	"errors"
+	"sync"
 
 	common_error "github.com/098765432m/grpc-kafka/common/error"
 	image_repo "github.com/098765432m/grpc-kafka/image/internal/repository/image"
 	"github.com/cloudinary/cloudinary-go/v2"
+	"github.com/cloudinary/cloudinary-go/v2/api/uploader"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
 	"go.uber.org/zap"
@@ -132,19 +134,39 @@ func (is *ImageService) GetImagesByRoomTypeIds(ctx context.Context, roomTypeIds 
 }
 
 func (is *ImageService) DeleteImage(ctx context.Context, id pgtype.UUID) error {
-	err := is.repo.DeleteImage(ctx, id)
+
+	publicId, err := is.repo.DeleteImage(ctx, id)
 	if err != nil {
 		return err
 	}
+
+	// Delete image from Cloudinary
+	is.cld.Upload.Destroy(ctx, uploader.DestroyParams{
+		PublicID: publicId,
+	})
 
 	return nil
 
 }
 
 func (is *ImageService) DeleteImages(ctx context.Context, ids []pgtype.UUID) error {
-	err := is.repo.DeleteImages(ctx, ids)
+	publicIds, err := is.repo.DeleteImages(ctx, ids)
 	if err != nil {
 		return err
+	}
+
+	var wg sync.WaitGroup
+
+	// Delete images from Cloudinary
+	// utilize goroutine to speed up the process
+	for _, publicId := range publicIds {
+		wg.Add(1)
+		go func(pid string) {
+			defer wg.Done()
+			is.cld.Upload.Destroy(ctx, uploader.DestroyParams{
+				PublicID: publicId,
+			})
+		}(publicId)
 	}
 
 	return nil

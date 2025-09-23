@@ -19,7 +19,6 @@ var rootCmd = &cobra.Command{
 		if err != nil {
 			zap.S().Fatal("Failed to connected to database")
 		}
-
 		defer conn.Close()
 
 		// Start grpc server

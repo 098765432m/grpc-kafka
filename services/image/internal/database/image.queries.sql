@@ -64,8 +64,10 @@ SELECT *
 FROM images
 WHERE user_id = ANY(@user_ids::uuid[]);
 
--- name: DeleteImage :exec
-DELETE FROM images WHERE id = $1;
+-- name: DeleteImage :one
+DELETE FROM images WHERE id = $1
+RETURNING public_id;
 
--- name: DeleteImages :exec
-DELETE FROM images WHERE id = ANY($1::uuid[]);
+-- name: DeleteImages :many
+DELETE FROM images WHERE id = ANY($1::uuid[])
+RETURNING public_id;

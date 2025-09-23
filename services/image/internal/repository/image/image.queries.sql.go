@@ -11,22 +11,41 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-const deleteImage = `-- name: DeleteImage :exec
+const deleteImage = `-- name: DeleteImage :one
 DELETE FROM images WHERE id = $1
+RETURNING public_id
 `
 
-func (q *Queries) DeleteImage(ctx context.Context, id pgtype.UUID) error {
-	_, err := q.db.Exec(ctx, deleteImage, id)
-	return err
+func (q *Queries) DeleteImage(ctx context.Context, id pgtype.UUID) (string, error) {
+	row := q.db.QueryRow(ctx, deleteImage, id)
+	var public_id string
+	err := row.Scan(&public_id)
+	return public_id, err
 }
 
-const deleteImages = `-- name: DeleteImages :exec
+const deleteImages = `-- name: DeleteImages :many
 DELETE FROM images WHERE id = ANY($1::uuid[])
+RETURNING public_id
 `
 
-func (q *Queries) DeleteImages(ctx context.Context, dollar_1 []pgtype.UUID) error {
-	_, err := q.db.Exec(ctx, deleteImages, dollar_1)
-	return err
+func (q *Queries) DeleteImages(ctx context.Context, dollar_1 []pgtype.UUID) ([]string, error) {
+	rows, err := q.db.Query(ctx, deleteImages, dollar_1)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []string
+	for rows.Next() {
+		var public_id string
+		if err := rows.Scan(&public_id); err != nil {
+			return nil, err
+		}
+		items = append(items, public_id)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const getImageById = `-- name: GetImageById :one
