@@ -15,26 +15,16 @@ var rootCmd = &cobra.Command{
 	Short: "Image service for hotel management system",
 	Run: func(cmd *cobra.Command, args []string) {
 
-		// Cloudinary SDK
-		// cld, err := cloudinary.New()
-		// if err != nil {
-		// 	zap.S().Infoln("Failed to initialize Cloudinary client: ", err)
-		// }
-
-		// img, err := cld.Image()
-
 		conn, err := image_database.Connect()
 		if err != nil {
 			zap.S().Fatal("Failed to connected to database")
 		}
 
+		defer conn.Close()
+
 		// Start grpc server
 		grpcServer := image_app.NewGrpcServer(consts.IMAGE_GRPC_PORT, conn)
 		go grpcServer.Run()
-
-		//Start Http server
-		httpServer := image_app.NewHttpServer(consts.IMAGE_HTTP_PORT, conn)
-		httpServer.Run()
 	},
 }
 

@@ -9,7 +9,9 @@ import (
 	image_handler "github.com/098765432m/grpc-kafka/image/internal/handler"
 	image_repo "github.com/098765432m/grpc-kafka/image/internal/repository/image"
 	image_service "github.com/098765432m/grpc-kafka/image/internal/service"
+	"github.com/cloudinary/cloudinary-go/v2"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"go.uber.org/zap"
 	"google.golang.org/grpc"
 )
 
@@ -30,9 +32,15 @@ func (g *GrpcServer) Run() {
 
 	grpcServer := grpc.NewServer()
 
+	// Cloudinary SDK
+	cld, err := cloudinary.New()
+	if err != nil {
+		zap.S().Infoln("Failed to initialize Cloudinary client: ", err)
+	}
+
 	// Register our grpc services
 	repo := image_repo.New(g.conn)
-	service := image_service.NewImageService(repo)
+	service := image_service.NewImageService(repo, cld)
 
 	image_pb.RegisterImageServiceServer(grpcServer, image_handler.NewImageGrpcHandler(service))
 

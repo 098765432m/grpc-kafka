@@ -6,6 +6,7 @@ import (
 
 	common_error "github.com/098765432m/grpc-kafka/common/error"
 	image_repo "github.com/098765432m/grpc-kafka/image/internal/repository/image"
+	"github.com/cloudinary/cloudinary-go/v2"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
 	"go.uber.org/zap"
@@ -13,11 +14,13 @@ import (
 
 type ImageService struct {
 	repo *image_repo.Queries
+	cld  *cloudinary.Cloudinary
 }
 
-func NewImageService(repo *image_repo.Queries) *ImageService {
+func NewImageService(repo *image_repo.Queries, cld *cloudinary.Cloudinary) *ImageService {
 	return &ImageService{
 		repo: repo,
+		cld:  cld,
 	}
 }
 
