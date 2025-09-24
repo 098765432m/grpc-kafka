@@ -24,6 +24,7 @@ message Image {
     string hotelId = 4;
     string userId = 5;
     string roomTypeId = 6;
+    string url = 7;
 }
 
 message HotelImage {
@@ -31,6 +32,7 @@ message HotelImage {
     string publicId = 2;
     string format = 3;
     string hotelId = 4;
+    string url = 5;
 }
 
 message UserImage {
@@ -38,6 +40,7 @@ message UserImage {
     string publicId = 2;
     string format = 3;
     string userId = 4;
+    string url = 5;
 }
 
 message RoomTypeImage {
@@ -45,6 +48,7 @@ message RoomTypeImage {
     string publicId = 2;
     string format = 3;
     string roomTypeId = 4;
+    string url = 5;
 }
 
 // Upload Image

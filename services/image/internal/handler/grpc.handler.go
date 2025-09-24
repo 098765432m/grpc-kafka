@@ -25,6 +25,23 @@ func NewImageGrpcHandler(service *image_service.ImageService) *ImageGrpcHandler 
 	}
 }
 
+// Reuse to get image urls map
+func (ig *ImageGrpcHandler) getImageUrlsMap(ctx context.Context, images []image_repo.Image) (map[string]string, error) {
+
+	imagePublicIds := make([]string, 0, len(images))
+	for _, image := range images {
+		imagePublicIds = append(imagePublicIds, image.PublicID)
+	}
+
+	// Get public IDs Map
+	imageUrlsMap, err := ig.service.GetImageUrlsMap(ctx, imagePublicIds)
+	if err != nil {
+		return nil, status.Error(codes.Internal, "Loi he thong")
+	}
+
+	return imageUrlsMap, nil
+}
+
 func (ig *ImageGrpcHandler) GetImageById(ctx context.Context, req *image_pb.GetImageByIdRequest) (*image_pb.GetImageByIdResponse, error) {
 	var id pgtype.UUID
 	if err := id.Scan(req.Id); err != nil {
@@ -36,11 +53,10 @@ func (ig *ImageGrpcHandler) GetImageById(ctx context.Context, req *image_pb.GetI
 		return nil, err
 	}
 
-	var hotelId string
-	if image.HotelID.Valid {
-		hotelId = image.HotelID.String()
-	} else {
-		hotelId = ""
+	url, err := ig.service.GetImageUrl(ctx, image.PublicID)
+	if err != nil {
+		zap.S().Errorln("Failed to get image url: ", err)
+		return nil, status.Error(codes.Internal, "Loi he thong")
 	}
 
 	return &image_pb.GetImageByIdResponse{
@@ -48,7 +64,8 @@ func (ig *ImageGrpcHandler) GetImageById(ctx context.Context, req *image_pb.GetI
 			Id:         image.ID.String(),
 			PublicId:   image.PublicID,
 			Format:     image.Format,
-			HotelId:    hotelId,
+			Url:        url,
+			HotelId:    image.HotelID.String(),
 			UserId:     image.UserID.String(),
 			RoomTypeId: image.RoomTypeID.String(),
 		},
@@ -69,10 +86,16 @@ func (ig *ImageGrpcHandler) GetImagesByHotelId(ctx context.Context, req *image_p
 		return nil, err
 	}
 
+	imageUrlsMap, err := ig.getImageUrlsMap(ctx, images)
+	if err != nil {
+		return nil, status.Error(codes.Internal, "Loi khong the lay image urls map duoc")
+	}
+
 	var hotelImages []*image_pb.HotelImage
 	for _, img := range images {
 		hotelImage := &image_pb.HotelImage{
 			Id:       img.ID.String(),
+			Url:      imageUrlsMap[img.PublicID],
 			PublicId: img.PublicID,
 			Format:   img.Format,
 			HotelId:  img.HotelID.String(),
@@ -104,9 +127,16 @@ func (ig *ImageGrpcHandler) GetImageByUserId(ctx context.Context, req *image_pb.
 		}
 	}
 
+	url, err := ig.service.GetImageUrl(ctx, image.PublicID)
+	if err != nil {
+		zap.S().Errorln("Failed to get image url: ", err)
+		return nil, status.Error(codes.Internal, "Loi he thong")
+	}
+
 	return &image_pb.GetImageByUserIdResponse{
 		Image: &image_pb.UserImage{
 			Id:       image.ID.String(),
+			Url:      url,
 			PublicId: image.PublicID,
 			Format:   image.Format,
 			UserId:   image.UserID.String(),
@@ -125,10 +155,16 @@ func (ig *ImageGrpcHandler) GetImagesByRoomTypeId(ctx context.Context, req *imag
 		return nil, err
 	}
 
+	imageUrlsMap, err := ig.getImageUrlsMap(ctx, images)
+	if err != nil {
+		return nil, status.Error(codes.Internal, "Loi khong the lay image urls map duoc")
+	}
+
 	var roomTypeImages []*image_pb.RoomTypeImage
 	for _, img := range images {
 		hotelImage := &image_pb.RoomTypeImage{
 			Id:         img.ID.String(),
+			Url:        imageUrlsMap[img.PublicID],
 			PublicId:   img.PublicID,
 			Format:     img.Format,
 			RoomTypeId: img.RoomTypeID.String(),
@@ -159,16 +195,22 @@ func (ig *ImageGrpcHandler) GetImagesByRoomTypeIds(ctx context.Context, req *ima
 		return nil, status.Error(codes.Internal, "Loi lay hinh anh loai phong")
 	}
 
+	imageUrlsMap, err := ig.getImageUrlsMap(ctx, images)
+	if err != nil {
+		return nil, status.Error(codes.Internal, "Loi khong the lay image urls map duoc")
+	}
+
 	var roomTypeImages []*image_pb.RoomTypeImage
 	for _, img := range images {
-		hotelImage := &image_pb.RoomTypeImage{
+		roomTypeImage := &image_pb.RoomTypeImage{
 			Id:         img.ID.String(),
+			Url:        imageUrlsMap[img.PublicID],
 			PublicId:   img.PublicID,
 			Format:     img.Format,
 			RoomTypeId: img.RoomTypeID.String(),
 		}
 
-		roomTypeImages = append(roomTypeImages, hotelImage)
+		roomTypeImages = append(roomTypeImages, roomTypeImage)
 	}
 
 	return &image_pb.GetImagesByRoomTypeIdsResponse{
@@ -196,10 +238,16 @@ func (ig *ImageGrpcHandler) GetImagesByHotelIds(ctx context.Context, req *image_
 		return nil, status.Error(codes.Internal, "Loi he thong")
 	}
 
+	imageUrlsMap, err := ig.getImageUrlsMap(ctx, images)
+	if err != nil {
+		return nil, status.Error(codes.Internal, "Loi khong the lay image urls map duoc")
+	}
+
 	var hotelImages []*image_pb.HotelImage
 	for _, img := range images {
 		hotelImage := &image_pb.HotelImage{
 			Id:       img.ID.String(),
+			Url:      imageUrlsMap[img.PublicID],
 			PublicId: img.PublicID,
 			Format:   img.Format,
 			HotelId:  img.HotelID.String(),
@@ -230,10 +278,16 @@ func (ig *ImageGrpcHandler) GetImagesByUserIds(ctx context.Context, req *image_p
 		return nil, status.Error(codes.Internal, "Khong the tim images bang user ids")
 	}
 
+	imageUrlsMap, err := ig.getImageUrlsMap(ctx, images)
+	if err != nil {
+		return nil, status.Error(codes.Internal, "Loi khong the lay image urls map duoc")
+	}
+
 	imagesGrpcResult := make([]*image_pb.UserImage, 0, len(images))
 	for _, image := range images {
 		imageGrpc := &image_pb.UserImage{
 			Id:       image.ID.String(),
+			Url:      imageUrlsMap[image.PublicID],
 			PublicId: image.PublicID,
 			Format:   image.Format,
 			UserId:   image.UserID.String(),

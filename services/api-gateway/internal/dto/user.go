@@ -2,6 +2,7 @@ package api_dto
 
 type UserImage struct {
 	Id       string `json:"id"`
+	Url      string `json:"url"`
 	PublicId string `json:"public_id"`
 	Format   string `json:"format"`
 }

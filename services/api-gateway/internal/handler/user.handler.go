@@ -113,6 +113,7 @@ func (uh *UserHandler) GetUserById(ctx *gin.Context) {
 	if image != nil {
 		resp.Image = &api_dto.UserImage{
 			Id:       image.GetId(),
+			Url:      image.GetUrl(),
 			PublicId: image.GetPublicId(),
 			Format:   image.GetFormat(),
 		}

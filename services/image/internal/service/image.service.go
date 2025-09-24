@@ -168,6 +168,107 @@ func (is *ImageService) DeleteImages(ctx context.Context, ids []pgtype.UUID) err
 			})
 		}(publicId)
 	}
+	wg.Wait()
 
 	return nil
+}
+
+// GET image URL from Cloudinary by public ID
+func (is *ImageService) GetImageUrl(ctx context.Context, publicId string) (string, error) {
+	img, err := is.cld.Image(publicId)
+	if err != nil {
+		zap.S().Error("Failed to get image url: ", err)
+		return "", err
+	}
+
+	url, err := img.String()
+	if err != nil {
+		zap.S().Error("Failed to convert image to string: ", err)
+		return "", err
+	}
+
+	return url, nil
+}
+
+// GET image URLs from Cloudinary by public IDs
+func (is *ImageService) GetImageUrls(ctx context.Context, publicIds []string) ([]string, error) {
+	urls := make([]string, 0, len(publicIds))
+
+	var wg sync.WaitGroup
+	mu := sync.Mutex{}
+	errGroup := make([]error, 0, len(publicIds))
+
+	for _, publicId := range publicIds {
+		wg.Add(1)
+		go func(pid string) {
+			defer wg.Done()
+
+			img, err := is.cld.Image(publicId)
+			if err != nil {
+				mu.Lock()
+				errGroup = append(errGroup, err)
+				mu.Unlock()
+				return
+			}
+
+			url, err := img.String()
+			if err != nil {
+				zap.S().Error("Failed to convert image to string: ", err)
+				errGroup = append(errGroup, err)
+				return
+			}
+
+			urls = append(urls, url)
+
+		}(publicId)
+	}
+
+	wg.Wait()
+	if len(errGroup) > 0 {
+		return nil, common_error.ErrInternalServer
+	}
+
+	return urls, nil
+}
+
+// GET image URLs
+// Return map[publicId]url
+func (is *ImageService) GetImageUrlsMap(ctx context.Context, publicIds []string) (map[string]string, error) {
+	urlsMap := make(map[string]string)
+
+	var wg sync.WaitGroup
+	mu := sync.Mutex{}
+	errGroup := make([]error, 0, len(publicIds))
+
+	for _, publicId := range publicIds {
+		wg.Add(1)
+		go func(pid string) {
+			defer wg.Done()
+
+			img, err := is.cld.Image(publicId)
+			if err != nil {
+				mu.Lock()
+				errGroup = append(errGroup, err)
+				mu.Unlock()
+				return
+			}
+
+			url, err := img.String()
+			if err != nil {
+				zap.S().Error("Failed to convert image to string: ", err)
+				errGroup = append(errGroup, err)
+				return
+			}
+
+			urlsMap[pid] = url
+
+		}(publicId)
+	}
+
+	wg.Wait()
+	if len(errGroup) > 0 {
+		return nil, common_error.ErrInternalServer
+	}
+
+	return urlsMap, nil
 }

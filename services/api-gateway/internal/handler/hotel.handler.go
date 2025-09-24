@@ -106,6 +106,7 @@ func (hh *HotelHandler) GetAll(ctx *gin.Context) {
 			if img.HotelId == hotel.Id { // Append image if match hotelId
 				resp.Images = append(resp.Images, api_dto.HotelImage{
 					Id:       img.Id,
+					Url:      img.GetUrl(),
 					PublicId: img.PublicId,
 					Format:   img.Format,
 				})
@@ -157,6 +158,7 @@ func (hh *HotelHandler) GetHotelById(ctx *gin.Context) {
 	for _, img := range images.GetImages() {
 		resp.Images = append(resp.Images, api_dto.HotelImage{
 			Id:       img.GetId(),
+			Url:      img.GetUrl(),
 			PublicId: img.GetPublicId(),
 			Format:   img.GetFormat(),
 		})
@@ -272,6 +274,7 @@ func (hh *HotelHandler) GetRoomTypesByHotelId(ctx *gin.Context) {
 	for _, image := range imagesGrpcResult.GetImages() {
 		imageMap[image.RoomTypeId] = &api_dto.RoomTypeImage{
 			Id:         image.Id,
+			Url:        image.GetUrl(),
 			PublicId:   image.PublicId,
 			Format:     image.Format,
 			RoomTypeId: image.RoomTypeId,
@@ -342,6 +345,7 @@ func (hh *HotelHandler) GetAvailableRoomTypes(ctx *gin.Context) {
 	for _, image := range imagesGrpcResult.GetImages() {
 		imageMap[image.RoomTypeId] = append(imageMap[image.RoomTypeId], api_dto.RoomTypeImage{
 			Id:         image.Id,
+			Url:        image.GetUrl(),
 			PublicId:   image.PublicId,
 			Format:     image.Format,
 			RoomTypeId: image.RoomTypeId,
