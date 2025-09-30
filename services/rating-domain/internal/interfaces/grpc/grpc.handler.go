@@ -8,8 +8,6 @@ import (
 	rating_repo "github.com/098765432m/grpc-kafka/rating-domain/internal/repository/rating"
 	"github.com/jackc/pgx/v5/pgtype"
 	"go.uber.org/zap"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
 type RatingGrpcHandler struct {
@@ -23,30 +21,31 @@ func NewRatingGrpcHandler(service *rating_service.RatingService) *RatingGrpcHand
 	}
 }
 
+// TODO: Fix this
 func (rg *RatingGrpcHandler) GetRatingsByHotelId(ctx context.Context, req *rating_pb.GetRatingsByHotelIdRequest) (*rating_pb.GetRatingsByHotelIdRepsonse, error) {
-	var hotelId pgtype.UUID
-	if err := hotelId.Scan(req.GetHotelId()); err != nil {
-		zap.S().Errorln("Failed to convert UUID")
-		return nil, status.Error(codes.InvalidArgument, "Loi UUID khach san")
-	}
+	// var hotelId pgtype.UUID
+	// if err := hotelId.Scan(req.GetHotelId()); err != nil {
+	// 	zap.S().Errorln("Failed to convert UUID")
+	// 	return nil, status.Error(codes.InvalidArgument, "Loi UUID khach san")
+	// }
 
-	ratings, err := rg.service.GetRatingsByHotelId(ctx, hotelId)
-	if err != nil {
-		zap.S().Errorln(err)
-		return nil, status.Error(codes.Internal, "Loi he thong")
-	}
+	// ratings, err := rg.service.GetRatingsByHotelId(ctx, hotelId)
+	// if err != nil {
+	// 	zap.S().Errorln(err)
+	// 	return nil, status.Error(codes.Internal, "Loi he thong")
+	// }
 
 	var grpc_ratings []*rating_pb.Rating
-	for _, rating := range ratings {
-		grpc_rating := &rating_pb.Rating{
-			Id:      rating.ID.String(),
-			Score:   rating.Score,
-			HotelId: rating.HotelID.String(),
-			UserId:  rating.UserID.String(),
-			Comment: rating.Comment.String,
-		}
-		grpc_ratings = append(grpc_ratings, grpc_rating)
-	}
+	// for _, rating := range ratings {
+	// 	grpc_rating := &rating_pb.Rating{
+	// 		Id:      rating.ID.String(),
+	// 		Score:   rating.Score,
+	// 		HotelId: rating.HotelID.String(),
+	// 		UserId:  rating.UserID.String(),
+	// 		Comment: rating.Comment.String,
+	// 	}
+	// 	grpc_ratings = append(grpc_ratings, grpc_rating)
+	// }
 
 	return &rating_pb.GetRatingsByHotelIdRepsonse{
 		Ratings: grpc_ratings,

@@ -4,25 +4,44 @@ import (
 	"context"
 
 	rating_repo "github.com/098765432m/grpc-kafka/rating/internal/repository/rating"
+	rating_redis "github.com/098765432m/grpc-kafka/rating/internal/repository/redis"
 	"github.com/jackc/pgx/v5/pgtype"
 	"go.uber.org/zap"
 )
 
 type RatingService struct {
-	repo *rating_repo.Queries
+	repo  *rating_repo.Queries
+	redis *rating_redis.RedisRatingCache
 }
 
-func NewRatingService(repo *rating_repo.Queries) *RatingService {
+func NewRatingService(repo *rating_repo.Queries, redis *rating_redis.RedisRatingCache) *RatingService {
 	return &RatingService{
-		repo: repo,
+		repo:  repo,
+		redis: redis,
 	}
 }
 
 func (rs *RatingService) GetRatingsByHotelId(ctx context.Context, hotelId pgtype.UUID) ([]rating_repo.Rating, error) {
 
+	cache, err := rs.redis.GetRatingsByHotelId(ctx, hotelId.String())
+	if err != nil {
+		zap.S().Errorln("Failed to get Redis Ratings by Hotel id: ", err)
+		return nil, err
+	}
+
+	if cache != nil {
+		return cache, nil
+	}
+
 	ratings, err := rs.repo.GetRatingsByHotel(ctx, hotelId)
 	if err != nil {
 		zap.S().Errorln("Failed to get Ratings by Hotel id: ", err)
+		return nil, err
+	}
+
+	err = rs.redis.SetRatingsByHotelId(ctx, hotelId.String(), ratings)
+	if err != nil {
+		zap.S().Errorln("Failed to set Redis Ratings by Hotel id: ", err)
 		return nil, err
 	}
 

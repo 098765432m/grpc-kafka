@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/098765432m/grpc-kafka/rating-domain/internal/domain"
+	rating_repo "github.com/098765432m/grpc-kafka/rating/internal/repository/rating"
 	"github.com/redis/go-redis/v9"
 )
 
@@ -15,13 +15,14 @@ type RedisRatingCache struct {
 	ttl    time.Duration
 }
 
-func NewRedisRatingCache(client *redis.Client) *RedisRatingCache {
+func NewRedisRatingCache(client *redis.Client, ttl time.Duration) *RedisRatingCache {
 	return &RedisRatingCache{
 		client: client,
+		ttl:    ttl,
 	}
 }
 
-func (rrc *RedisRatingCache) GetRatingsByHotelId(ctx context.Context, hotelId string) ([]domain.Rating, error) {
+func (rrc *RedisRatingCache) GetRatingsByHotelId(ctx context.Context, hotelId string) ([]rating_repo.Rating, error) {
 	key := fmt.Sprintf("rating:hotel:%s", hotelId)
 	val, err := rrc.client.Get(ctx, key).Result()
 	if err == redis.Nil {
@@ -30,7 +31,7 @@ func (rrc *RedisRatingCache) GetRatingsByHotelId(ctx context.Context, hotelId st
 		return nil, err
 	}
 
-	var ratings []domain.Rating
+	var ratings []rating_repo.Rating
 	if err := json.Unmarshal([]byte(val), &ratings); err != nil {
 		return nil, err
 	}
@@ -38,7 +39,7 @@ func (rrc *RedisRatingCache) GetRatingsByHotelId(ctx context.Context, hotelId st
 	return ratings, nil
 }
 
-func (rrs *RedisRatingCache) SetRatingsByHotelId(ctx context.Context, hotelId string, ratings []domain.Rating) error {
+func (rrs *RedisRatingCache) SetRatingsByHotelId(ctx context.Context, hotelId string, ratings []rating_repo.Rating) error {
 	key := fmt.Sprintf("rating:hotel:%s", hotelId)
 
 	data, err := json.Marshal(ratings)
