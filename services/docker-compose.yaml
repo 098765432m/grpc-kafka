@@ -83,3 +83,15 @@ services:
     volumes:
       # - ./rating/internal/database/persistent:/var/lib/postgresql/data
       - ./rating/internal/database/script/rating_init.sql:/docker-entrypoint-initdb.d/create_tables.sql
+
+  redis:
+    image: redis:8.2-bookworm
+    container_name: redis
+    ports:
+      - "6379:6379"
+
+  redis-insight:
+    image: redis/redisinsight:2.70
+    container_name: redis_insight
+    ports:
+      - "5540:5540"

@@ -251,6 +251,28 @@ func (q *Queries) GetImagesByUserIds(ctx context.Context, userIds []pgtype.UUID)
 	return items, nil
 }
 
+const updateImageById = `-- name: UpdateImageById :one
+UPDATE images
+SET 
+    public_id = $1::text,
+    format = $2::text
+WHERE id = $3::uuid
+RETURNING id
+`
+
+type UpdateImageByIdParams struct {
+	PublicID string      `json:"public_id"`
+	Format   string      `json:"format"`
+	ID       pgtype.UUID `json:"id"`
+}
+
+func (q *Queries) UpdateImageById(ctx context.Context, arg UpdateImageByIdParams) (pgtype.UUID, error) {
+	row := q.db.QueryRow(ctx, updateImageById, arg.PublicID, arg.Format, arg.ID)
+	var id pgtype.UUID
+	err := row.Scan(&id)
+	return id, err
+}
+
 const uploadHotelImage = `-- name: UploadHotelImage :exec
 INSERT INTO images (
     public_id,

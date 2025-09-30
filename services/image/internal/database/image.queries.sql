@@ -34,6 +34,14 @@ INSERT INTO images (
     @room_type_id::uuid
 );
 
+-- name: UpdateImageById :one
+UPDATE images
+SET 
+    public_id = @public_id::text,
+    format = @format::text
+WHERE id = @id::uuid
+RETURNING id;
+
 -- name: GetImagesByHotelId :many
 SELECT *
 FROM images

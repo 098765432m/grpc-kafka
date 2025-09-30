@@ -62,6 +62,40 @@ func (is *ImageService) UploadRoomTypeImage(ctx context.Context, newImage image_
 	return nil
 }
 
+func (is *ImageService) UpdateImageById(ctx context.Context, id pgtype.UUID, publicId string, format string) error {
+
+	oldImage, err := is.repo.GetImageById(ctx, id)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			zap.S().Infoln("No record found to update")
+			return common_error.ErrNoRows
+		}
+		zap.S().Errorln("Failed to get image by id: ", err)
+		return err
+	}
+
+	_, err = is.repo.UpdateImageById(ctx, image_repo.UpdateImageByIdParams{
+		ID:       id,
+		PublicID: publicId,
+		Format:   format,
+	})
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			zap.S().Infoln("No record found to update")
+			return common_error.ErrNoRows
+		}
+		zap.S().Errorln("Failed to update image by id: ", err)
+		return err
+	}
+
+	// Delete old image from Cloudinary
+	is.cld.Upload.Destroy(ctx, uploader.DestroyParams{
+		PublicID: oldImage.PublicID,
+	})
+
+	return nil
+}
+
 func (is *ImageService) GetImagesByHotelId(ctx context.Context, hotelId pgtype.UUID) ([]image_repo.Image, error) {
 	images, err := is.repo.GetImagesByHotelId(ctx, hotelId)
 	if err != nil {
