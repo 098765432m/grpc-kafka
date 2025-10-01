@@ -1,0 +1,15 @@
+CREATE TYPE BOOKING_STATUS AS ENUM ('BOOKED', 'CHECK_IN' ,'PAID');
+
+CREATE TABLE bookings (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    check_in DATE NOT NULL,
+    check_out DATE NOT NULL,
+    total INT NOT NULL,
+    status BOOKING_STATUS NOT NULL DEFAULT 'BOOKED',
+    hotel_id UUID NOT NULL,
+    room_type_id UUID NOT NULL,
+    user_id UUID NOT NULL,
+    room_id UUID NOT NULL,
+    create_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);

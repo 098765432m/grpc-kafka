@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"strings"
 
-	booking_repo "github.com/098765432m/grpc-kafka/booking/internal/repository/booking"
+	booking_domain "github.com/098765432m/grpc-kafka/booking/internal/domain"
+	booking_repo_mapping "github.com/098765432m/grpc-kafka/booking/internal/infrastructure/repository"
+	booking_repo "github.com/098765432m/grpc-kafka/booking/internal/infrastructure/repository/sqlc/booking"
 	common_error "github.com/098765432m/grpc-kafka/common/error"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -44,7 +46,7 @@ type GetBookingsByUserIdParams struct {
 	Offset         int
 }
 
-func (bs *BookingService) GetBookingsByUserId(ctx context.Context, params *GetBookingsByUserIdParams) ([]booking_repo.Booking, error) {
+func (bs *BookingService) GetBookingsByUserId(ctx context.Context, params *GetBookingsByUserIdParams) ([]booking_domain.Booking, error) {
 
 	bookings, err := bs.repo.GetBookingsByUserId(ctx, booking_repo.GetBookingsByUserIdParams{
 		UserID:         params.UserId,
@@ -58,7 +60,9 @@ func (bs *BookingService) GetBookingsByUserId(ctx context.Context, params *GetBo
 		return nil, err
 	}
 
-	return bookings, nil
+	result := booking_repo_mapping.FromBookingsRepoToBookingsDomain(bookings)
+
+	return result, nil
 }
 
 func (bs *BookingService) CreateBooking(ctx context.Context, bookingParams *booking_repo.CreateBookingParams) error {

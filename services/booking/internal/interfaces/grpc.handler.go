@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	booking_service "github.com/098765432m/grpc-kafka/booking/internal/service"
+	booking_service "github.com/098765432m/grpc-kafka/booking/internal/application"
 	"github.com/098765432m/grpc-kafka/common/gen-proto/booking_pb"
 	"github.com/098765432m/grpc-kafka/common/utils"
 	"github.com/jackc/pgx/v5/pgtype"
@@ -147,14 +147,14 @@ func (bg *BookingGrpcHandler) GetBookingsByUserId(ctx context.Context, req *book
 	results := make([]*booking_pb.Booking, 0, len(bookings))
 	for _, booking := range bookings {
 		results = append(results, &booking_pb.Booking{
-			Id:         booking.ID.String(),
-			UserId:     booking.UserID.String(),
-			CheckIn:    booking.CheckIn.Time.Format("2006-01-02"),
-			CheckOut:   booking.CheckOut.Time.Format("2006-01-02"),
-			Total:      booking.Total,
-			HotelId:    booking.HotelID.String(),
-			RoomTypeId: booking.RoomTypeID.String(),
-			RoomId:     booking.RoomID.String(),
+			Id:         booking.Id,
+			UserId:     booking.UserId,
+			CheckIn:    booking.CheckIn.Format("2006-01-02"),
+			CheckOut:   booking.CheckOut.Format("2006-01-02"),
+			Total:      int32(booking.Total),
+			HotelId:    booking.HotelId,
+			RoomTypeId: booking.RoomTypeId,
+			RoomId:     booking.RoomId,
 			Status:     string(booking.Status),
 		})
 	}
