@@ -3,9 +3,9 @@ package rating_service
 import (
 	"context"
 
-	"github.com/098765432m/grpc-kafka/rating/internal/domain"
+	rating_domain "github.com/098765432m/grpc-kafka/rating/internal/domain"
 	rating_redis "github.com/098765432m/grpc-kafka/rating/internal/infrastructure/redis"
-	rating_repo "github.com/098765432m/grpc-kafka/rating/internal/repository/rating"
+	rating_repo "github.com/098765432m/grpc-kafka/rating/internal/infrastructure/repository/sqlc/rating"
 	"github.com/jackc/pgx/v5/pgtype"
 	"go.uber.org/zap"
 )
@@ -22,7 +22,7 @@ func NewRatingService(repo *rating_repo.Queries, redis *rating_redis.RedisRating
 	}
 }
 
-func (rs *RatingService) GetRatingsByHotelId(ctx context.Context, hotelId pgtype.UUID) ([]domain.Rating, error) {
+func (rs *RatingService) GetRatingsByHotelId(ctx context.Context, hotelId pgtype.UUID) ([]rating_domain.Rating, error) {
 
 	cache, err := rs.redis.GetRatingsByHotelId(ctx, hotelId.String())
 	if err != nil {
@@ -40,9 +40,9 @@ func (rs *RatingService) GetRatingsByHotelId(ctx context.Context, hotelId pgtype
 		return nil, err
 	}
 
-	result := make([]domain.Rating, 0, len(ratings))
+	result := make([]rating_domain.Rating, 0, len(ratings))
 	for _, rating := range ratings {
-		result = append(result, domain.Rating{
+		result = append(result, rating_domain.Rating{
 			Id:      rating.ID.String(),
 			Score:   int(rating.Score),
 			HotelId: rating.HotelID.String(),

@@ -1,4 +1,4 @@
-package domain
+package rating_domain
 
 type Rating struct {
 	Id      string `json:"id"`

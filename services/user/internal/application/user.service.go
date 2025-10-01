@@ -7,7 +7,9 @@ import (
 	"time"
 
 	common_error "github.com/098765432m/grpc-kafka/common/error"
-	user_repo "github.com/098765432m/grpc-kafka/user/internal/repository/user"
+	user_domain "github.com/098765432m/grpc-kafka/user/internal/domain"
+	user_repo_mapping "github.com/098765432m/grpc-kafka/user/internal/infrastructure/repository/sqlc"
+	user_repo "github.com/098765432m/grpc-kafka/user/internal/infrastructure/repository/sqlc/user"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
@@ -27,7 +29,7 @@ func NewUserService(repo *user_repo.Queries) *UserService {
 	}
 }
 
-func (us *UserService) GetUsers(ctx context.Context) ([]user_repo.User, error) {
+func (us *UserService) GetUsers(ctx context.Context) ([]user_domain.User, error) {
 
 	users, err := us.repo.GetUsers(ctx)
 	if err != nil {
@@ -35,10 +37,12 @@ func (us *UserService) GetUsers(ctx context.Context) ([]user_repo.User, error) {
 		return nil, err
 	}
 
-	return users, nil
+	result := user_repo_mapping.FromUsersRepoToUsersDomain(users)
+
+	return result, nil
 }
 
-func (us *UserService) GetUserById(ctx context.Context, id pgtype.UUID) (*user_repo.User, error) {
+func (us *UserService) GetUserById(ctx context.Context, id pgtype.UUID) (*user_domain.User, error) {
 	user, err := us.repo.GetUserById(ctx, id)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
@@ -50,10 +54,12 @@ func (us *UserService) GetUserById(ctx context.Context, id pgtype.UUID) (*user_r
 		return nil, err
 	}
 
-	return &user, nil
+	result := user_repo_mapping.FromUserRepoToUserDomain(user)
+
+	return &result, nil
 }
 
-func (us *UserService) GetUsersByIds(ctx context.Context, ids []pgtype.UUID) ([]user_repo.User, error) {
+func (us *UserService) GetUsersByIds(ctx context.Context, ids []pgtype.UUID) ([]user_domain.User, error) {
 
 	users, err := us.repo.GetUsersByIds(ctx, ids)
 	if err != nil {
@@ -61,7 +67,7 @@ func (us *UserService) GetUsersByIds(ctx context.Context, ids []pgtype.UUID) ([]
 		return nil, err
 	}
 
-	return users, nil
+	return user_repo_mapping.FromUsersRepoToUsersDomain(users), nil
 }
 
 func (us *UserService) CreateUser(ctx context.Context, newUser *user_repo.CreateUserParams) error {

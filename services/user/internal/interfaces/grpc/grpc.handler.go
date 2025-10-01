@@ -6,8 +6,8 @@ import (
 
 	common_error "github.com/098765432m/grpc-kafka/common/error"
 	"github.com/098765432m/grpc-kafka/common/gen-proto/user_pb"
-	user_repo "github.com/098765432m/grpc-kafka/user/internal/repository/user"
-	user_service "github.com/098765432m/grpc-kafka/user/internal/service"
+	user_service "github.com/098765432m/grpc-kafka/user/internal/application"
+	user_repo "github.com/098765432m/grpc-kafka/user/internal/infrastructure/repository/sqlc/user"
 	"github.com/jackc/pgx/v5/pgtype"
 	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
@@ -43,7 +43,7 @@ func (ug *UserGrpcHandler) GetUserById(ctx context.Context, req *user_pb.GetUser
 
 	return &user_pb.GetUserByIdResponse{
 		User: &user_pb.User{
-			Id:          user.ID.String(),
+			Id:          user.Id,
 			Username:    user.Username,
 			Password:    user.Password,
 			Address:     user.Address,
@@ -51,7 +51,7 @@ func (ug *UserGrpcHandler) GetUserById(ctx context.Context, req *user_pb.GetUser
 			FullName:    user.Address,
 			PhoneNumber: user.PhoneNumber,
 			Role:        string(user.Role),
-			HotelId:     user.HotelID.String(),
+			HotelId:     user.HotelId,
 		},
 	}, nil
 }
@@ -77,14 +77,14 @@ func (ug *UserGrpcHandler) GetUsersByIds(ctx context.Context, req *user_pb.GetUs
 	usersGrpcResult := make([]*user_pb.User, 0, len(users))
 	for _, user := range users {
 		userGrpcResult := &user_pb.User{
-			Id:          user.ID.String(),
+			Id:          user.Id,
 			Username:    user.Username,
 			Password:    user.Password,
 			Address:     user.Address,
 			Email:       user.Username,
 			PhoneNumber: user.PhoneNumber,
 			FullName:    user.FullName,
-			HotelId:     user.HotelID.String(),
+			HotelId:     user.HotelId,
 			Role:        string(user.Role),
 		}
 		usersGrpcResult = append(usersGrpcResult, userGrpcResult)
