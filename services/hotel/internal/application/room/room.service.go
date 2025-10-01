@@ -5,7 +5,10 @@ import (
 	"errors"
 
 	common_error "github.com/098765432m/grpc-kafka/common/error"
-	room_repo "github.com/098765432m/grpc-kafka/hotel/internal/repository/room"
+	hotel_domain "github.com/098765432m/grpc-kafka/hotel/internal/domain"
+	hotel_repo_mapping "github.com/098765432m/grpc-kafka/hotel/internal/infrastructure/repository"
+	room_repo "github.com/098765432m/grpc-kafka/hotel/internal/infrastructure/repository/sqlc/room"
+
 	"github.com/jackc/pgx/v5/pgtype"
 	"go.uber.org/zap"
 )
@@ -20,7 +23,7 @@ func NewRoomService(repo *room_repo.Queries) *RoomService {
 	}
 }
 
-func (rs *RoomService) GetRoomsByHotelId(ctx context.Context, hotelId pgtype.UUID) ([]room_repo.Room, error) {
+func (rs *RoomService) GetRoomsByHotelId(ctx context.Context, hotelId pgtype.UUID) ([]hotel_domain.Room, error) {
 
 	rooms, err := rs.repo.GetRoomsByHotelId(ctx, hotelId)
 	if err != nil {
@@ -29,10 +32,12 @@ func (rs *RoomService) GetRoomsByHotelId(ctx context.Context, hotelId pgtype.UUI
 		return nil, err
 	}
 
-	return rooms, nil
+	result := hotel_repo_mapping.FromRoomsRepoToRoomsDomain(rooms)
+
+	return result, nil
 }
 
-func (rs *RoomService) GetRoomsByRoomTypeId(ctx context.Context, roomTypeId pgtype.UUID) ([]room_repo.Room, error) {
+func (rs *RoomService) GetRoomsByRoomTypeId(ctx context.Context, roomTypeId pgtype.UUID) ([]hotel_domain.Room, error) {
 
 	rooms, err := rs.repo.GetRoomsByRoomTypeId(ctx, roomTypeId)
 	if err != nil {
@@ -41,10 +46,12 @@ func (rs *RoomService) GetRoomsByRoomTypeId(ctx context.Context, roomTypeId pgty
 		return nil, err
 	}
 
-	return rooms, nil
+	result := hotel_repo_mapping.FromRoomsRepoToRoomsDomain(rooms)
+
+	return result, nil
 }
 
-func (rs *RoomService) GetRoomsById(ctx context.Context, id pgtype.UUID) (*room_repo.Room, error) {
+func (rs *RoomService) GetRoomsById(ctx context.Context, id pgtype.UUID) (*hotel_domain.Room, error) {
 
 	room, err := rs.repo.GetRoomsById(ctx, id)
 	if err != nil {
@@ -57,7 +64,9 @@ func (rs *RoomService) GetRoomsById(ctx context.Context, id pgtype.UUID) (*room_
 		return nil, err
 	}
 
-	return &room, nil
+	result := hotel_repo_mapping.FromRoomRepoToRoomDomain(room)
+
+	return &result, nil
 
 }
 

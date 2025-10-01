@@ -4,8 +4,8 @@ import (
 	"context"
 
 	"github.com/098765432m/grpc-kafka/common/gen-proto/room_type_pb"
-	room_type_repo "github.com/098765432m/grpc-kafka/hotel/internal/repository/room-type"
-	room_type_service "github.com/098765432m/grpc-kafka/hotel/internal/service/room-type"
+	room_type_service "github.com/098765432m/grpc-kafka/hotel/internal/application/room-type"
+	room_type_repo "github.com/098765432m/grpc-kafka/hotel/internal/infrastructure/repository/sqlc/room-type"
 	"github.com/jackc/pgx/v5/pgtype"
 	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
@@ -37,10 +37,10 @@ func (rtg *RoomTypeGrpcHandler) GetRoomTypeById(ctx context.Context, req *room_t
 
 	return &room_type_pb.GetRoomTypeByIdResponse{
 		RoomType: &room_type_pb.RoomType{
-			Id:      roomType.ID.String(),
+			Id:      roomType.Id,
 			Name:    roomType.Name,
 			Price:   uint32(roomType.Price),
-			HotelId: roomType.HotelID.String(),
+			HotelId: roomType.HotelId,
 		},
 	}, nil
 }

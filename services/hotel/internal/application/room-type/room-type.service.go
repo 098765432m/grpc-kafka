@@ -3,7 +3,9 @@ package room_type_service
 import (
 	"context"
 
-	room_type_repo "github.com/098765432m/grpc-kafka/hotel/internal/repository/room-type"
+	hotel_domain "github.com/098765432m/grpc-kafka/hotel/internal/domain"
+	hotel_repo_mapping "github.com/098765432m/grpc-kafka/hotel/internal/infrastructure/repository"
+	room_type_repo "github.com/098765432m/grpc-kafka/hotel/internal/infrastructure/repository/sqlc/room-type"
 	"github.com/jackc/pgx/v5/pgtype"
 	"go.uber.org/zap"
 )
@@ -18,14 +20,16 @@ func NewRoomTypeService(repo *room_type_repo.Queries) *RoomTypeService {
 	}
 }
 
-func (rts *RoomTypeService) GetRoomTypeById(ctx context.Context, id pgtype.UUID) (*room_type_repo.RoomType, error) {
+func (rts *RoomTypeService) GetRoomTypeById(ctx context.Context, id pgtype.UUID) (*hotel_domain.RoomType, error) {
 	roomType, err := rts.repo.GetRoomTypeById(ctx, id)
 	if err != nil {
 		zap.S().Errorln("Cannot get Room Type By id")
 		return nil, err
 	}
 
-	return &roomType, nil
+	result := hotel_repo_mapping.FromRoomTypeRepoToRoomTypeDomain(roomType)
+
+	return &result, nil
 }
 
 func (rts *RoomTypeService) GetRoomTypesByHotelId(ctx context.Context, hotelId pgtype.UUID) ([]room_type_repo.GetRoomTypesByHotelIdRow, error) {

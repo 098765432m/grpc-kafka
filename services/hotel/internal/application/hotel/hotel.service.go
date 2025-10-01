@@ -6,7 +6,9 @@ import (
 
 	common_error "github.com/098765432m/grpc-kafka/common/error"
 	"github.com/098765432m/grpc-kafka/common/gen-proto/image_pb"
-	hotel_repo "github.com/098765432m/grpc-kafka/hotel/internal/repository/hotel"
+	hotel_domain "github.com/098765432m/grpc-kafka/hotel/internal/domain"
+	hotel_repo_mapping "github.com/098765432m/grpc-kafka/hotel/internal/infrastructure/repository"
+	hotel_repo "github.com/098765432m/grpc-kafka/hotel/internal/infrastructure/repository/sqlc/hotel"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
 	"go.uber.org/zap"
@@ -24,7 +26,7 @@ func NewHotelService(repo *hotel_repo.Queries, imageClient image_pb.ImageService
 	}
 }
 
-func (hs *HotelService) GetHotelById(ctx context.Context, id pgtype.UUID) (*hotel_repo.Hotel, error) {
+func (hs *HotelService) GetHotelById(ctx context.Context, id pgtype.UUID) (*hotel_domain.Hotel, error) {
 
 	hotel, err := hs.repo.GetHotelById(ctx, id)
 	if err != nil {
@@ -36,7 +38,9 @@ func (hs *HotelService) GetHotelById(ctx context.Context, id pgtype.UUID) (*hote
 		return nil, err
 	}
 
-	return &hotel, nil
+	result := hotel_repo_mapping.FromHotelRepoToHotelDomain(hotel)
+
+	return &result, nil
 }
 
 func (hs *HotelService) CreateHotel(ctx context.Context, newHotel *hotel_repo.CreateHotelParams) error {

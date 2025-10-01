@@ -7,8 +7,8 @@ import (
 	common_error "github.com/098765432m/grpc-kafka/common/error"
 	"github.com/098765432m/grpc-kafka/common/gen-proto/room_pb"
 	"github.com/098765432m/grpc-kafka/common/utils"
-	room_repo "github.com/098765432m/grpc-kafka/hotel/internal/repository/room"
-	room_service "github.com/098765432m/grpc-kafka/hotel/internal/service/room"
+	room_service "github.com/098765432m/grpc-kafka/hotel/internal/application/room"
+	room_repo "github.com/098765432m/grpc-kafka/hotel/internal/infrastructure/repository/sqlc/room"
 	"github.com/jackc/pgx/v5/pgtype"
 	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
@@ -45,10 +45,10 @@ func (rg *RoomGrpcHandler) GetRoomById(ctx context.Context, req *room_pb.GetRoom
 
 	return &room_pb.GetRoomByIdResponse{
 		Room: &room_pb.Room{
-			Id:      room.ID.String(),
+			Id:      room.Id,
 			Name:    room.Name,
-			Status:  string(room.Status.RoomStatus),
-			HotelId: room.HotelID.String(),
+			Status:  room.Status,
+			HotelId: room.HotelId,
 		},
 	}, nil
 }
@@ -69,11 +69,11 @@ func (rg *RoomGrpcHandler) GetRoomsByRoomTypeId(ctx context.Context, req *room_p
 	roomsGrpcResult := make([]*room_pb.Room, 0, len(rooms))
 	for _, room := range rooms {
 		roomGrpc := &room_pb.Room{
-			Id:         room.ID.String(),
+			Id:         room.Id,
 			Name:       room.Name,
-			Status:     string(room.Status.RoomStatus),
-			RoomTypeId: room.RoomTypeID.String(),
-			HotelId:    room.HotelID.String(),
+			Status:     room.Status,
+			RoomTypeId: room.RoomTypeId,
+			HotelId:    room.HotelId,
 		}
 
 		roomsGrpcResult = append(roomsGrpcResult, roomGrpc)
@@ -101,11 +101,11 @@ func (rg *RoomGrpcHandler) GetRoomsByHotelId(ctx context.Context, req *room_pb.G
 	roomsGrpcResult := make([]*room_pb.Room, 0, len(rooms))
 	for _, room := range rooms {
 		roomGrpc := &room_pb.Room{
-			Id:         room.ID.String(),
+			Id:         room.Id,
 			Name:       room.Name,
-			Status:     string(room.Status.RoomStatus),
-			RoomTypeId: room.RoomTypeID.String(),
-			HotelId:    room.HotelID.String(),
+			Status:     room.Status,
+			RoomTypeId: room.RoomTypeId,
+			HotelId:    room.HotelId,
 		}
 
 		roomsGrpcResult = append(roomsGrpcResult, roomGrpc)

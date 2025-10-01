@@ -7,10 +7,10 @@ import (
 	common_error "github.com/098765432m/grpc-kafka/common/error"
 	"github.com/098765432m/grpc-kafka/common/gen-proto/hotel_pb"
 	"github.com/098765432m/grpc-kafka/common/utils"
-	hotel_repo "github.com/098765432m/grpc-kafka/hotel/internal/repository/hotel"
-	hotel_service "github.com/098765432m/grpc-kafka/hotel/internal/service/hotel"
-	room_service "github.com/098765432m/grpc-kafka/hotel/internal/service/room"
-	room_type_service "github.com/098765432m/grpc-kafka/hotel/internal/service/room-type"
+	hotel_service "github.com/098765432m/grpc-kafka/hotel/internal/application/hotel"
+	room_service "github.com/098765432m/grpc-kafka/hotel/internal/application/room"
+	room_type_service "github.com/098765432m/grpc-kafka/hotel/internal/application/room-type"
+	hotel_repo "github.com/098765432m/grpc-kafka/hotel/internal/infrastructure/repository/sqlc/hotel"
 	"github.com/jackc/pgx/v5/pgtype"
 	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
@@ -104,9 +104,9 @@ func (hg *HotelGrpcHandler) GetHotelById(ctx context.Context, req *hotel_pb.GetH
 
 	return &hotel_pb.GetHotelByIdResponse{
 		Hotel: &hotel_pb.Hotel{
-			Id:      hotel.ID.String(),
+			Id:      hotel.Id,
 			Name:    hotel.Name,
-			Address: hotel.Address.String,
+			Address: hotel.Address,
 		},
 	}, nil
 }
