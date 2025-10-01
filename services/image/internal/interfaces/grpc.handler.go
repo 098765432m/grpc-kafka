@@ -6,8 +6,8 @@ import (
 
 	common_error "github.com/098765432m/grpc-kafka/common/error"
 	"github.com/098765432m/grpc-kafka/common/gen-proto/image_pb"
-	image_repo "github.com/098765432m/grpc-kafka/image/internal/repository/image"
-	image_service "github.com/098765432m/grpc-kafka/image/internal/service"
+	image_service "github.com/098765432m/grpc-kafka/image/internal/application"
+	image_repo "github.com/098765432m/grpc-kafka/image/internal/infrastructure/repository/sqlc/image"
 	"github.com/jackc/pgx/v5/pgtype"
 	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"

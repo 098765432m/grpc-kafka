@@ -6,7 +6,7 @@ import (
 	"sync"
 
 	common_error "github.com/098765432m/grpc-kafka/common/error"
-	image_repo "github.com/098765432m/grpc-kafka/image/internal/repository/image"
+	image_repo "github.com/098765432m/grpc-kafka/image/internal/infrastructure/repository/sqlc/image"
 	"github.com/cloudinary/cloudinary-go/v2"
 	"github.com/cloudinary/cloudinary-go/v2/api/uploader"
 	"github.com/jackc/pgx/v5"
