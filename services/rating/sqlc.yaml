@@ -3,12 +3,12 @@ sql:
   # Hotel
   - engine: "postgresql"
     schema:
-      - "internal/database/rating.schema.sql"
+      - "internal/infrastructure/postgres/sqlc/rating.schema.sql"
     queries:
-      - "internal/database/rating.queries.sql"
+      - "internal/infrastructure/postgres/sqlc/rating.queries.sql"
     gen:
       go:
-        out: "internal/repository/rating"
+        out: "internal/infrastructure/repository/sqlc/rating"
         package: "rating_repo"
         sql_package: "pgx/v5"
         emit_json_tags: true

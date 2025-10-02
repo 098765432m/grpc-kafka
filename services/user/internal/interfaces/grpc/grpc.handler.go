@@ -8,6 +8,7 @@ import (
 	"github.com/098765432m/grpc-kafka/common/gen-proto/user_pb"
 	user_service "github.com/098765432m/grpc-kafka/user/internal/application"
 	user_repo "github.com/098765432m/grpc-kafka/user/internal/infrastructure/repository/sqlc/user"
+
 	"github.com/jackc/pgx/v5/pgtype"
 	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"

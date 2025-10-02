@@ -19,7 +19,7 @@ services:
       - grpc-kafka-net
     volumes:
       # - ./hotel/internal/database/persistent:/var/lib/postgresql/data
-      - ./hotel/internal/database/script/hotel_init.sql:/docker-entrypoint-initdb.d/create_hotel_tables.sql
+      - ./hotel/internal/infrastructure/postgres/sqlc/hotel_init.sql:/docker-entrypoint-initdb.d/create_hotel_tables.sql
 
   # User Database
   postgres-user:
@@ -35,7 +35,7 @@ services:
       - grpc-kafka-net
     volumes:
       # - ./user/internal/database/persistent:/var/lib/postgresql/data
-      - ./user/internal/database/script/user_init.sql:/docker-entrypoint-initdb.d/create_tables.sql
+      - ./user/internal/infrastructure/postgres/sqlc/user_init.sql:/docker-entrypoint-initdb.d/create_tables.sql
   # Image Database
   postgres-image:
     image: postgres:14.18
@@ -50,7 +50,7 @@ services:
       - grpc-kafka-net
     volumes:
       # - ./image/internal/database/persistent:/var/lib/postgresql/data
-      - ./image/internal/database/script/image_init.sql:/docker-entrypoint-initdb.d/create_tables.sql
+      - ./image/internal/infrastructure/postgres/sqlc/image_init.sql:/docker-entrypoint-initdb.d/create_tables.sql
 
   # Booking Database
   postgres-booking:
@@ -66,7 +66,7 @@ services:
       - grpc-kafka-net
     volumes:
       # - ./booking/internal/database/persistent:/var/lib/postgresql/data
-      - ./booking/internal/database/script/booking_init.sql:/docker-entrypoint-initdb.d/create_tables.sql
+      - ./booking/internal/infrastructure/postgres/sqlc/booking_init.sql:/docker-entrypoint-initdb.d/create_tables.sql
 
   # Rating Database
   postgres-rating:
@@ -82,7 +82,7 @@ services:
       - grpc-kafka-net
     volumes:
       # - ./rating/internal/database/persistent:/var/lib/postgresql/data
-      - ./rating/internal/database/script/rating_init.sql:/docker-entrypoint-initdb.d/create_tables.sql
+      - ./rating/internal/infrastructure/postgres/sqlc/rating_init.sql:/docker-entrypoint-initdb.d/create_tables.sql
 
   redis:
     image: redis:8.2-bookworm

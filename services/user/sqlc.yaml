@@ -3,12 +3,12 @@ sql:
   # Hotel
   - engine: "postgresql"
     schema:
-      - "internal/database/user.schema.sql"
+      - "internal/infrastructure/postgres/sqlc/user.schema.sql"
     queries:
-      - "internal/database/user.queries.sql"
+      - "internal/infrastructure/postgres/sqlc/user.queries.sql"
     gen:
       go:
-        out: "internal/repository/user"
+        out: "internal/infrastructure/repository/sqlc/user"
         package: "user_repo"
         sql_package: "pgx/v5"
         emit_json_tags: true
