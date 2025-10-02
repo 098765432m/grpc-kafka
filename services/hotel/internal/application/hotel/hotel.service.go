@@ -26,6 +26,18 @@ func NewHotelService(repo *hotel_repo.Queries, imageClient image_pb.ImageService
 	}
 }
 
+func (hs *HotelService) GetAll(ctx context.Context) ([]hotel_domain.Hotel, error) {
+	hotels, err := hs.repo.GetAll(ctx)
+	if err != nil {
+		zap.S().Error("Failed to get all hotels: ", err)
+		return nil, err
+	}
+
+	result := hotel_repo_mapping.FromHotelsRepoToHotelsDomain(hotels)
+
+	return result, nil
+}
+
 func (hs *HotelService) GetHotelById(ctx context.Context, id pgtype.UUID) (*hotel_domain.Hotel, error) {
 
 	hotel, err := hs.repo.GetHotelById(ctx, id)
@@ -54,15 +66,6 @@ func (hs *HotelService) CreateHotel(ctx context.Context, newHotel *hotel_repo.Cr
 	}
 
 	return nil
-}
-
-func (hs *HotelService) GetAll(ctx context.Context) ([]hotel_repo.Hotel, error) {
-	hotels, err := hs.repo.GetAll(ctx)
-	if err != nil {
-		zap.S().Error("Failed to get all hotels: ", err)
-		return nil, err
-	}
-	return hotels, nil
 }
 
 func (hs *HotelService) GetHotelsByAddress(ctx context.Context, address pgtype.Text, hotelName pgtype.Text) ([]pgtype.UUID, error) {

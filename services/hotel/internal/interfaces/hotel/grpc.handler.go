@@ -46,7 +46,7 @@ func (hg *HotelGrpcHandler) GetAllHotels(ctx context.Context, req *hotel_pb.GetA
 	var grpc_hotels []*hotel_pb.Hotel
 	for _, hotel := range hotels {
 		grpc_hotel := &hotel_pb.Hotel{
-			Id:   hotel.ID.String(),
+			Id:   hotel.Id,
 			Name: hotel.Name,
 		}
 

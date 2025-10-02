@@ -4,7 +4,7 @@ PROTO_FILES := $(wildcard $(PROTO_SRC)/*.proto)
 
 SQLC_CONFIG_FILES = $(wildcard services/*/sqlc.yaml)
 
-MAIN_FILES = $(wildcard services/*/main.go)
+MAIN_FILES = $(shell find services/ -name main.go)
 API_GATEWAY_MAIN_FILE = $(wildcard services/api-gateway/*/main.go)
 MAIN_FILES_WITHOUT_API_GATEWAY = ${filter-out ${API_GATEWAY_MAIN_FILE}, ${MAIN_FILES}}
 

@@ -28,7 +28,7 @@ func main() {
 	// 2. Infras
 	db, err := pgxpool.New(ctx, dsn)
 	if err != nil {
-		panic(err)
+		zap.S().Fatalln("Failed to connect to database: ", err)
 	}
 	defer db.Close()
 
@@ -43,7 +43,7 @@ func main() {
 	// 5. Start Server
 	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", consts.USER_GRPC_PORT))
 	if err != nil {
-		panic(err)
+		zap.S().Fatalln("Failed to Start server on port: ", consts.USER_GRPC_PORT, err)
 	}
 
 	grpc := grpc.NewServer()

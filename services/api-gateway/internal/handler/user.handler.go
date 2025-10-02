@@ -98,7 +98,7 @@ func (uh *UserHandler) GetUserById(ctx *gin.Context) {
 
 	}
 
-	zap.S().Infoln("IMage: ", image)
+	zap.S().Infoln("Image: ", image)
 
 	resp := api_dto.UserResponse{
 		Id:          user.GetId(),
